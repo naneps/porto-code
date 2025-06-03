@@ -1,6 +1,6 @@
 
 import { PortfolioData, SidebarItemConfig, ProjectDetail, Command } from './types';
-import { User, Briefcase, Code2, FolderKanban, Mail, FileJson2, LucideIcon, FileTerminal, HelpCircle, Eye, Palette, Type as FontIcon, Settings, GitFork, Bell, TerminalSquare, ArrowLeft, ArrowRight, SplitSquareHorizontal, LayoutGrid, UserCircle2 as UserProfileIcon, Minus, Square, X, ChevronDown, ChevronRight, Search, Check, Files, FileCode, Bot } from 'lucide-react'; // Added Bot, FontIcon alias, Files, ChevronRight, FileCode
+import { User, Briefcase, Code2, FolderKanban, Mail, FileJson2, LucideIcon, FileTerminal, HelpCircle, Eye, Palette, Type as FontIcon, Settings, GitFork, Bell, TerminalSquare, ArrowLeft, ArrowRight, SplitSquareHorizontal, LayoutGrid, UserCircle2 as UserProfileIcon, Minus, Square, X, ChevronDown, ChevronRight, Search, Check, Files, FileCode, Bot, FileText, Link, Phone } from 'lucide-react'; // Added Bot, FontIcon alias, Files, ChevronRight, FileCode, FileText, Link, Phone
 
 
 export const PORTFOLIO_DATA: PortfolioData = {
@@ -84,18 +84,27 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'skills.json': Code2,
   'projects.json': FolderKanban,
   'contact.json': Mail,
+  Mail, // For JsonPreviewView
+  Phone, // For JsonPreviewView
+  User, // For JsonPreviewView
+  Briefcase, // For JsonPreviewView
+  Code2, // For JsonPreviewView
+  Linkedin: GitFork, // Placeholder, ideally a Linkedin icon
+  Instagram: GitFork, // Placeholder
+  Tiktok: GitFork, // Placeholder
+  GitFork, // For JsonPreviewView (GitHub) and Status Bar
+  Link, // For JsonPreviewView (general links)
   project_detail: FileJson2, 
-  'command_palette': FileTerminal, // Used for Command Palette menu item
+  'command_palette': FileTerminal,
   'toggle_sidebar': Eye, 
   'about_portfolio': HelpCircle,
   'theme_command': Palette,
   'font_command': FontIcon,
-  'files_icon': Files, // For Activity Bar
-  'settings_icon': Settings, // For Activity Bar
-  'ai_chat_icon': Bot, // For AI Chat in Activity Bar
-  'git_fork_icon': GitFork, // For Status Bar
-  'bell_icon': Bell, // For Status Bar
-  'terminal_square_icon': TerminalSquare, // For empty tab placeholder
+  'files_icon': Files, 
+  'settings_icon': Settings, 
+  'ai_chat_icon': Bot, 
+  'bell_icon': Bell, 
+  'terminal_square_icon': TerminalSquare, 
   'arrow_left_icon': ArrowLeft,
   'arrow_right_icon': ArrowRight,
   'split_square_horizontal_icon': SplitSquareHorizontal,
@@ -109,17 +118,15 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'search_icon': Search,
   'check_icon': Check,
   'file_code_icon': FileCode,
+  FileText, // For context menu "Show Preview"
 };
 
-export const APP_VERSION = "1.3.0"; // Updated version for AI Chat feature
+export const APP_VERSION = "1.3.1"; // Incremented version after refactor
 export const REPO_URL = "https://github.com/nandangeka"; 
 
-// COMMANDS_CONFIG is now empty. 
-// All commands are built dynamically in App.tsx to reflect current state (e.g., theme, font selections).
 export const COMMANDS_CONFIG: Omit<Command, 'action' | 'isSelected'>[] = [];
 
 
-// Helper function to generate JSON content for main files
 export function generateFileContent(fileName: string, data: PortfolioData): string {
   let content: any;
   switch (fileName) {
@@ -172,10 +179,7 @@ export function generateFileContent(fileName: string, data: PortfolioData): stri
   return JSON.stringify(content, null, 2);
 }
 
-// Helper function to generate JSON content for project detail files
-// (ensure definition exists if it was in a previous version)
 export function generateProjectDetailContent(projectId: string, data: PortfolioData): string {
-  // Find the original project title based on the projectId pattern
   const projectIndexMatch = projectId.match(/project_(\d+)_/);
   let projectTitle = "Unknown Project";
   if (projectIndexMatch && projectIndexMatch[1]) {
@@ -185,14 +189,13 @@ export function generateProjectDetailContent(projectId: string, data: PortfolioD
     }
   }
 
-  // Simulate some project details
   const projectDetail: ProjectDetail = {
     id: projectId,
     title: projectTitle,
     description: `This is a detailed description for ${projectTitle}. It showcases various aspects of the project including its goals, challenges, and outcomes. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`,
     technologies: ["React", "TypeScript", "Tailwind CSS", "VSCode API (Simulated)"],
-    year: 2024, // Example year
-    related_skills: data.skills.slice(0, Math.floor(Math.random() * 3) + 2), // Random subset of skills
+    year: 2024, 
+    related_skills: data.skills.slice(0, Math.floor(Math.random() * 3) + 2), 
   };
   return JSON.stringify(projectDetail, null, 2);
 }

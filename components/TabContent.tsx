@@ -2,11 +2,11 @@
 import React from 'react';
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import json from 'react-syntax-highlighter/dist/esm/languages/prism/json';
-import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Tab, PortfolioData } from '../types';
 import ProjectCard from './ProjectCard';
 import AIChatInterface from './AIChatInterface';
-import JsonPreviewView from './JsonPreviewView'; // Import JsonPreviewView
+import JsonPreviewView from './JsonPreviewView';
+import { getSyntaxHighlighterTheme } from '../utils/syntaxHighlighterUtils'; // Import the utility
 
 SyntaxHighlighter.registerLanguage('json', json);
 
@@ -16,53 +16,22 @@ interface TabContentProps {
   portfolioData: PortfolioData;
   onOpenProjectTab: (projectId: string, projectTitle: string) => void;
   currentThemeName: string;
-  onContextMenuRequest: (x: number, y: number, tabId: string) => void; // New prop
+  onContextMenuRequest: (x: number, y: number, tabId: string) => void;
 }
 
 const TabContent: React.FC<TabContentProps> = ({ tab, content, portfolioData, onOpenProjectTab, currentThemeName, onContextMenuRequest }) => {
-  const [finalSyntaxTheme, setFinalSyntaxTheme] = React.useState<any>(vscDarkPlus);
+  const [finalSyntaxTheme, setFinalSyntaxTheme] = React.useState<any>({});
 
   React.useLayoutEffect(() => {
-    const isAppLightTheme = currentThemeName === 'VSCode Light+';
-    const baseTheme = isAppLightTheme ? vs : vscDarkPlus;
-    const newTheme = JSON.parse(JSON.stringify(baseTheme));
-    const preStyleUpdates = {
-      background: 'var(--editor-background)',
-      color: 'var(--editor-foreground)',
-      margin: '0', padding: '1rem',
-      fontSize: 'var(--editor-font-size)',
-      fontFamily: 'var(--editor-font-family)',
-      lineHeight: 'var(--editor-line-height)',
-      height: '100%', overflow: 'auto',
-    };
-    newTheme['pre[class*="language-"]'] = { ...(newTheme['pre[class*="language-"]'] || {}), ...preStyleUpdates };
-    const codeStyleUpdates = {
-      background: 'transparent', color: 'var(--editor-foreground)',
-      fontFamily: 'var(--editor-font-family)', fontSize: 'var(--editor-font-size)',
-      lineHeight: 'var(--editor-line-height)', textShadow: 'none',
-    };
-    newTheme['code[class*="language-"]'] = { ...(newTheme['code[class*="language-"]'] || {}), ...codeStyleUpdates };
-    const tokenStyleOverrides = {
-      '.token.string': { color: 'var(--syntax-string)' }, '.token.keyword': { color: 'var(--syntax-keyword)' },
-      '.token.comment': { color: 'var(--syntax-comment)' }, '.token.number': { color: 'var(--syntax-number)' },
-      '.token.boolean': { color: 'var(--syntax-boolean)' }, '.token.property': { color: 'var(--syntax-property)' },
-      '.token.operator': { color: 'var(--syntax-operator)' }, '.token.punctuation': { color: 'var(--syntax-punctuation)' },
-      '.token.function': { color: 'var(--syntax-function)' }, '.token.plain-text': { color: 'var(--editor-foreground)' } 
-    };
-    for (const [selector, styles] of Object.entries(tokenStyleOverrides)) {
-      newTheme[selector] = { ...(newTheme[selector] || {}), ...styles };
-    }
-    setFinalSyntaxTheme(newTheme);
+    setFinalSyntaxTheme(getSyntaxHighlighterTheme(currentThemeName));
   }, [currentThemeName]);
 
   const handleContextMenu = (event: React.MouseEvent) => {
-    // Only show custom context menu for eligible file types that are not already previews
     const eligibleForPreview = ['about.json', 'experience.json', 'skills.json', 'contact.json'].includes(tab.id);
     if (tab.type === 'file' && eligibleForPreview) {
       event.preventDefault();
       onContextMenuRequest(event.pageX, event.pageY, tab.id);
     }
-    // For other tab types or non-eligible files, the default browser context menu will show.
   };
 
 
@@ -73,7 +42,6 @@ const TabContent: React.FC<TabContentProps> = ({ tab, content, portfolioData, on
   if (tab.type === 'json_preview' && tab.fileName) {
     try {
       const parsedData = JSON.parse(content);
-      // tab.fileName here refers to the original file ID (e.g., "about.json")
       return <JsonPreviewView jsonData={parsedData} fileId={tab.fileName} portfolioData={portfolioData} />;
     } catch (error) {
       console.error(`Failed to parse JSON for preview tab ${tab.id}:`, error);
@@ -81,7 +49,7 @@ const TabContent: React.FC<TabContentProps> = ({ tab, content, portfolioData, on
     }
   }
 
-  if (tab.id === 'projects.json' && tab.type === 'file') { // Ensure it's the file, not a preview of it
+  if (tab.id === 'projects.json' && tab.type === 'file') {
     try {
       const projectsData = JSON.parse(content);
       const projectsList = projectsData.projects as { id: string; title: string }[];
@@ -106,10 +74,12 @@ const TabContent: React.FC<TabContentProps> = ({ tab, content, portfolioData, on
           </div>
         </div>
       );
-    } catch (error) { /* ... */ }
+    } catch (error) { 
+        console.error(`Failed to parse JSON for projects.json:`, error);
+        return <div className="p-4 text-red-400 bg-[var(--editor-background)]">Error displaying projects: Invalid JSON data.</div>;
+    }
   }
   
-  // Default: Render raw content with SyntaxHighlighter for 'file' and 'project_detail'
   return (
     <div onContextMenu={handleContextMenu} className="h-full w-full">
       <SyntaxHighlighter

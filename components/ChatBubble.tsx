@@ -9,33 +9,36 @@ interface ChatBubbleProps {
   message: ChatMessage;
 }
 
-const TYPING_SPEED_MS = 35; // Adjusted for smoother typing animation
-const TYPING_ANIMATION_ID_PREFIX = "ai-typing-"; // From AIChatInterface
+const TYPING_SPEED_MS = 35; 
+// TYPING_ANIMATION_ID_PREFIX is part of message IDs generated in useGeminiChat.ts
+// This component checks for it to enable the typing animation.
 
 const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
   const [displayedText, setDisplayedText] = useState('');
   const isUser = message.sender === 'user';
-  const isTypingMessage = message.sender === 'ai' && !message.error && message.id.startsWith(TYPING_ANIMATION_ID_PREFIX);
+  // Check if the message ID starts with the prefix defined in useGeminiChat.ts
+  const isTypingMessage = message.sender === 'ai' && !message.error && message.id.startsWith("ai-typing-");
+
 
   useEffect(() => {
     if (isTypingMessage) {
-      setDisplayedText(''); // Reset for new typing messages
+      setDisplayedText(''); 
       let charIndex = 0;
       const typingInterval = setInterval(() => {
         const charToAdd = message.text[charIndex];
-        if (charToAdd) { // Ensure character exists before appending
+        if (charToAdd) { 
           setDisplayedText(prev => prev + charToAdd);
         }
         charIndex++;
-        if (charIndex >= message.text.length) { // Use >= for safety
+        if (charIndex >= message.text.length) { 
           clearInterval(typingInterval);
         }
       }, TYPING_SPEED_MS);
       return () => clearInterval(typingInterval);
     } else {
-      setDisplayedText(message.text); // Display full text immediately for user or non-typing AI messages
+      setDisplayedText(message.text); 
     }
-  }, [message.text, message.id, isTypingMessage]); // Dependencies ensure effect reruns for new typing messages
+  }, [message.text, message.id, isTypingMessage]); 
 
   const bubbleClasses = isUser
     ? 'bg-[var(--modal-selected-item-background)] text-[var(--modal-selected-item-foreground)] self-end rounded-lg rounded-br-none'
@@ -58,7 +61,6 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
                 remarkPlugins={[remarkGfm]}
                 components={{
                   a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />
-                  // You can add more custom components here if needed for specific Markdown elements
                 }}
               >
                 {displayedText}

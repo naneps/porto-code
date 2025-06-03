@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { ContextMenuProps, ContextMenuItem } from '../types'; // Use updated types
+import { ContextMenuProps } from '../types'; // Use updated types
 
-const ContextMenuComponent: React.FC<ContextMenuProps> = ({ x, y, items, visible, onClose }) => {
+const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, visible, onClose }) => {
   if (!visible) return null;
 
   return (
@@ -33,4 +33,4 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({ x, y, items, visible
   );
 };
 
-export default ContextMenuComponent;
+export default ContextMenu;
