@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { Tab, PortfolioData } from '../types';
+import { Tab, PortfolioData, SidebarItemConfig } from '../types'; // Added SidebarItemConfig
 import { ICONS } from '../constants';
 
 
 interface BreadcrumbsProps {
   activeTab: Tab | undefined | null;
   portfolioData: PortfolioData;
-  onOpenTab: (fileName: string) => void; 
+  onOpenTab: (itemOrConfig: SidebarItemConfig | { id?: string, fileName: string, type?: Tab['type'], title?: string }) => void; 
 }
 
 const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onOpenTab }) => {
@@ -23,26 +23,37 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
         return portfolioData.projects[projectIndex];
       }
     }
+    // Fallback for titles that might not have an index, e.g., if ID format changes
     const genericMatch = projectId.match(/project_\d+_(.+)\.json/);
-    return genericMatch ? genericMatch[1].replace(/_/g, ' ') : 'Project Detail';
+    if (genericMatch && genericMatch[1]) {
+        return genericMatch[1].replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+    // Last resort if no pattern matches, use the tab title if available, or a default
+    return activeTab?.title || 'Project Detail';
   };
   
-  let ActiveTabIcon = ICONS.default; 
-  if (activeTab.type === 'project_detail') {
-    ActiveTabIcon = ICONS['project_detail'] || ICONS.default;
-  } else if (ICONS[activeTab.id]) {
-    ActiveTabIcon = ICONS[activeTab.id];
-  }
-  const ProjectsIcon = ICONS['projects.json'];
-  const RootIcon = ICONS['projects.json']; // Using FolderKanban for root, same as projects.json icon
+  const RootIcon = ICONS['projects.json']; 
   const SeparatorIcon = ICONS.chevron_right_icon;
+  const ProjectsJSONIcon = ICONS['projects.json']; // Icon for the 'projects.json' link
+
+  // Determine the icon for the final segment of the breadcrumb
+  let FinalSegmentIcon: React.ElementType | undefined = ICONS.default;
+  if (activeTab.type === 'file' && activeTab.fileName && ICONS[activeTab.fileName]) {
+    FinalSegmentIcon = ICONS[activeTab.fileName];
+  } else if (activeTab.type === 'project_detail') {
+    FinalSegmentIcon = ICONS['project_detail'] || ICONS.default;
+  } else if (activeTab.type === 'ai_chat') {
+    FinalSegmentIcon = ICONS.ai_chat_icon || ICONS.default;
+  } else if (activeTab.type === 'json_preview' && activeTab.fileName && ICONS[activeTab.fileName]) {
+    FinalSegmentIcon = ICONS[activeTab.fileName];
+  }
 
 
   return (
     <div className="flex items-center px-3 py-1.5 text-xs text-[var(--breadcrumbs-foreground)] bg-[var(--breadcrumbs-background)] border-t border-[var(--border-color)] shadow-sm">
       {RootIcon && (
         <button 
-          onClick={() => { /* Potentially open root or specific explorer view */}} 
+          onClick={() => { /* Optional: Define action for clicking root, e.g., open sidebar or specific file */}} 
           className="flex items-center hover:text-[var(--breadcrumbs-focus-foreground)] transition-colors duration-150"
           title="Portfolio Root"
         >
@@ -50,35 +61,42 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
           <span className="font-medium">PORTFOLIO</span>
         </button>
       )}
+      
       {SeparatorIcon && <SeparatorIcon size={16} className="mx-1 text-[var(--breadcrumbs-separator-color)]" />}
 
-      {activeTab.type === 'project_detail' && ProjectsIcon && (
+      {/* Path based on activeTab type */}
+      {activeTab.type === 'project_detail' && (
         <>
-          <button 
-            onClick={() => onOpenTab('projects.json')}
-            className="flex items-center hover:text-[var(--breadcrumbs-focus-foreground)] transition-colors duration-150"
-            title="Open projects.json"
-          >
-            <ProjectsIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)] opacity-75" />
-            <span>projects.json</span>
-          </button>
+          {ProjectsJSONIcon && (
+            <button 
+              onClick={() => onOpenTab({ fileName: 'projects.json', type: 'file', title: 'projects.json' })}
+              className="flex items-center hover:text-[var(--breadcrumbs-focus-foreground)] transition-colors duration-150"
+              title="Open projects.json"
+            >
+              <ProjectsJSONIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)] opacity-75" />
+              <span>projects.json</span>
+            </button>
+          )}
           {SeparatorIcon && <SeparatorIcon size={16} className="mx-1 text-[var(--breadcrumbs-separator-color)]" />}
           <div className="flex items-center text-[var(--breadcrumbs-focus-foreground)]">
-            <ActiveTabIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />
+            {FinalSegmentIcon && <FinalSegmentIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />}
             <span>{getProjectTitleFromId(activeTab.id)}</span>
           </div>
         </>
       )}
 
-      {activeTab.type === 'file' && (
-         <button 
-            onClick={() => onOpenTab(activeTab.id)}
-            className="flex items-center text-[var(--breadcrumbs-focus-foreground)] hover:opacity-80 transition-opacity duration-150"
-            title={`Open ${activeTab.title}`}
-        >
-            <ActiveTabIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />
+      {(activeTab.type === 'file' || activeTab.type === 'json_preview') && (
+         <div className="flex items-center text-[var(--breadcrumbs-focus-foreground)]">
+            {FinalSegmentIcon && <FinalSegmentIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />}
             <span>{activeTab.title}</span>
-        </button>
+        </div>
+      )}
+
+      {activeTab.type === 'ai_chat' && (
+        <div className="flex items-center text-[var(--breadcrumbs-focus-foreground)]">
+            {FinalSegmentIcon && <FinalSegmentIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />}
+            <span>{activeTab.title}</span>
+        </div>
       )}
     </div>
   );

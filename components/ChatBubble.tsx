@@ -4,16 +4,18 @@ import { ChatMessage } from '../types';
 import { Bot, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+// Removed: import CodeBlock from './CodeBlock'; 
 
 interface ChatBubbleProps {
   message: ChatMessage;
+  // Removed: currentThemeName?: string; 
 }
 
 const TYPING_SPEED_MS = 35; 
 // TYPING_ANIMATION_ID_PREFIX is part of message IDs generated in useGeminiChat.ts
 // This component checks for it to enable the typing animation.
 
-const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
+const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => { // Removed currentThemeName from props
   const [displayedText, setDisplayedText] = useState('');
   const isUser = message.sender === 'user';
   // Check if the message ID starts with the prefix defined in useGeminiChat.ts
@@ -61,6 +63,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
                 remarkPlugins={[remarkGfm]}
                 components={{
                   a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />
+                  // Removed custom code renderer
                 }}
               >
                 {displayedText}

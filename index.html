@@ -82,9 +82,10 @@
        max-width: 90%;
     }
 
-    /* Markdown styling for chat bubbles */
+    /* Markdown styling for chat bubbles and articles */
     .markdown-content pre {
-      background-color: var(--editor-tab-inactive-background, #2D2D2D); /* Slightly different from main editor bg for distinction */
+      position: relative; /* For copy button positioning (if re-added) */
+      background-color: var(--editor-tab-inactive-background, #2D2D2D); 
       color: var(--editor-foreground, #D4D4D4);
       padding: 0.8em;
       margin-top: 0.5em;
@@ -92,19 +93,20 @@
       border-radius: 4px;
       overflow-x: auto;
       font-family: var(--editor-font-family, monospace);
-      font-size: 0.9em;
+      font-size: 0.9em; /* Slightly smaller for pre blocks */
       border: 1px solid var(--border-color, #333333);
-      white-space: pre-wrap; /* Ensure wrapping inside chat bubble */
-      word-wrap: break-word; /* Break long words if necessary */
+      white-space: pre-wrap; 
+      word-wrap: break-word; 
     }
-    .markdown-content pre code { /* Style code inside pre specifically */
-      background-color: transparent !important; /* Override inline code style if nested */
-      color: inherit !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      font-size: inherit !important;
-      border-radius: 0 !important;
-      border: none !important;
+    .markdown-content pre code { /* Code inside pre specifically */
+      background-color: transparent; 
+      padding: 0; 
+      margin: 0; 
+      font-size: inherit; 
+      border-radius: 0; 
+      border: none; 
+      white-space: pre-wrap; 
+      word-wrap: break-word; 
     }
     .markdown-content code:not(pre > code) { /* Inline code */
       background-color: var(--sidebar-item-hover-background, #2A2D2E);
@@ -117,7 +119,7 @@
       border: 1px solid var(--border-color, #333333);
     }
     .markdown-content ul, .markdown-content ol {
-      padding-left: 1.8em; /* Increased padding for better visual hierarchy */
+      padding-left: 1.8em; 
       margin-top: 0.5em;
       margin-bottom: 0.5em;
     }
@@ -125,12 +127,12 @@
       margin-bottom: 0.3em;
     }
     .markdown-content strong {
-      font-weight: 600; /* Slightly bolder */
-      color: var(--syntax-keyword, #569CD6); /* Using a theme color for emphasis */
+      font-weight: 600; 
+      color: var(--syntax-keyword, #569CD6); 
     }
     .markdown-content em {
       font-style: italic;
-      color: var(--syntax-string, #CE9178); /* Using another theme color */
+      color: var(--syntax-string, #CE9178); 
     }
     .markdown-content a {
       color: var(--link-foreground, #3794FF);
@@ -140,8 +142,8 @@
       color: var(--link-hover-foreground, #6EB0FF);
     }
     .markdown-content p {
-      margin-bottom: 0.5em; /* Add some space between paragraphs */
-      line-height: 1.6; /* Improve readability of paragraphs */
+      margin-bottom: 0.5em; 
+      line-height: 1.6; 
     }
     .markdown-content p:last-child {
       margin-bottom: 0;
@@ -157,6 +159,12 @@
         margin-top: 1em;
         margin-bottom: 1em;
     }
+    /* Styles for copy button in code blocks - REMOVED 
+    .code-block-copy-button { ... }
+    .markdown-content pre:hover .code-block-copy-button { ... }
+    .code-block-copy-button:hover { ... }
+    .code-block-copy-button:focus { ... }
+    */
   </style>
 <script type="importmap">
 {

@@ -1,15 +1,16 @@
 
 import React, { useEffect, useRef } from 'react';
-import { PortfolioData } from '../types';
+import { PortfolioData } from '../types'; 
 import ChatBubble from './ChatBubble';
 import { Send, AlertTriangle, Loader2 } from 'lucide-react';
 import { useGeminiChat } from '../hooks/useGeminiChat'; 
 
 interface AIChatInterfaceProps {
   portfolioData: PortfolioData;
+  // Removed: currentThemeName?: string; 
 }
 
-const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ portfolioData }) => {
+const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ portfolioData }) => { // Removed currentThemeName from props
   const {
     messages,
     input,
@@ -30,7 +31,7 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ portfolioData }) => {
     <div className="flex flex-col h-full bg-[var(--editor-background)] text-[var(--editor-foreground)]">
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
         {messages.map(msg => (
-          <ChatBubble key={msg.id} message={msg} />
+          <ChatBubble key={msg.id} message={msg} /> // Removed currentThemeName
         ))}
         <div ref={messagesEndRef} />
       </div>
@@ -65,7 +66,7 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ portfolioData }) => {
           <button
             type="submit"
             disabled={isLoading || !input.trim() || !apiKeyAvailable}
-            className="p-2.5 bg-[var(--modal-button-background)] text-[var(--modal-button-foreground)] rounded-md hover:bg-[var(--modal-button-hover-background)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-border)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-2.5 bg-[var(--modal-button-background)] text-[var(--modal-button-foreground)] hover:bg-[var(--modal-button-hover-background)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--focus-border)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
             aria-label="Send message"
           >
             {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}

@@ -16,6 +16,7 @@ export interface Position {
   role: string;
   company: string;
   period: string;
+  description?: string; // Added description
 }
 
 export interface WorkExperienceEntry extends Position {}
@@ -26,6 +27,7 @@ export interface PortfolioData {
   email: string;
   phone: string;
   address: Address;
+  summary?: string; // Added summary
   education: EducationEntry[];
   current_position: Position;
   work_experience: WorkExperienceEntry[];
@@ -50,45 +52,46 @@ export interface ProjectDetail {
 }
 
 export interface Tab {
-  id: string; // e.g., "about.json", "about.json_preview", "project_pos_system.json", "ai_chat_tab"
-  title: string; // e.g., "about.json", "Preview: about.json", "Project: POS System", "AI Assistant"
-  type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview'; // Differentiates tab types
-  fileName?: string; // For 'json_preview' tabs, this would be the original fileName e.g. "about.json"
+  id: string;
+  title: string;
+  type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview' | 'article_detail';
+  fileName?: string;
+  articleSlug?: string; // To identify which article content to show
 }
 
 export interface SidebarItemConfig {
-  id: string; // Unique ID for the sidebar item, often same as fileName
-  label: string; // Display label in sidebar
-  fileName: string; // The "file" that gets opened
+  id: string;
+  label: string;
+  fileName: string;
   icon: LucideIcon;
-  type?: 'file'; // Specify tab type for sidebar item, default to 'file'
+  type?: 'file';
 }
 
 export interface Command {
-  id: string; // Unique ID for the command
-  label: string; // Text displayed in the command palette
-  action: () => void; // Function to execute
-  icon?: LucideIcon; // Optional icon
-  group?: string; // Optional group like "Go to File"
-  description?: string; // Optional more detailed description
-  value?: string; // For commands that set a value, like theme or font
-  isSelected?: boolean; // To indicate if this command's value is currently active
+  id: string;
+  label: string;
+  action: () => void;
+  icon?: LucideIcon;
+  group?: string;
+  description?: string;
+  value?: string;
+  isSelected?: boolean;
 }
 
 // Type for TitleBar menu items, allowing for nesting
 export interface AppMenuItem {
-  label?: string; // Made optional
+  label?: string;
   action?: () => void;
-  icon?: LucideIcon; 
+  icon?: LucideIcon;
   subItems?: AppMenuItem[];
-  value?: string; // For menu items that represent a selectable value (e.g., theme name, font name)
-  isSelected?: boolean; // To show a checkmark or different styling for selected items
-  separator?: boolean; // To render a separator before this item
+  value?: string;
+  isSelected?: boolean;
+  separator?: boolean;
 }
 
 // Theme related types
 export interface ThemeProperties {
-  [key: string]: string; // e.g., '--editor-background': '#1E1E1E'
+  [key: string]: string;
 }
 
 export interface Theme {
@@ -97,17 +100,16 @@ export interface Theme {
 }
 
 export interface FontFamilyOption {
-  id: string; // e.g., 'fira-code'
-  label: string; // e.g., 'Fira Code'
-  value: string; // e.g., '"Fira Code", monospace'
+  id: string;
+  label: string;
+  value: string;
 }
 
 export interface FontSizeOption {
-  id: string; // e.g., 'small'
-  label: string; // e.g., 'Small'
-  value: string; // e.g., '12px'
-  // Line height can also be part of this if different font sizes need different line heights
-  lineHeight?: string; // e.g., '1.4'
+  id: string;
+  label: string;
+  value: string;
+  lineHeight?: string;
 }
 
 export interface ChatMessage {
@@ -132,4 +134,30 @@ export interface ContextMenuProps {
   items: ContextMenuItem[];
   visible: boolean;
   onClose: () => void;
+}
+
+// For ActivityBar selection
+export type ActivityBarSelection = 'explorer' | 'ai_chat_tab' | 'search' | 'articles' | null;
+
+// For Global Search Results
+export interface SearchResultItem {
+  id: string;
+  fileId: string;
+  fileDisplayPath: string;
+  lineNumber: number;
+  lineContent: string;
+  fullContent?: string;
+  tabType: Tab['type'];
+}
+
+// For Articles/Blog
+export interface ArticleItem {
+  id: string;
+  title: string;
+  date: string;
+  summary: string;
+  tags?: string[];
+  contentMarkdown: string;
+  slug: string;
+  imageUrl?: string; // Added for article cover image
 }

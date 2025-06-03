@@ -1,5 +1,5 @@
 
-import { PortfolioData } from '../types';
+import { PortfolioData, WorkExperienceEntry } from '../types';
 import { generateFileContent } from '../constants';
 
 export const getContextualPrompt = (userInput: string, portfolioData: PortfolioData): string => {
@@ -34,7 +34,9 @@ Keep your answers concise and well-formatted.
 
 **Nandang Eka Prasetya's Information:**
 *   **Name:** ${portfolioData.name} (He also goes by ${portfolioData.nickname})
+*   **Summary:** ${portfolioData.summary || 'Nandang Eka Prasetya is a software developer.'}
 *   **Current Role:** ${about.current_position.role} at ${about.current_position.company} (from ${about.current_position.period})
+    *   **Description:** ${about.current_position.description || 'Details about current role.'}
 *   **Education:**
     ${about.education.map((edu: { school: string, major: string, period: string}) => `  - ${edu.major} from ${edu.school} (${edu.period})`).join('\n    ')}
 *   **Contact & Socials:** ${contactDetails.join('; ')} (Details in \`contact.json\`)
@@ -42,13 +44,16 @@ Keep your answers concise and well-formatted.
 *   **Key Skills:** ${skills.skills.join(', ')} (View details in \`skills.json\`)
 
 *   **Work Experience:**
-    ${experience.work_experience.map((exp: { role: string, company: string, period: string}) => `  - ${exp.role} at ${exp.company} (${exp.period})`).join('\n    ')} (View details in \`experience.json\`)
+    ${(experience.work_experience as WorkExperienceEntry[]).map(exp => 
+        `  - **${exp.role} at ${exp.company} (${exp.period})**\n    *Description:* ${exp.description || 'No specific description provided.'}`
+    ).join('\n    ')}
+    (View more details in \`experience.json\`)
 
 *   **Project Titles:** ${projectTitles}
     (For project details, the user can click on \`projects.json\` in the Explorer to see project cards, then click a card to open its details.)
 
 **Guidance for Responding:**
-*   If a user asks for general info (e.g., "tell me about Nandang"), provide a brief summary.
+*   If a user asks for general info (e.g., "tell me about Nandang"), provide a brief summary based on the 'Summary' field.
 *   If a user asks about a specific section (e.g., "what are his skills?", "show me his projects", "how to contact him?"), refer them to the relevant JSON file in the Explorer (e.g., "You can find Nandang's skills listed in \`skills.json\` in the Explorer sidebar.", or "Contact details including social media links are in \`contact.json\`.").
 *   If asked about how to use the website, explain the Explorer sidebar and Command Palette for navigation.
 *   Be polite and helpful!

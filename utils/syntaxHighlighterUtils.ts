@@ -9,16 +9,19 @@ export const getSyntaxHighlighterTheme = (currentThemeName: string): any => {
   const newTheme = JSON.parse(JSON.stringify(baseTheme));
 
   // Apply overrides from CSS variables
+  // Let index.html's .markdown-content pre handle background, padding, border, border-radius, and font-size.
   const preStyleUpdates = {
-    background: 'var(--editor-background)',
-    color: 'var(--editor-foreground)',
-    margin: '0', // Reset margin
-    padding: '1rem', // Standard padding
-    fontSize: 'var(--editor-font-size)',
-    fontFamily: 'var(--editor-font-family)',
-    lineHeight: 'var(--editor-line-height)',
-    height: '100%', // Ensure it fills its container
-    overflow: 'auto', // Allow scrolling for content
+    // background: 'var(--editor-background)', // REMOVED - Handled by .markdown-content pre in index.html
+    color: 'var(--editor-foreground)',      // Base text color inside the code block
+    margin: '0',                            // Reset margin to align with global styles
+    // padding: '1rem',                      // REMOVED - Handled by .markdown-content pre in index.html
+    // fontSize: 'var(--editor-font-size)', // REMOVED - To allow 0.9em from .markdown-content pre
+    fontFamily: 'var(--editor-font-family)',// Ensure font family consistency
+    lineHeight: 'var(--editor-line-height)',// Ensure line height consistency
+    height: '100%',                         // Ensure it fills its container
+    overflow: 'auto',                       // Allow scrolling for content
+    // border: 'none',                      // REMOVED - Handled by .markdown-content pre
+    // borderRadius: '0px',                 // REMOVED - Handled by .markdown-content pre
   };
 
   newTheme['pre[class*="language-"]'] = { 
@@ -27,12 +30,14 @@ export const getSyntaxHighlighterTheme = (currentThemeName: string): any => {
   };
 
   const codeStyleUpdates = {
-    background: 'transparent', // Code block itself should be transparent
+    background: 'transparent', // Code tag itself inside pre should be transparent
     color: 'var(--editor-foreground)', // Inherit foreground
     fontFamily: 'var(--editor-font-family)',
-    fontSize: 'var(--editor-font-size)',
+    fontSize: 'inherit', // Explicitly inherit font size from the parent <pre> tag
     lineHeight: 'var(--editor-line-height)',
     textShadow: 'none', // Remove default text shadow if any
+    padding: '0', // No padding for the code tag itself
+    margin: '0', // No margin for the code tag itself
   };
 
   newTheme['code[class*="language-"]'] = { 

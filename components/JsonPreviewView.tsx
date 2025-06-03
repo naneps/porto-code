@@ -11,15 +11,16 @@ interface JsonPreviewViewProps {
 
 const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, portfolioData }) => {
   const MailIcon = ICONS.Mail;
-  const PhoneIcon = ICONS.Phone || MailIcon; // Fallback if no specific phone icon
+  const PhoneIcon = ICONS.Phone || MailIcon; 
   const BriefcaseIcon = ICONS.Briefcase;
   const UserIcon = ICONS.User;
   const Code2Icon = ICONS.Code2;
-  const LinkedinIcon = ICONS.Linkedin || Code2Icon; // Placeholder, better to have specific
+  const LinkedinIcon = ICONS.Linkedin || Code2Icon; 
   const InstagramIcon = ICONS.Instagram || Code2Icon;
   const TiktokIcon = ICONS.Tiktok || Code2Icon;
-  const GithubIcon = ICONS.GitFork; // Assuming 'otherSocial' is GitHub
+  const GithubIcon = ICONS.GitFork; 
   const LinkIcon = ICONS.Link || Code2Icon;
+  const InfoIcon = ICONS.about_portfolio || UserIcon; // For summary
 
 
   const renderSectionTitle = (title: string, Icon?: React.ElementType) => (
@@ -53,8 +54,8 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
 
 
   if (fileId === 'about.json') {
-    const { name, nickname, current_position, education } = jsonData as {
-      name: string; nickname: string; current_position: Position; education: EducationEntry[];
+    const { name, nickname, summary, current_position, education } = jsonData as {
+      name: string; nickname: string; summary?: string; current_position: Position; education: EducationEntry[];
     };
     return (
       <div className="p-4 md:p-6 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
@@ -62,10 +63,19 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
         {renderDetailItem("Full Name", name)}
         {renderDetailItem("Nickname", nickname)}
 
+        {summary && (
+          <>
+            {renderSectionTitle("Summary", InfoIcon)}
+            <p className="text-[var(--text-default)] mb-4 whitespace-pre-line text-sm leading-relaxed">{summary}</p>
+          </>
+        )}
+
         {renderSectionTitle("Current Position", BriefcaseIcon)}
         {renderDetailItem("Role", current_position.role)}
         {renderDetailItem("Company", current_position.company)}
         {renderDetailItem("Period", current_position.period)}
+        {current_position.description && <p className="text-sm text-[var(--text-muted)] mt-1 ml-6 whitespace-pre-line">{current_position.description}</p>}
+
 
         {renderSectionTitle("Education", Code2Icon)}
         {education.map((edu, index) => (
@@ -87,7 +97,8 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
           <div key={index} className="mb-4 p-3 border border-[var(--border-color)] rounded-md bg-[var(--sidebar-background)]">
             <h3 className="text-lg font-semibold text-[var(--link-foreground)]">{exp.role}</h3>
             <p className="text-md text-[var(--text-default)]">{exp.company}</p>
-            <p className="text-sm text-[var(--text-muted)]">{exp.period}</p>
+            <p className="text-sm text-[var(--text-muted)] mb-1">{exp.period}</p>
+            {exp.description && <p className="text-sm text-[var(--text-muted)] whitespace-pre-line">{exp.description}</p>}
           </div>
         ))}
       </div>
@@ -111,14 +122,14 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
   }
 
   if (fileId === 'contact.json') {
-    const { email, phone, address, linkedIn, instagram, tiktok, otherSocial } = jsonData as PortfolioData; // Assuming structure matches PortfolioData subset
+    const { email, phone, address, linkedIn, instagram, tiktok, otherSocial } = jsonData as PortfolioData; 
     return (
       <div className="p-4 md:p-6 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
         {renderSectionTitle("Contact Information", MailIcon)}
-        {renderDetailItem("Email", renderClickableLink(`mailto:${email}`, email, MailIcon))}
-        {renderDetailItem("Phone", renderClickableLink(`tel:${phone}`, phone, PhoneIcon))}
+        {email && renderDetailItem("Email", renderClickableLink(`mailto:${email}`, email, MailIcon))}
+        {phone && renderDetailItem("Phone", renderClickableLink(`tel:${phone}`, phone, PhoneIcon))}
         
-        {address && renderDetailItem("Address", `${address.full}, ${address.city}`)}
+        {address && renderDetailItem("Address", `${address.full}`)}
 
         {renderSectionTitle("Social Media", LinkIcon)}
         {linkedIn && renderDetailItem("LinkedIn", renderClickableLink(linkedIn, "View LinkedIn Profile", LinkedinIcon))}

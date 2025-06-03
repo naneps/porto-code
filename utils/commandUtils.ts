@@ -1,9 +1,9 @@
 
 import { Command, SidebarItemConfig, Theme, FontFamilyOption, FontSizeOption } from '../types';
-import { LucideIcon, EyeOff, Eye, Command as CommandIcon, Bot as BotIcon } from 'lucide-react';
+import { LucideIcon, EyeOff, Eye, Command as CommandIcon, Bot as BotIcon, Search as SearchIconLucide, Newspaper as ArticlesIconLucide } from 'lucide-react';
 
 interface GenerateCommandsArgs {
-  sidebarItems: SidebarItemConfig[];
+  sidebarItems: SidebarItemConfig[]; 
   handleOpenTab: (item: SidebarItemConfig | { id?: string, fileName: string, type?: 'file' | 'project_detail' | 'ai_chat' | 'json_preview', title?: string }) => void;
   closeCommandPalette: () => void;
   isSidebarVisible: boolean;
@@ -21,10 +21,12 @@ interface GenerateCommandsArgs {
   currentFontSizeId: string;
   openAboutModal: () => void;
   icons: { [key: string]: LucideIcon };
+  handleToggleSearchPanel: () => void;
+  handleToggleArticlesPanel: () => void; // Add new handler
 }
 
 export const generateCommands = ({
-  sidebarItems,
+  sidebarItems, 
   handleOpenTab,
   closeCommandPalette,
   isSidebarVisible,
@@ -42,10 +44,11 @@ export const generateCommands = ({
   currentFontSizeId,
   openAboutModal,
   icons,
+  handleToggleSearchPanel,
+  handleToggleArticlesPanel, // Destructure new handler
 }: GenerateCommandsArgs): Command[] => {
   const allCommands: Command[] = [];
 
-  // File commands
   sidebarItems.forEach(item => {
     allCommands.push({
       id: `open_${item.fileName}`,
@@ -56,12 +59,25 @@ export const generateCommands = ({
     });
   });
 
-  // General commands
   allCommands.push({
     id: 'toggle_sidebar',
-    label: isSidebarVisible ? 'Hide Sidebar' : 'Show Sidebar',
+    label: isSidebarVisible ? 'Hide Explorer Sidebar' : 'Show Explorer Sidebar',
     action: () => { toggleSidebarVisibility(); closeCommandPalette(); },
     icon: isSidebarVisible ? EyeOff : Eye,
+    group: "View",
+  });
+  allCommands.push({
+    id: 'toggle_search_panel',
+    label: 'Toggle Search Panel',
+    action: () => { handleToggleSearchPanel(); closeCommandPalette(); },
+    icon: SearchIconLucide,
+    group: "View",
+  });
+   allCommands.push({
+    id: 'toggle_articles_panel',
+    label: 'Toggle Articles Panel',
+    action: () => { handleToggleArticlesPanel(); closeCommandPalette(); },
+    icon: ArticlesIconLucide, // Use Newspaper icon
     group: "View",
   });
   allCommands.push({
@@ -72,14 +88,13 @@ export const generateCommands = ({
     group: "View",
   });
   allCommands.push({
-    id: 'command_palette_command', // Renamed to avoid conflict with other 'command_palette' id potentially
+    id: 'command_palette_command',
     label: 'Command Palette',
     action: () => { closeCommandPalette(); openCommandPalette(); },
     icon: CommandIcon,
     group: "View",
   });
 
-  // Theme commands
   predefinedThemes.forEach(theme => {
     allCommands.push({
       id: `theme_${theme.name.toLowerCase().replace(/\s+/g, '_')}`,
@@ -92,7 +107,6 @@ export const generateCommands = ({
     });
   });
 
-  // Font family commands
   fontFamilyOptions.forEach(font => {
     allCommands.push({
       id: `font_family_${font.id}`,
@@ -105,7 +119,6 @@ export const generateCommands = ({
     });
   });
 
-  // Font size commands
   fontSizeOptions.forEach(size => {
     allCommands.push({
       id: `font_size_${size.id}`,
