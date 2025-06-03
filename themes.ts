@@ -1,0 +1,264 @@
+import { Theme, ThemeProperties, FontFamilyOption, FontSizeOption } from './types';
+
+// VSCode Dark+ (Based on default VSCode dark theme)
+const vscodeDarkPlusProperties: ThemeProperties = {
+  // App & General UI
+  '--app-background': '#1e1e1e', // Main app background
+  '--text-default': '#d4d4d4', // Default foreground
+  '--text-muted': '#808080',   // For less important text
+  '--text-accent': '#4EC9B0',  // A common accent color in Dark+
+  '--text-inverse': '#1E1E1E', // Text on light backgrounds
+  '--border-color': '#333333', // General border color
+  '--focus-border': '#007ACC', // Focus outline color (VSCode blue)
+  '--link-foreground': '#3794FF',
+  '--link-hover-foreground': '#6EB0FF',
+
+  // Title Bar
+  '--titlebar-background': '#3C3C3C',
+  '--titlebar-foreground': '#CCCCCC',
+  '--titlebar-inactive-foreground': '#999999',
+  '--titlebar-border': '#4A4A4A',
+  '--titlebar-button-hover-background': '#505050',
+  '--titlebar-icon-blue': '#007ACC', // For VSCode icon and nav arrows
+  '--titlebar-menu-active-background': '#505050',
+
+  // Menu Bar (within TitleBar or separate)
+  '--menubar-background': '#3C3C3C', // Often same as titlebar
+  '--menubar-foreground': '#CCCCCC',
+  '--menubar-hover-background': '#505050',
+  '--menubar-separator-color': '#4A4A4A',
+  '--menu-dropdown-background': '#252526',
+  '--menu-dropdown-border': '#3E3E3E',
+  '--menu-item-hover-background': '#094771', // VSCode blue selection
+  '--menu-item-selected-background': '#073655',
+  '--menu-item-selected-foreground': '#FFFFFF',
+  '--menu-item-foreground': '#CCCCCC',
+  '--menu-item-icon-foreground': '#C5C5C5',
+
+
+  // Activity Bar
+  '--activitybar-background': '#333333',
+  '--activitybar-foreground': '#D4D4D4',
+  '--activitybar-inactive-foreground': '#858585',
+  '--activitybar-active-border': '#007ACC', // Blue accent for active item
+  '--activitybar-active-background': '#404040', // Slight highlight for active icon button
+  '--activitybar-hover-background': '#4A4A4A',
+
+  // Sidebar (Explorer)
+  '--sidebar-background': '#252526',
+  '--sidebar-foreground': '#CCCCCC',
+  '--sidebar-border': '#333333',
+  '--sidebar-section-header-foreground': '#BBBBBB',
+  '--sidebar-item-hover-background': '#2A2D2E',
+  '--sidebar-item-focus-background': '#094771', // VSCode blue selection
+  '--sidebar-item-focus-foreground': '#FFFFFF',
+
+  // Editor Area & Tabs
+  '--editor-background': '#1E1E1E',
+  '--editor-foreground': '#D4D4D4', // For syntax highlighting base
+  '--editor-line-number-foreground': '#858585',
+  '--editor-tab-background': '#2D2D2D', // Tab bar background
+  '--editor-tab-inactive-background': '#2D2D2D', // Inactive tab itself
+  '--editor-tab-active-background': '#1E1E1E', // Active tab matches editor
+  '--editor-tab-active-foreground': '#FFFFFF',
+  '--editor-tab-inactive-foreground': '#999999',
+  '--editor-tab-hover-background': '#37373D', // Hover for inactive tab
+  '--editor-tab-border': '#252525', // Border between tabs
+  '--editor-tab-active-border-bottom': '#007ACC', // Blue accent for active tab
+  '--editor-tab-icon-foreground': '#C5C5C5',
+  '--editor-tab-icon-active-foreground': '#4EC9B0',
+
+
+  // Breadcrumbs
+  '--breadcrumbs-background': '#1E1E1E', // Match editor
+  '--breadcrumbs-foreground': '#CCCCCC',
+  '--breadcrumbs-focus-foreground': '#E0E0E0',
+  '--breadcrumbs-separator-color': '#4A4A4A',
+  '--breadcrumbs-icon-foreground': '#4EC9B0',
+
+  // Status Bar
+  '--statusbar-background': '#007ACC', // VSCode blue by default
+  '--statusbar-foreground': '#FFFFFF',
+  '--statusbar-border': 'transparent', // Top border (or #333333 if distinct border needed)
+  '--statusbar-item-hover-background': 'rgba(255, 255, 255, 0.12)',
+
+  // Modals (Command Palette, About)
+  '--modal-backdrop-background': 'rgba(0, 0, 0, 0.6)',
+  '--modal-background': '#252526',
+  '--modal-foreground': '#CCCCCC',
+  '--modal-border': '#3E3E3E',
+  '--modal-input-background': '#3C3C3C',
+  '--modal-input-placeholder': '#A0A0A0',
+  '--modal-input-border': '#3C3C3C',
+  '--modal-selected-item-background': '#094771',
+  '--modal-selected-item-foreground': '#FFFFFF',
+  '--modal-button-background': '#0E639C',
+  '--modal-button-hover-background': '#1177BB',
+  '--modal-button-foreground': '#FFFFFF',
+
+  // Scrollbar
+  '--scrollbar-track-background': '#252526', // Match sidebar usually
+  '--scrollbar-thumb-background': '#424242',
+  '--scrollbar-thumb-hover-background': '#555555',
+
+  // Syntax Highlighting (simplified, main colors)
+  '--syntax-string': '#CE9178',      // Orange-ish for strings
+  '--syntax-keyword': '#569CD6',     // Blue for keywords
+  '--syntax-comment': '#6A9955',     // Green for comments
+  '--syntax-number': '#B5CEA8',      // Light green/blue for numbers
+  '--syntax-boolean': '#569CD6',    // Blue for booleans
+  '--syntax-property': '#9CDCFE',    // Light blue for JSON keys/properties
+  '--syntax-operator': '#D4D4D4',    // Default for operators
+  '--syntax-punctuation': '#D4D4D4', // Default for punctuation
+  '--syntax-function': '#DCDCAA',    // Yellow for functions
+  '--syntax-base-text': '#D4D4D4', // Base text color for JSON display not covered by other tokens
+};
+
+// VSCode Light+ (Based on default VSCode light theme)
+const vscodeLightPlusProperties: ThemeProperties = {
+  // App & General UI
+  '--app-background': '#ffffff',
+  '--text-default': '#24292E',
+  '--text-muted': '#586069',
+  '--text-accent': '#0366D6',
+  '--text-inverse': '#FFFFFF',
+  '--border-color': '#E1E4E8',
+  '--focus-border': '#0366D6',
+  '--link-foreground': '#0366D6',
+  '--link-hover-foreground': '#0052CC',
+
+
+  // Title Bar
+  '--titlebar-background': '#DDDDDD',
+  '--titlebar-foreground': '#333333',
+  '--titlebar-inactive-foreground': '#666666',
+  '--titlebar-border': '#CCCCCC',
+  '--titlebar-button-hover-background': '#CACACA',
+  '--titlebar-icon-blue': '#005FB8',
+  '--titlebar-menu-active-background': '#CACACA',
+
+  // Menu Bar
+  '--menubar-background': '#DDDDDD',
+  '--menubar-foreground': '#333333',
+  '--menubar-hover-background': '#CACACA',
+  '--menubar-separator-color': '#CCCCCC',
+  '--menu-dropdown-background': '#F3F3F3',
+  '--menu-dropdown-border': '#D1D1D1',
+  '--menu-item-hover-background': '#0060C0',
+  '--menu-item-hover-foreground': '#FFFFFF',
+  '--menu-item-selected-background': '#0052CC',
+  '--menu-item-selected-foreground': '#FFFFFF',
+  '--menu-item-foreground': '#1F1F1F',
+  '--menu-item-icon-foreground': '#424242',
+
+
+  // Activity Bar
+  '--activitybar-background': '#F8F8F8',
+  '--activitybar-foreground': '#24292E',
+  '--activitybar-inactive-foreground': '#586069',
+  '--activitybar-active-border': '#0366D6',
+  '--activitybar-active-background': '#E7E7E7',
+  '--activitybar-hover-background': '#EDEDED',
+
+  // Sidebar (Explorer)
+  '--sidebar-background': '#F3F3F3',
+  '--sidebar-foreground': '#24292E',
+  '--sidebar-border': '#E1E4E8',
+  '--sidebar-section-header-foreground': '#333333',
+  '--sidebar-item-hover-background': '#E8E8E8',
+  '--sidebar-item-focus-background': '#CDE4F6',
+  '--sidebar-item-focus-foreground': '#005FB8',
+
+  // Editor Area & Tabs
+  '--editor-background': '#FFFFFF',
+  '--editor-foreground': '#24292E',
+  '--editor-line-number-foreground': '#AAAAAA',
+  '--editor-tab-background': '#ECECEC',
+  '--editor-tab-inactive-background': '#ECECEC',
+  '--editor-tab-active-background': '#FFFFFF',
+  '--editor-tab-active-foreground': '#000000',
+  '--editor-tab-inactive-foreground': '#586069',
+  '--editor-tab-hover-background': '#DADADA',
+  '--editor-tab-border': '#D1D1D1',
+  '--editor-tab-active-border-bottom': '#0366D6',
+  '--editor-tab-icon-foreground': '#424242',
+  '--editor-tab-icon-active-foreground': '#0366D6',
+
+
+  // Breadcrumbs
+  '--breadcrumbs-background': '#FFFFFF',
+  '--breadcrumbs-foreground': '#586069',
+  '--breadcrumbs-focus-foreground': '#24292E',
+  '--breadcrumbs-separator-color': '#D1D1D1',
+  '--breadcrumbs-icon-foreground': '#0366D6',
+
+
+  // Status Bar
+  '--statusbar-background': '#007ACC', // VSCode blue by default
+  '--statusbar-foreground': '#FFFFFF',
+  '--statusbar-border': 'transparent', // Top border
+  '--statusbar-item-hover-background': 'rgba(0, 0, 0, 0.08)',
+
+  // Modals
+  '--modal-backdrop-background': 'rgba(24, 29, 33, 0.6)',
+  '--modal-background': '#FDFDFD',
+  '--modal-foreground': '#24292E',
+  '--modal-border': '#D1D1D1',
+  '--modal-input-background': '#FFFFFF',
+  '--modal-input-placeholder': '#6A737D',
+  '--modal-input-border': '#D1D1D1',
+  '--modal-selected-item-background': '#0060C0',
+  '--modal-selected-item-foreground': '#FFFFFF',
+  '--modal-button-background': '#0366D6',
+  '--modal-button-hover-background': '#0056BA',
+  '--modal-button-foreground': '#FFFFFF',
+
+
+  // Scrollbar
+  '--scrollbar-track-background': '#F3F3F3',
+  '--scrollbar-thumb-background': '#C1C1C1',
+  '--scrollbar-thumb-hover-background': '#A8A8A8',
+
+  // Syntax Highlighting
+  '--syntax-string': '#032F62',      // Dark blue for strings
+  '--syntax-keyword': '#D73A49',     // Red for keywords
+  '--syntax-comment': '#6A737D',     // Gray for comments
+  '--syntax-number': '#005CC5',      // Blue for numbers
+  '--syntax-boolean': '#D73A49',    // Red for booleans
+  '--syntax-property': '#E36209',    // Orange for JSON keys/properties
+  '--syntax-operator': '#24292E',    // Default for operators
+  '--syntax-punctuation': '#24292E', // Default for punctuation
+  '--syntax-function': '#6F42C1',    // Purple for functions
+  '--syntax-base-text': '#24292E', // Base text color for JSON display
+};
+
+export const PREDEFINED_THEMES: Theme[] = [
+  { name: 'VSCode Dark+', properties: vscodeDarkPlusProperties },
+  { name: 'VSCode Light+', properties: vscodeLightPlusProperties },
+];
+
+export const FONT_FAMILY_OPTIONS: FontFamilyOption[] = [
+  { id: 'fira-code', label: 'Fira Code', value: '"Fira Code", "JetBrains Mono", Consolas, "Courier New", monospace' },
+  { id: 'jetbrains-mono', label: 'JetBrains Mono', value: '"JetBrains Mono", "Fira Code", Consolas, "Courier New", monospace' },
+  { id: 'consolas', label: 'Consolas', value: 'Consolas, "Courier New", monospace' },
+  { id: 'courier-new', label: 'Courier New', value: '"Courier New", monospace' },
+  { id: 'monospace', label: 'System Monospace', value: 'monospace' },
+];
+
+export const FONT_SIZE_OPTIONS: FontSizeOption[] = [
+  { id: 'small', label: 'Small (12px)', value: '12px', lineHeight: '1.4' },
+  { id: 'medium', label: 'Medium (14px)', value: '14px', lineHeight: '1.5' },
+  { id: 'large', label: 'Large (16px)', value: '16px', lineHeight: '1.5' },
+  { id: 'xlarge', label: 'X-Large (18px)', value: '18px', lineHeight: '1.6' },
+];
+
+export const DEFAULT_THEME_NAME = PREDEFINED_THEMES[0].name;
+export const DEFAULT_FONT_FAMILY_ID = FONT_FAMILY_OPTIONS[0].id;
+export const DEFAULT_FONT_SIZE_ID = FONT_SIZE_OPTIONS[1].id;
+
+
+export function generateCSSVariables(properties: ThemeProperties): string {
+  return Object.entries(properties)
+    .map(([key, value]) => `${key}: ${value};`)
+    .join('\n');
+}
