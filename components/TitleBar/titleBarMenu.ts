@@ -1,6 +1,6 @@
 
-import { AppMenuItem, Theme, FontFamilyOption, FontSizeOption } from '../../types';
-import { LucideIcon, Command, Eye, EyeOff, Check } from 'lucide-react'; // Ensure all used icons are imported
+import { AppMenuItem, Theme, FontFamilyOption, FontSizeOption, SidebarItemConfig, Tab, ProjectDetail } from '../../types';
+import { LucideIcon, Command, Eye, EyeOff, Check, Play, FileTerminal, Cat } from 'lucide-react';
 
 interface MenuConfigArgs {
   onOpenCommandPalette: () => void;
@@ -17,85 +17,125 @@ interface MenuConfigArgs {
   onFontSizeChange: (sizeId: string) => void;
   onOpenAboutModal: () => void;
   icons: { [key: string]: LucideIcon };
+  sidebarItems: SidebarItemConfig[];
+  projects: string[]; 
+  onRunItem: (config: { id: string, fileName: string, title: string, type: Tab['type'] }) => void;
+  onToggleTerminal: () => void;
+  onTogglePetsPanel: () => void; 
 }
 
-export const generateMenuConfig = ({
-  onOpenCommandPalette,
-  onToggleSidebar,
-  isSidebarVisible,
-  themes,
-  currentThemeName,
-  onThemeChange,
-  fontFamilies,
-  currentFontFamilyId,
-  onFontFamilyChange,
-  fontSizes,
-  currentFontSizeId,
-  onFontSizeChange,
-  onOpenAboutModal,
-  icons,
-}: MenuConfigArgs): { name: string; subItems?: AppMenuItem[] }[] => [
-  { name: 'File' }, // Placeholder
-  { name: 'Edit' }, // Placeholder
-  { name: 'Selection' }, // Placeholder
+export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subItems?: AppMenuItem[] }[] => [
+  { name: 'File' }, 
+  { name: 'Edit' }, 
+  { name: 'Selection' }, 
   { 
     name: 'View', 
     subItems: [
-      { label: 'Command Palette...', action: onOpenCommandPalette, icon: Command },
+      { label: 'Command Palette...', action: args.onOpenCommandPalette, icon: Command },
       { 
         label: 'Appearance', 
-        icon: icons.theme_command,
+        icon: args.icons.theme_command,
         subItems: [ 
           { 
-            label: 'Toggle Sidebar', 
-            action: onToggleSidebar, 
-            icon: isSidebarVisible ? EyeOff : Eye
+            label: 'Toggle Explorer Sidebar', 
+            action: args.onToggleSidebar, 
+            icon: args.isSidebarVisible ? EyeOff : Eye
           },
           { separator: true },
           {
             label: 'Theme',
-            icon: icons.theme_command,
-            subItems: themes.map(theme => ({
+            icon: args.icons.theme_command,
+            subItems: args.themes.map(theme => ({
               label: theme.name,
-              action: () => onThemeChange(theme.name),
+              action: () => args.onThemeChange(theme.name),
               value: theme.name,
-              isSelected: currentThemeName === theme.name,
-              icon: currentThemeName === theme.name ? Check : undefined, // Or a more subtle icon
+              isSelected: args.currentThemeName === theme.name,
+              icon: args.currentThemeName === theme.name ? Check : undefined, 
             })),
           },
           {
             label: 'Font Family',
-            icon: icons.font_command,
-            subItems: fontFamilies.map(font => ({
+            icon: args.icons.font_command,
+            subItems: args.fontFamilies.map(font => ({
               label: font.label,
-              action: () => onFontFamilyChange(font.id),
+              action: () => args.onFontFamilyChange(font.id),
               value: font.id,
-              isSelected: currentFontFamilyId === font.id,
-              icon: currentFontFamilyId === font.id ? Check : undefined,
+              isSelected: args.currentFontFamilyId === font.id,
+              icon: args.currentFontFamilyId === font.id ? Check : undefined,
             })),
           },
           {
             label: 'Font Size',
-            icon: icons.font_command, // Could use a dedicated size icon
-            subItems: fontSizes.map(size => ({
+            icon: args.icons.font_command, 
+            subItems: args.fontSizes.map(size => ({
               label: `${size.label} (${size.value})`,
-              action: () => onFontSizeChange(size.id),
+              action: () => args.onFontSizeChange(size.id),
               value: size.id,
-              isSelected: currentFontSizeId === size.id,
-              icon: currentFontSizeId === size.id ? Check : undefined,
+              isSelected: args.currentFontSizeId === size.id,
+              icon: args.currentFontSizeId === size.id ? Check : undefined,
             })),
           },
         ]
-      }
+      },
+      { separator: true },
+      { 
+        label: 'Toggle Terminal', 
+        action: args.onToggleTerminal, 
+        icon: args.icons.TerminalIcon || FileTerminal,
+      },
+      { 
+        label: 'Toggle Pets Panel', 
+        action: args.onTogglePetsPanel, 
+        icon: args.icons.CatIcon || Cat, 
+      },
     ] 
   },
-  { name: 'Go' }, // Placeholder
-  { name: 'Run' }, // Placeholder
-  { name: 'Terminal' }, // Placeholder
+  { 
+    name: 'Go' 
+  }, 
+  {
+    name: 'Run',
+    subItems: [
+      ...args.sidebarItems.map(item => ({
+        label: `Run ${item.fileName}`,
+        action: () => args.onRunItem({
+          id: `${item.id}_preview`, 
+          fileName: item.fileName,  
+          title: `Preview: ${item.title || item.fileName}`,
+          type: 'json_preview',
+        }),
+        icon: args.icons.PlayIcon, 
+      })),
+      ...(args.projects.length > 0 && args.sidebarItems.length > 0 ? [{ separator: true }] : []),
+      ...args.projects.map((projectTitle, index) => {
+        const projectId = `project_${index}_${projectTitle.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]+/g, '')}.json`;
+        return {
+          label: `Run Project: ${projectTitle}`,
+          action: () => args.onRunItem({
+            id: `${projectId}_preview`, 
+            fileName: projectId,        
+            title: `Preview: ${projectTitle}`,
+            type: 'json_preview',
+          }),
+          icon: args.icons.PlayIcon,
+        };
+      }),
+    ],
+  },
+  { 
+    name: 'Terminal', 
+    subItems: [
+        {
+            label: 'New Terminal', // This action will toggle and focus terminal tab
+            action: args.onToggleTerminal,
+            icon: args.icons.TerminalIcon || FileTerminal,
+        }
+    ]
+  }, 
   { 
     name: 'Help', 
     subItems: [
-      { label: 'About Portfolio', action: onOpenAboutModal, icon: icons.about_portfolio },
+      { label: 'About Portfolio', action: args.onOpenAboutModal, icon: args.icons.about_portfolio },
     ] 
   },
 ];

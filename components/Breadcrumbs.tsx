@@ -44,6 +44,8 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
     FinalSegmentIcon = ICONS['project_detail'] || ICONS.default;
   } else if (activeTab.type === 'ai_chat') {
     FinalSegmentIcon = ICONS.ai_chat_icon || ICONS.default;
+  } else if (activeTab.type === 'article_detail') {
+    FinalSegmentIcon = ICONS.article_detail || ICONS.default;
   } else if (activeTab.type === 'json_preview' && activeTab.fileName && ICONS[activeTab.fileName]) {
     FinalSegmentIcon = ICONS[activeTab.fileName];
   }
@@ -81,6 +83,27 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
           <div className="flex items-center text-[var(--breadcrumbs-focus-foreground)]">
             {FinalSegmentIcon && <FinalSegmentIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />}
             <span>{getProjectTitleFromId(activeTab.id)}</span>
+          </div>
+        </>
+      )}
+      
+      {activeTab.type === 'article_detail' && (
+        <>
+           {/* Placeholder for "Articles" link - ideally links to ArticlesPanel */}
+           {ICONS.articles_icon && (
+            <button 
+              onClick={() => { /* TODO: Action to show/focus ArticlesPanel */ }}
+              className="flex items-center hover:text-[var(--breadcrumbs-focus-foreground)] transition-colors duration-150"
+              title="Go to Articles"
+            >
+              <ICONS.articles_icon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)] opacity-75" />
+              <span>Articles</span>
+            </button>
+          )}
+          {SeparatorIcon && <SeparatorIcon size={16} className="mx-1 text-[var(--breadcrumbs-separator-color)]" />}
+          <div className="flex items-center text-[var(--breadcrumbs-focus-foreground)]">
+            {FinalSegmentIcon && <FinalSegmentIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />}
+            <span className="truncate max-w-xs">{activeTab.title}</span>
           </div>
         </>
       )}

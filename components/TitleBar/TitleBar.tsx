@@ -1,9 +1,9 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import MenuBar from '../MenuBar'; 
+import React, { useEffect, useRef, useState } from 'react';
 import { ICONS, PORTFOLIO_DATA } from '../../constants';
-import { AppMenuItem, Theme, FontFamilyOption, FontSizeOption } from '../../types'; 
-import { generateMenuConfig } from './titleBarMenu'; // Import the menu config generator
+import { AppMenuItem, FontFamilyOption, FontSizeOption, SidebarItemConfig, Tab, Theme } from '../../types';
+import MenuBar from '../MenuBar';
+import { generateMenuConfig } from './titleBarMenu';
 
 
 interface TitleBarProps {
@@ -26,6 +26,11 @@ interface TitleBarProps {
   onFontSizeChange: (sizeId: string) => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
+  sidebarItems: SidebarItemConfig[];
+  projects: string[]; 
+  onRunItem: (config: { id: string, fileName: string, title: string, type: Tab['type'] }) => void;
+  onToggleTerminal: () => void;
+  onTogglePetsPanel: () => void;
 }
 
 const TitleBar: React.FC<TitleBarProps> = (props) => {
@@ -35,7 +40,10 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
     themes, currentThemeName, onThemeChange,
     fontFamilies, currentFontFamilyId, onFontFamilyChange,
     fontSizes, currentFontSizeId, onFontSizeChange,
-    isFullscreen, onToggleFullscreen
+    isFullscreen, onToggleFullscreen,
+    sidebarItems, projects, onRunItem,
+    onToggleTerminal,
+    onTogglePetsPanel 
   } = props;
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -70,6 +78,11 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
     onFontSizeChange,
     onOpenAboutModal,
     icons: ICONS,
+    sidebarItems,
+    projects,
+    onRunItem,
+    onToggleTerminal,
+    onTogglePetsPanel, 
   });
   
   const MenuDropdownIcon = ICONS.chevron_down_icon;
@@ -153,7 +166,7 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
         <div className="bg-[var(--menubar-background)] border border-[var(--menubar-separator-color)] rounded-md px-3 py-1 flex items-center max-w-md w-full">
           <ICONS.file_code_icon size={14} className="text-[var(--titlebar-icon-blue)] mr-2 flex-shrink-0" />
           <span className="truncate text-[var(--titlebar-foreground)] text-xs">
-            vscode-portfolio -- {PORTFOLIO_DATA.name}
+             PORTO CODE -- {PORTFOLIO_DATA.name || 'Untitled Project'}
           </span>
         </div>
       </div>

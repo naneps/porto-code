@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArticleItem } from '../types';
-import { ICONS } from '../constants';
+import { ArticleItem } from '../../types'; // Adjusted path
+import { ICONS } from '../../constants'; // Adjusted path
 
 interface ArticlesPanelProps {
   isVisible: boolean;
@@ -41,10 +41,11 @@ const ArticlesPanel: React.FC<ArticlesPanelProps> = ({
   }, [filterTerm, articles]);
 
   useEffect(() => {
+    // Reset filter when panel visibility changes or articles data updates
     if (isVisible) {
-        setFilterTerm('');
+        setFilterTerm(''); // Clear filter when panel becomes visible
     }
-    setFilteredArticles(articles);
+    setFilteredArticles(articles); // Always ensure filtered articles are up-to-date with props
   }, [isVisible, articles]);
 
 
@@ -102,7 +103,7 @@ const ArticlesPanel: React.FC<ArticlesPanelProps> = ({
 
 
         <div className="flex-1 overflow-y-auto mt-1 space-y-1.5"> {/* Reduced space-y for tighter packing */}
-          {filteredArticles.length === 0 && isVisible && (
+          {filteredArticles.length === 0 && isVisible && ( // Only show if panel is visible
             <p className="text-sm text-[var(--text-muted)] px-1 py-2 text-center">
               {filterTerm ? "No articles match your filter." : "No articles available yet."}
             </p>

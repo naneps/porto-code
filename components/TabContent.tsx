@@ -4,25 +4,31 @@ import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import json from 'react-syntax-highlighter/dist/esm/languages/prism/json';
 import { Tab, PortfolioData } from '../types';
 import ProjectCard from './ProjectCard';
-import AIChatInterface from './AIChatInterface';
+import AIChatInterface from './AIChat/AIChatInterface';
 import JsonPreviewView from './JsonPreviewView';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { getSyntaxHighlighterTheme } from '../utils/syntaxHighlighterUtils';
-// Removed: import CodeBlock from './CodeBlock'; 
 
 SyntaxHighlighter.registerLanguage('json', json);
 
 interface TabContentProps {
   tab: Tab;
-  content: string | { markdown: string; imageUrl?: string }; // Updated content type
+  content: string | { markdown: string; imageUrl?: string };
   portfolioData: PortfolioData;
   onOpenProjectTab: (projectId: string, projectTitle: string) => void;
   currentThemeName: string;
   onContextMenuRequest: (x: number, y: number, tabId: string) => void;
 }
 
-const TabContent: React.FC<TabContentProps> = ({ tab, content, portfolioData, onOpenProjectTab, currentThemeName, onContextMenuRequest }) => {
+const TabContent: React.FC<TabContentProps> = ({ 
+  tab, 
+  content, 
+  portfolioData, 
+  onOpenProjectTab, 
+  currentThemeName, 
+  onContextMenuRequest
+}) => {
   const [finalSyntaxTheme, setFinalSyntaxTheme] = React.useState<any>({});
 
   React.useLayoutEffect(() => {
@@ -30,20 +36,19 @@ const TabContent: React.FC<TabContentProps> = ({ tab, content, portfolioData, on
   }, [currentThemeName]);
 
   const handleContextMenu = (event: React.MouseEvent) => {
-    const eligibleForPreview = ['about.json', 'experience.json', 'skills.json', 'contact.json'].includes(tab.fileName || '');
-    if (tab.type === 'file' && eligibleForPreview) {
-      event.preventDefault();
-      onContextMenuRequest(event.pageX, event.pageY, tab.id);
+    const eligibleForPreview = ['about.json', 'experience.json', 'skills.json', 'contact.json', 'projects.json'].includes(tab.fileName || '');
+    if (((tab.type === 'file' && eligibleForPreview) || tab.type === 'project_detail') && !tab.id.endsWith('_preview')) {
+        event.preventDefault();
+        onContextMenuRequest(event.pageX, event.pageY, tab.id);
     }
   };
-
+  
 
   if (tab.type === 'ai_chat') {
-    return <AIChatInterface portfolioData={portfolioData} />; // Removed currentThemeName
+    return <AIChatInterface portfolioData={portfolioData} />;
   }
 
   const contentAsString = typeof content === 'string' ? content : (content as {markdown: string}).markdown;
-
 
   if (tab.type === 'json_preview' && tab.fileName) {
     try {
@@ -71,7 +76,6 @@ const TabContent: React.FC<TabContentProps> = ({ tab, content, portfolioData, on
             remarkPlugins={[remarkGfm]}
             components={{
               a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />
-              // Removed custom code renderer
             }}
           >
             {articleContent.markdown}
@@ -125,9 +129,9 @@ const TabContent: React.FC<TabContentProps> = ({ tab, content, portfolioData, on
           fontFamily: 'var(--editor-font-family)'
         }}
         wrapLines={true}
-        wrapLongLines={false}
-        className="h-full w-full text-[length:var(--editor-font-size)]"
-        customStyle={{padding: '1rem'}}
+        wrapLongLines={false} 
+        className="h-full w-full text-[length:var(--editor-font-size)]" 
+        customStyle={{padding: '1rem'}} 
       >
         {contentAsString}
       </SyntaxHighlighter>

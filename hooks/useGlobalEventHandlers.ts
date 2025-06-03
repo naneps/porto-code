@@ -10,6 +10,8 @@ interface UseGlobalEventHandlersProps {
   closeAboutModal: () => void;
   contextMenuVisible: boolean;
   setContextMenuVisible: (visible: boolean) => void;
+  toggleTerminalVisibility: () => void; // Now toggles Terminal tab in bottom panel
+  togglePetsPanelVisibility: () => void; // Now toggles Pets tab in bottom panel
 }
 
 export const useGlobalEventHandlers = ({
@@ -21,16 +23,13 @@ export const useGlobalEventHandlers = ({
   closeAboutModal,
   contextMenuVisible,
   setContextMenuVisible,
+  toggleTerminalVisibility,
+  togglePetsPanelVisibility, 
 }: UseGlobalEventHandlersProps) => {
   useEffect(() => {
     const handleGlobalClick = (event: MouseEvent) => {
         if (contextMenuVisible) {
-            // Check if the click is outside any custom context menu.
-            // This logic assumes custom context menus have a specific class or structure.
-            // For simplicity, we'll rely on the context menu component itself to handle its closure
-            // or for the Escape key to close it. This global click primarily handles
-            // clicks that are NOT on a custom context menu, ensuring it closes.
-            const customContextMenuSelectors = '.fixed.bg-\\[var\\(--menu-dropdown-background\\)\\]'; // Selector for our ContextMenu
+            const customContextMenuSelectors = '.fixed.bg-\\[var\\(--menu-dropdown-background\\)\\]'; 
             const isClickInsideCustomMenu = (event.target as HTMLElement).closest(customContextMenuSelectors);
 
             if (!isClickInsideCustomMenu) {
@@ -50,6 +49,17 @@ export const useGlobalEventHandlers = ({
         event.preventDefault();
         openCommandPalette();
       }
+      // Toggle Terminal Tab in Bottom Panel
+      if ((event.ctrlKey || event.metaKey) && event.key === '`') { 
+        event.preventDefault();
+        toggleTerminalVisibility(); // This now handles terminal tab logic
+      }
+      // Toggle Pets Panel Tab in Bottom Panel (Example shortcut, can be adjusted)
+      if ((event.ctrlKey || event.metaKey) && event.altKey && event.shiftKey && (event.key === 'P' || event.key === 'p')) {
+        event.preventDefault();
+        togglePetsPanelVisibility(); // This now handles pets tab logic
+      }
+
       // Escape key
       if (event.key === 'Escape') {
         if (isCommandPaletteOpen) closeCommandPalette();
@@ -58,7 +68,6 @@ export const useGlobalEventHandlers = ({
         if (document.fullscreenElement) document.exitFullscreen().catch(err => console.error("Error exiting fullscreen:", err));
       }
 
-      // Attempt to disable inspect element shortcuts
       if (event.key === 'F12') {
         event.preventDefault();
       }
@@ -69,15 +78,12 @@ export const useGlobalEventHandlers = ({
           event.preventDefault();
         }
       }
-      // Attempt to disable view source (Ctrl+U / Cmd+U)
       if ((event.ctrlKey || event.metaKey) && (event.key === 'U' || event.key === 'u')) {
         event.preventDefault();
       }
     };
 
     const handleContextMenu = (event: MouseEvent) => {
-      // Prevent the default browser context menu everywhere.
-      // Specific components can still open custom context menus.
       event.preventDefault();
     };
 
@@ -98,6 +104,8 @@ export const useGlobalEventHandlers = ({
     isAboutModalOpen, 
     closeAboutModal, 
     contextMenuVisible, 
-    setContextMenuVisible
+    setContextMenuVisible,
+    toggleTerminalVisibility,
+    togglePetsPanelVisibility, 
   ]);
 };

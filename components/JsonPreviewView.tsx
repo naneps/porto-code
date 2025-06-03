@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { PortfolioData, EducationEntry, WorkExperienceEntry, Position } from '../types';
-import { ICONS } from '../constants'; // For icons if needed
+import { PortfolioData, EducationEntry, WorkExperienceEntry, Position, ProjectDetail } from '../types';
+import { ICONS } from '../constants'; 
 
 interface JsonPreviewViewProps {
-  jsonData: any; // The parsed JSON data
-  fileId: string; // Original file ID (e.g., "about.json") to determine structure
-  portfolioData: PortfolioData; // Full portfolio data for context if needed
+  jsonData: any; 
+  fileId: string; 
+  portfolioData: PortfolioData; 
 }
 
 const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, portfolioData }) => {
@@ -20,7 +20,10 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
   const TiktokIcon = ICONS.Tiktok || Code2Icon;
   const GithubIcon = ICONS.GitFork; 
   const LinkIcon = ICONS.Link || Code2Icon;
-  const InfoIcon = ICONS.about_portfolio || UserIcon; // For summary
+  const InfoIcon = ICONS.about_portfolio || UserIcon; 
+  const ProjectIcon = ICONS.project_detail || BriefcaseIcon; // For project previews
+  const TechIcon = ICONS.Code2; // For technology lists
+  const CalendarIcon = ICONS.FileText; // Placeholder for year
 
 
   const renderSectionTitle = (title: string, Icon?: React.ElementType) => (
@@ -42,15 +45,57 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
     </a>
   );
 
-  const renderDetailItem = (label: string, value: string | JSX.Element, Icon?: React.ElementType) => (
-    <div className="mb-2 flex items-start">
-      {Icon && <Icon size={16} className="text-[var(--text-muted)] mr-2 mt-1 flex-shrink-0" />}
-      <div>
-        <span className="font-medium text-[var(--editor-foreground)]">{label}: </span>
-        <span className="text-[var(--text-default)]">{value}</span>
+  const renderDetailItem = (label: string, value: string | JSX.Element | string[], Icon?: React.ElementType) => {
+    let displayValue: JSX.Element | string;
+    if (Array.isArray(value)) {
+      displayValue = (
+        <div className="flex flex-wrap gap-1">
+          {value.map((item, index) => (
+            <span key={index} className="px-2 py-0.5 bg-[var(--sidebar-item-hover-background)] text-[var(--text-default)] rounded-sm text-xs border border-[var(--border-color)]">
+              {item}
+            </span>
+          ))}
+        </div>
+      );
+    } else {
+      displayValue = value as JSX.Element | string;
+    }
+
+    return (
+      <div className="mb-2 flex items-start">
+        {Icon && <Icon size={16} className="text-[var(--text-muted)] mr-2 mt-1 flex-shrink-0" />}
+        <div>
+          <span className="font-medium text-[var(--editor-foreground)]">{label}: </span>
+          <span className="text-[var(--text-default)]">{displayValue}</span>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
+
+
+  if (fileId.startsWith('project_')) {
+    const project = jsonData as ProjectDetail;
+    return (
+      <div className="p-4 md:p-6 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
+        {renderSectionTitle(`Project Preview: ${project.title}`, ProjectIcon)}
+        
+        {renderDetailItem("ID", project.id)}
+        
+        {renderSectionTitle("Description", InfoIcon)}
+        <p className="text-sm text-[var(--text-default)] mb-4 ml-7 whitespace-pre-line leading-relaxed">
+          {project.description}
+        </p>
+
+        {renderDetailItem("Technologies", project.technologies, TechIcon)}
+        {project.year && renderDetailItem("Year", project.year.toString(), CalendarIcon)}
+        {project.related_skills && project.related_skills.length > 0 && 
+          renderDetailItem("Related Skills", project.related_skills, Code2Icon)}
+        
+        {/* Optional: Add a link to open the 'actual' project detail tab (raw JSON) if desired */}
+        {/* <button onClick={() => onOpenProjectTab(project.id, project.title)} className="text-[var(--link-foreground)]">View Raw JSON</button> */}
+      </div>
+    );
+  }
 
 
   if (fileId === 'about.json') {
@@ -66,7 +111,7 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
         {summary && (
           <>
             {renderSectionTitle("Summary", InfoIcon)}
-            <p className="text-[var(--text-default)] mb-4 whitespace-pre-line text-sm leading-relaxed">{summary}</p>
+            <p className="text-[var(--text-default)] mb-4 whitespace-pre-line text-sm leading-relaxed ml-7">{summary}</p>
           </>
         )}
 
@@ -142,7 +187,29 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
     );
   }
 
-  // Fallback for unknown fileId or if jsonData is not in expected format
+  // Fallback for fileId === 'projects.json' or other unknown fileIds when opened as preview
+  if (fileId === 'projects.json') {
+      const { projects } = jsonData as { projects: { id: string; title: string }[] };
+      return (
+        <div className="p-4 md:p-6 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
+            {renderSectionTitle("Projects List Preview", ProjectIcon)}
+            <p className="text-sm text-[var(--text-muted)] mb-4 ml-7">
+                This is a preview of the <code>projects.json</code> file. It lists all available projects.
+                To see detailed cards for each project, open <code>projects.json</code> normally (not in preview).
+                To see a formatted preview of an individual project, use the "Run" menu in the TitleBar.
+            </p>
+            <ul>
+                {projects.map(p => (
+                    <li key={p.id} className="mb-1 ml-7">
+                        <span className="font-semibold">{p.title}</span> (ID: <code>{p.id}</code>)
+                    </li>
+                ))}
+            </ul>
+        </div>
+      );
+  }
+
+
   return (
     <div className="p-4 bg-[var(--editor-background)] text-[var(--editor-foreground)]">
       <h2 className="text-xl font-semibold text-red-500">Preview Not Available</h2>

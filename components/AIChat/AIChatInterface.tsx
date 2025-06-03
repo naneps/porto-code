@@ -1,9 +1,9 @@
 
 import React, { useEffect, useRef } from 'react';
-import { PortfolioData } from '../types'; 
-import ChatBubble from './ChatBubble';
+import { PortfolioData } from '../../types'; // Adjusted path
+import ChatBubble from './ChatBubble'; // Updated path
 import { Send, AlertTriangle, Loader2 } from 'lucide-react';
-import { useGeminiChat } from '../hooks/useGeminiChat'; 
+import { useGeminiChat } from '../../hooks/useGeminiChat'; // Adjusted path
 
 interface AIChatInterfaceProps {
   portfolioData: PortfolioData;

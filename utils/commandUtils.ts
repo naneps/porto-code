@@ -1,10 +1,10 @@
 
 import { Command, SidebarItemConfig, Theme, FontFamilyOption, FontSizeOption } from '../types';
-import { LucideIcon, EyeOff, Eye, Command as CommandIcon, Bot as BotIcon, Search as SearchIconLucide, Newspaper as ArticlesIconLucide } from 'lucide-react';
+import { LucideIcon, EyeOff, Eye, Command as CommandIcon, Bot as BotIcon, Search as SearchIconLucide, Newspaper as ArticlesIconLucide, FileTerminal, Cat } from 'lucide-react';
 
 interface GenerateCommandsArgs {
   sidebarItems: SidebarItemConfig[]; 
-  handleOpenTab: (item: SidebarItemConfig | { id?: string, fileName: string, type?: 'file' | 'project_detail' | 'ai_chat' | 'json_preview', title?: string }) => void;
+  handleOpenTab: (item: SidebarItemConfig | { id?: string, fileName: string, type?: 'file' | 'project_detail' | 'ai_chat' | 'json_preview', title?: string }, isRunAction?: boolean) => void;
   closeCommandPalette: () => void;
   isSidebarVisible: boolean;
   toggleSidebarVisibility: () => void;
@@ -22,7 +22,9 @@ interface GenerateCommandsArgs {
   openAboutModal: () => void;
   icons: { [key: string]: LucideIcon };
   handleToggleSearchPanel: () => void;
-  handleToggleArticlesPanel: () => void; // Add new handler
+  handleToggleArticlesPanel: () => void; 
+  toggleTerminalVisibility: () => void; // Renamed for clarity, handles terminal tab
+  togglePetsPanelVisibility: () => void; // Renamed for clarity, handles pets tab
 }
 
 export const generateCommands = ({
@@ -45,10 +47,13 @@ export const generateCommands = ({
   openAboutModal,
   icons,
   handleToggleSearchPanel,
-  handleToggleArticlesPanel, // Destructure new handler
+  handleToggleArticlesPanel,
+  toggleTerminalVisibility,
+  togglePetsPanelVisibility, 
 }: GenerateCommandsArgs): Command[] => {
   const allCommands: Command[] = [];
 
+  // Go to File commands
   sidebarItems.forEach(item => {
     allCommands.push({
       id: `open_${item.fileName}`,
@@ -59,6 +64,7 @@ export const generateCommands = ({
     });
   });
 
+  // View commands
   allCommands.push({
     id: 'toggle_sidebar',
     label: isSidebarVisible ? 'Hide Explorer Sidebar' : 'Show Explorer Sidebar',
@@ -77,8 +83,24 @@ export const generateCommands = ({
     id: 'toggle_articles_panel',
     label: 'Toggle Articles Panel',
     action: () => { handleToggleArticlesPanel(); closeCommandPalette(); },
-    icon: ArticlesIconLucide, // Use Newspaper icon
+    icon: ArticlesIconLucide, 
     group: "View",
+  });
+  allCommands.push({
+    id: 'toggle_terminal_panel', 
+    label: 'Toggle Terminal', // Changed label for clarity
+    action: () => { toggleTerminalVisibility(); closeCommandPalette(); },
+    icon: icons.TerminalIcon || FileTerminal, 
+    group: "View",
+    description: "Show, hide, or focus the Terminal tab in the bottom panel (Ctrl+` or Cmd+`)",
+  });
+   allCommands.push({
+    id: 'toggle_pets_panel', 
+    label: 'Toggle Pets Panel',
+    action: () => { togglePetsPanelVisibility(); closeCommandPalette(); },
+    icon: icons.CatIcon || Cat, 
+    group: "View",
+    description: "Show, hide, or focus the Pets tab in the bottom panel (Ctrl+Alt+Shift+P or Cmd+Alt+Shift+P)",
   });
   allCommands.push({
     id: 'open_ai_chat',
@@ -90,11 +112,13 @@ export const generateCommands = ({
   allCommands.push({
     id: 'command_palette_command',
     label: 'Command Palette',
-    action: () => { closeCommandPalette(); openCommandPalette(); },
+    action: () => { closeCommandPalette(); openCommandPalette(); }, 
     icon: CommandIcon,
     group: "View",
+    description: "Open the command palette to search for commands and files."
   });
 
+  // Preferences: Theme commands
   predefinedThemes.forEach(theme => {
     allCommands.push({
       id: `theme_${theme.name.toLowerCase().replace(/\s+/g, '_')}`,
@@ -107,6 +131,7 @@ export const generateCommands = ({
     });
   });
 
+  // Preferences: Font Family commands
   fontFamilyOptions.forEach(font => {
     allCommands.push({
       id: `font_family_${font.id}`,
@@ -119,6 +144,7 @@ export const generateCommands = ({
     });
   });
 
+  // Preferences: Font Size commands
   fontSizeOptions.forEach(size => {
     allCommands.push({
       id: `font_size_${size.id}`,
@@ -131,6 +157,7 @@ export const generateCommands = ({
     });
   });
 
+  // Help commands
   allCommands.push({
     id: 'about_portfolio',
     label: 'About Portfolio',

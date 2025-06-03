@@ -19,7 +19,9 @@ export const useTabHistory = (
         }
 
         setTabHistory(prevHistory => {
+            // Truncate history if we've gone back and are now opening a new tab "branch"
             const newHistoryBase = prevHistory.slice(0, currentHistoryIndex + 1);
+            // Only add if it's a new tab or a different tab than the current one in history
             if (newHistoryBase[newHistoryBase.length - 1] !== newActiveTabId) {
                 newHistoryBase.push(newActiveTabId);
             }
@@ -35,6 +37,7 @@ export const useTabHistory = (
             const filteredHistory = prevHistory.filter(id => id !== closedTabId);
             if (newActiveTabId) {
                 const newIndex = filteredHistory.indexOf(newActiveTabId);
+                // If the new active tab is in history, point to it. Otherwise, it's like a new activation.
                 setCurrentHistoryIndex(newIndex !== -1 ? newIndex : filteredHistory.length - 1);
             } else {
                 // If no new active tab (all tabs closed), reset history index
@@ -61,16 +64,18 @@ export const useTabHistory = (
         }
     }, [currentHistoryIndex, tabHistory, setActiveTabId]);
     
+    // This effect ensures that if activeTabId is changed externally (e.g., by closing the last tab),
+    // the history index is appropriately managed.
     useEffect(() => {
         if (activeTabId) {
+            // If the active tab isn't the current one in history (e.g., after a close operation selected a previous tab)
+            // or if the history is empty and a tab becomes active.
             if (tabHistory[currentHistoryIndex] !== activeTabId) {
                  updateTabHistoryOnActivation(activeTabId);
             }
         } else {
-            // If activeTabId becomes null (no tabs open), ensure history index is reset.
-            // This can also be handled in `handleCloseTab` logic in App.tsx
-            // by ensuring `cleanTabHistoryOnClose` correctly sets the index to -1.
-            if (tabHistory.length === 0) {
+            // If activeTabId becomes null (no tabs open), ensure history index is reset if history is also empty.
+            if (tabHistory.length === 0) { // Ensure this condition is met
                  setCurrentHistoryIndex(-1);
             }
         }

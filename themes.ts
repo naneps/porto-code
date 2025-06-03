@@ -1,15 +1,16 @@
+
 import { Theme, ThemeProperties, FontFamilyOption, FontSizeOption } from './types';
 
 // VSCode Dark+ (Based on default VSCode dark theme)
 const vscodeDarkPlusProperties: ThemeProperties = {
   // App & General UI
-  '--app-background': '#1e1e1e', // Main app background
-  '--text-default': '#d4d4d4', // Default foreground
-  '--text-muted': '#808080',   // For less important text
-  '--text-accent': '#4EC9B0',  // A common accent color in Dark+
-  '--text-inverse': '#1E1E1E', // Text on light backgrounds
-  '--border-color': '#333333', // General border color
-  '--focus-border': '#007ACC', // Focus outline color (VSCode blue)
+  '--app-background': '#1e1e1e', 
+  '--text-default': '#d4d4d4', 
+  '--text-muted': '#808080',   
+  '--text-accent': '#4EC9B0',  
+  '--text-inverse': '#1E1E1E', 
+  '--border-color': '#333333', 
+  '--focus-border': '#007ACC', 
   '--link-foreground': '#3794FF',
   '--link-hover-foreground': '#6EB0FF',
 
@@ -19,17 +20,17 @@ const vscodeDarkPlusProperties: ThemeProperties = {
   '--titlebar-inactive-foreground': '#999999',
   '--titlebar-border': '#4A4A4A',
   '--titlebar-button-hover-background': '#505050',
-  '--titlebar-icon-blue': '#007ACC', // For VSCode icon and nav arrows
+  '--titlebar-icon-blue': '#007ACC', 
   '--titlebar-menu-active-background': '#505050',
 
   // Menu Bar (within TitleBar or separate)
-  '--menubar-background': '#3C3C3C', // Often same as titlebar
+  '--menubar-background': '#3C3C3C', 
   '--menubar-foreground': '#CCCCCC',
   '--menubar-hover-background': '#505050',
   '--menubar-separator-color': '#4A4A4A',
   '--menu-dropdown-background': '#252526',
   '--menu-dropdown-border': '#3E3E3E',
-  '--menu-item-hover-background': '#094771', // VSCode blue selection
+  '--menu-item-hover-background': '#094771', 
   '--menu-item-selected-background': '#073655',
   '--menu-item-selected-foreground': '#FFFFFF',
   '--menu-item-foreground': '#CCCCCC',
@@ -40,8 +41,8 @@ const vscodeDarkPlusProperties: ThemeProperties = {
   '--activitybar-background': '#333333',
   '--activitybar-foreground': '#D4D4D4',
   '--activitybar-inactive-foreground': '#858585',
-  '--activitybar-active-border': '#007ACC', // Blue accent for active item
-  '--activitybar-active-background': '#404040', // Slight highlight for active icon button
+  '--activitybar-active-border': '#007ACC', 
+  '--activitybar-active-background': '#404040', 
   '--activitybar-hover-background': '#4A4A4A',
 
   // Sidebar (Explorer)
@@ -50,36 +51,36 @@ const vscodeDarkPlusProperties: ThemeProperties = {
   '--sidebar-border': '#333333',
   '--sidebar-section-header-foreground': '#BBBBBB',
   '--sidebar-item-hover-background': '#2A2D2E',
-  '--sidebar-item-focus-background': '#094771', // VSCode blue selection
+  '--sidebar-item-focus-background': '#094771', 
   '--sidebar-item-focus-foreground': '#FFFFFF',
 
   // Editor Area & Tabs
   '--editor-background': '#1E1E1E',
-  '--editor-foreground': '#D4D4D4', // For syntax highlighting base
+  '--editor-foreground': '#D4D4D4', 
   '--editor-line-number-foreground': '#858585',
-  '--editor-tab-background': '#2D2D2D', // Tab bar background
-  '--editor-tab-inactive-background': '#2D2D2D', // Inactive tab itself
-  '--editor-tab-active-background': '#1E1E1E', // Active tab matches editor
+  '--editor-tab-background': '#2D2D2D', 
+  '--editor-tab-inactive-background': '#2D2D2D', 
+  '--editor-tab-active-background': '#1E1E1E', 
   '--editor-tab-active-foreground': '#FFFFFF',
   '--editor-tab-inactive-foreground': '#999999',
-  '--editor-tab-hover-background': '#37373D', // Hover for inactive tab
-  '--editor-tab-border': '#252525', // Border between tabs
-  '--editor-tab-active-border-bottom': '#007ACC', // Blue accent for active tab
+  '--editor-tab-hover-background': '#37373D', 
+  '--editor-tab-border': '#252525', 
+  '--editor-tab-active-border-top': '#007ACC', 
   '--editor-tab-icon-foreground': '#C5C5C5',
   '--editor-tab-icon-active-foreground': '#4EC9B0',
 
 
   // Breadcrumbs
-  '--breadcrumbs-background': '#1E1E1E', // Match editor
+  '--breadcrumbs-background': '#1E1E1E', 
   '--breadcrumbs-foreground': '#CCCCCC',
   '--breadcrumbs-focus-foreground': '#E0E0E0',
   '--breadcrumbs-separator-color': '#4A4A4A',
   '--breadcrumbs-icon-foreground': '#4EC9B0',
 
   // Status Bar
-  '--statusbar-background': '#007ACC', // VSCode blue by default
+  '--statusbar-background': '#007ACC', 
   '--statusbar-foreground': '#FFFFFF',
-  '--statusbar-border': 'transparent', // Top border (or #333333 if distinct border needed)
+  '--statusbar-border': 'transparent', 
   '--statusbar-item-hover-background': 'rgba(255, 255, 255, 0.12)',
 
   // Modals (Command Palette, About)
@@ -97,21 +98,46 @@ const vscodeDarkPlusProperties: ThemeProperties = {
   '--modal-button-foreground': '#FFFFFF',
 
   // Scrollbar
-  '--scrollbar-track-background': '#252526', // Match sidebar usually
+  '--scrollbar-track-background': '#252526', 
   '--scrollbar-thumb-background': '#424242',
   '--scrollbar-thumb-hover-background': '#555555',
 
+  // Terminal Panel (content area)
+  '--terminal-background': '#181818',
+  '--terminal-foreground': '#CCCCCC',
+  '--terminal-border': '#333333', // Border for the content area if needed, distinct from tab border
+  '--terminal-cursor-color': '#CCCCCC',
+  '--terminal-toolbar-background': '#252526', // Toolbar inside TerminalPanel/PetsPanel
+  '--terminal-close-button-hover-background': '#37373D',
+
+
+  // Bottom Panel Tabs (New)
+  '--bottom-panel-tab-background': '#252526', // Similar to sidebar or a bit darker than editor tabs
+  '--bottom-panel-tab-inactive-background': '#252526',
+  '--bottom-panel-tab-active-background': '#1E1E1E', // Usually matches editor background
+  '--bottom-panel-tab-active-foreground': '#E0E0E0',
+  '--bottom-panel-tab-inactive-foreground': '#888888',
+  '--bottom-panel-tab-hover-background': '#2A2D2E',
+  '--bottom-panel-tab-border': '#333333', // Border between tabs and panel top edge
+  '--bottom-panel-tab-active-border-bottom': '#007ACC', // Active indicator
+  '--bottom-panel-tab-icon-foreground': '#AAAAAA',
+  '--bottom-panel-tab-icon-active-foreground': '#4EC9B0',
+
+  // Linear Progress Bar
+  '--progress-bar-background': 'var(--editor-tab-border)', 
+  '--progress-bar-indicator': 'var(--focus-border)',   
+
   // Syntax Highlighting (simplified, main colors)
-  '--syntax-string': '#CE9178',      // Orange-ish for strings
-  '--syntax-keyword': '#569CD6',     // Blue for keywords
-  '--syntax-comment': '#6A9955',     // Green for comments
-  '--syntax-number': '#B5CEA8',      // Light green/blue for numbers
-  '--syntax-boolean': '#569CD6',    // Blue for booleans
-  '--syntax-property': '#9CDCFE',    // Light blue for JSON keys/properties
-  '--syntax-operator': '#D4D4D4',    // Default for operators
-  '--syntax-punctuation': '#D4D4D4', // Default for punctuation
-  '--syntax-function': '#DCDCAA',    // Yellow for functions
-  '--syntax-base-text': '#D4D4D4', // Base text color for JSON display not covered by other tokens
+  '--syntax-string': '#CE9178',      
+  '--syntax-keyword': '#569CD6',     
+  '--syntax-comment': '#6A9955',     
+  '--syntax-number': '#B5CEA8',      
+  '--syntax-boolean': '#569CD6',    
+  '--syntax-property': '#9CDCFE',    
+  '--syntax-operator': '#D4D4D4',    
+  '--syntax-punctuation': '#D4D4D4', 
+  '--syntax-function': '#DCDCAA',    
+  '--syntax-base-text': '#D4D4D4', 
 };
 
 // VSCode Light+ (Based on default VSCode light theme)
@@ -180,7 +206,7 @@ const vscodeLightPlusProperties: ThemeProperties = {
   '--editor-tab-inactive-foreground': '#586069',
   '--editor-tab-hover-background': '#DADADA',
   '--editor-tab-border': '#D1D1D1',
-  '--editor-tab-active-border-bottom': '#0366D6',
+  '--editor-tab-active-border-top': '#0366D6', 
   '--editor-tab-icon-foreground': '#424242',
   '--editor-tab-icon-active-foreground': '#0366D6',
 
@@ -194,9 +220,9 @@ const vscodeLightPlusProperties: ThemeProperties = {
 
 
   // Status Bar
-  '--statusbar-background': '#007ACC', // VSCode blue by default
+  '--statusbar-background': '#007ACC', 
   '--statusbar-foreground': '#FFFFFF',
-  '--statusbar-border': 'transparent', // Top border
+  '--statusbar-border': 'transparent', 
   '--statusbar-item-hover-background': 'rgba(0, 0, 0, 0.08)',
 
   // Modals
@@ -219,17 +245,41 @@ const vscodeLightPlusProperties: ThemeProperties = {
   '--scrollbar-thumb-background': '#C1C1C1',
   '--scrollbar-thumb-hover-background': '#A8A8A8',
 
+  // Terminal Panel (content area)
+  '--terminal-background': '#F0F0F0',
+  '--terminal-foreground': '#333333',
+  '--terminal-border': '#CCCCCC',
+  '--terminal-cursor-color': '#333333',
+  '--terminal-toolbar-background': '#E0E0E0', // Toolbar inside TerminalPanel/PetsPanel
+  '--terminal-close-button-hover-background': '#D0D0D0',
+
+  // Bottom Panel Tabs (New)
+  '--bottom-panel-tab-background': '#F3F3F3', 
+  '--bottom-panel-tab-inactive-background': '#F3F3F3',
+  '--bottom-panel-tab-active-background': '#FFFFFF', 
+  '--bottom-panel-tab-active-foreground': '#333333',
+  '--bottom-panel-tab-inactive-foreground': '#666666',
+  '--bottom-panel-tab-hover-background': '#E8E8E8',
+  '--bottom-panel-tab-border': '#D1D1D1', 
+  '--bottom-panel-tab-active-border-bottom': '#0366D6',
+  '--bottom-panel-tab-icon-foreground': '#555555',
+  '--bottom-panel-tab-icon-active-foreground': '#0366D6',
+
+  // Linear Progress Bar
+  '--progress-bar-background': 'var(--editor-tab-border)',
+  '--progress-bar-indicator': 'var(--focus-border)',  
+
   // Syntax Highlighting
-  '--syntax-string': '#032F62',      // Dark blue for strings
-  '--syntax-keyword': '#D73A49',     // Red for keywords
-  '--syntax-comment': '#6A737D',     // Gray for comments
-  '--syntax-number': '#005CC5',      // Blue for numbers
-  '--syntax-boolean': '#D73A49',    // Red for booleans
-  '--syntax-property': '#E36209',    // Orange for JSON keys/properties
-  '--syntax-operator': '#24292E',    // Default for operators
-  '--syntax-punctuation': '#24292E', // Default for punctuation
-  '--syntax-function': '#6F42C1',    // Purple for functions
-  '--syntax-base-text': '#24292E', // Base text color for JSON display
+  '--syntax-string': '#032F62',      
+  '--syntax-keyword': '#D73A49',     
+  '--syntax-comment': '#6A737D',     
+  '--syntax-number': '#005CC5',      
+  '--syntax-boolean': '#D73A49',    
+  '--syntax-property': '#E36209',    
+  '--syntax-operator': '#24292E',    
+  '--syntax-punctuation': '#24292E', 
+  '--syntax-function': '#6F42C1',    
+  '--syntax-base-text': '#24292E', 
 };
 
 export const PREDEFINED_THEMES: Theme[] = [

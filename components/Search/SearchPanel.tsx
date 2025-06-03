@@ -1,6 +1,7 @@
+
 import React, { useEffect, useRef } from 'react';
-import { SearchResultItem } from '../types';
-import { ICONS } from '../constants'; // For icons if needed
+import { SearchResultItem } from '../../types'; // Adjusted path
+import { ICONS } from '../../constants'; // Adjusted path
 
 interface SearchPanelProps {
   isVisible: boolean;

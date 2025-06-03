@@ -47,16 +47,16 @@ export interface ProjectDetail {
   title: string;
   description: string;
   technologies: string[];
-  year?: number; // Optional, as original data doesn't have it
-  related_skills?: string[]; // Skills from the main list that might be relevant
+  year?: number; 
+  related_skills?: string[]; 
 }
 
 export interface Tab {
   id: string;
   title: string;
   type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview' | 'article_detail';
-  fileName?: string;
-  articleSlug?: string; // To identify which article content to show
+  fileName?: string; // For file-based tabs and json_preview of files or projects
+  articleSlug?: string; 
 }
 
 export interface SidebarItemConfig {
@@ -65,6 +65,7 @@ export interface SidebarItemConfig {
   fileName: string;
   icon: LucideIcon;
   type?: 'file';
+  title?: string; // Added title for consistency, can be same as fileName or a more descriptive label
 }
 
 export interface Command {
@@ -82,7 +83,7 @@ export interface Command {
 export interface AppMenuItem {
   label?: string;
   action?: () => void;
-  icon?: LucideIcon;
+  icon?: LucideIcon | undefined; // Allow undefined for conditional icons like Check
   subItems?: AppMenuItem[];
   value?: string;
   isSelected?: boolean;
@@ -159,5 +160,5 @@ export interface ArticleItem {
   tags?: string[];
   contentMarkdown: string;
   slug: string;
-  imageUrl?: string; // Added for article cover image
+  imageUrl?: string; 
 }

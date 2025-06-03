@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { PortfolioData, SidebarItemConfig } from '../types';
 import { ICONS, REPO_URL, SIDEBAR_ITEMS } from '../constants';
+import { PortfolioData, SidebarItemConfig } from '../types';
 
 interface WelcomeViewProps {
   portfolioData: PortfolioData;
@@ -41,7 +41,7 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ portfolioData, onOpenTab, onO
         This interactive space is designed to showcase skills and projects in a familiar VSCode-like environment. Explore files in the sidebar or use the quick links below.
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-4xl mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 w-full max-w-4xl mb-12">
         {/* Start Exploring Section */}
         <div className="bg-[var(--sidebar-background)] p-6 rounded-lg shadow-md border border-[var(--border-color)] text-left">
           <h2 className="text-xl font-semibold mb-4 text-[var(--text-accent)]">Start Exploring</h2>

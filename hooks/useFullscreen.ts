@@ -7,6 +7,8 @@ export const useFullscreen = () => {
   const handleToggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(err => {
+        // It's good practice to inform the user if fullscreen fails,
+        // but for now, console logging is fine.
         console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
       });
     } else {

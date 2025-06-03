@@ -1,7 +1,8 @@
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Tab, PortfolioData, SidebarItemConfig, Command, ContextMenuItem, ActivityBarSelection, SearchResultItem, Theme, FontFamilyOption, FontSizeOption, ArticleItem } from './types';
-import { PORTFOLIO_DATA, SIDEBAR_ITEMS as DEFAULT_SIDEBAR_ITEMS, generateFileContent, generateProjectDetailContent, ICONS, REPO_URL, APP_VERSION, SAMPLE_ARTICLES } from './constants';
+import { PORTFOLIO_DATA, SIDEBAR_ITEMS as DEFAULT_SIDEBAR_ITEMS, generateFileContent, generateProjectDetailContent, ICONS, REPO_URL, APP_VERSION } from './constants';
+import { SAMPLE_ARTICLES } from './components/Articles/articlesData';
 import { PREDEFINED_THEMES, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS } from './themes';
 import TitleBar from './components/TitleBar/TitleBar';
 import ActivityBar from './components/ActivityBar';
@@ -13,8 +14,12 @@ import CommandPalette from './components/CommandPalette';
 import AboutModal from './components/AboutModal';
 import ContextMenu from './components/ContextMenu';
 import WelcomeView from './components/WelcomeView';
-import SearchPanel from './components/SearchPanel';
-import ArticlesPanel from './components/ArticlesPanel';
+import SearchPanel from './components/Search/SearchPanel';
+import ArticlesPanel from './components/Articles/ArticlesPanel';
+import TerminalPanel from './components/TerminalPanel';
+import PetsPanel from './components/PetsPanel';
+import BottomPanelTabs from './components/BottomPanelTabs';
+
 
 import { useThemeManager } from './hooks/useThemeManager';
 import { useTabHistory } from './hooks/useTabHistory';
@@ -22,6 +27,7 @@ import { useFullscreen } from './hooks/useFullscreen';
 import { useGlobalEventHandlers } from './hooks/useGlobalEventHandlers';
 import { generateCommands } from './utils/commandUtils';
 
+export type BottomPanelTabId = 'terminal' | 'pets';
 
 const App: React.FC = () => {
   const {
@@ -35,7 +41,16 @@ const App: React.FC = () => {
 
   const [openTabs, setOpenTabs] = useState<Tab[]>(() => {
     const saved = localStorage.getItem('portfolio-openTabs');
-    return saved ? JSON.parse(saved) : [];
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        console.error("Failed to parse saved openTabs from localStorage:", e);
+        return [];
+      }
+    }
+    return [];
   });
 
   const [activeTabId, setActiveTabIdState] = useState<string | null>(() => {
@@ -44,17 +59,44 @@ const App: React.FC = () => {
 
   const [isSidebarVisible, setIsSidebarVisible] = useState<boolean>(() => {
     const saved = localStorage.getItem('portfolio-isSidebarVisible');
-    return saved ? JSON.parse(saved) : false;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return typeof parsed === 'boolean' ? parsed : false;
+      } catch (e) {
+        console.error("Failed to parse saved isSidebarVisible from localStorage:", e);
+        return false;
+      }
+    }
+    return false;
   });
 
   const [isSearchPanelVisible, setIsSearchPanelVisible] = useState<boolean>(() => {
     const saved = localStorage.getItem('portfolio-isSearchPanelVisible');
-    return saved ? JSON.parse(saved) : false;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return typeof parsed === 'boolean' ? parsed : false;
+      } catch (e) {
+        console.error("Failed to parse saved isSearchPanelVisible from localStorage:", e);
+        return false;
+      }
+    }
+    return false;
   });
 
   const [isArticlesPanelVisible, setIsArticlesPanelVisible] = useState<boolean>(() => {
     const saved = localStorage.getItem('portfolio-isArticlesPanelVisible');
-    return saved ? JSON.parse(saved) : false;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return typeof parsed === 'boolean' ? parsed : false;
+      } catch (e) {
+        console.error("Failed to parse saved isArticlesPanelVisible from localStorage:", e);
+        return false;
+      }
+    }
+    return false;
   });
 
 
@@ -101,6 +143,32 @@ const App: React.FC = () => {
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [contextMenuState, setContextMenuState] = useState<{ x: number; y: number; items: ContextMenuItem[]; visible: boolean; tabId?: string }>({ x: 0, y: 0, items: [], visible: false });
 
+  const [isTabContentLoading, setIsTabContentLoading] = useState(false);
+  const loadingTimeoutRef = useRef<number | null>(null);
+
+  // Bottom Panel State
+  const [isBottomPanelVisible, setIsBottomPanelVisible] = useState<boolean>(() => {
+    const saved = localStorage.getItem('portfolio-isBottomPanelVisible');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return typeof parsed === 'boolean' ? parsed : false;
+      } catch (e) {
+        console.error("Failed to parse saved isBottomPanelVisible from localStorage:", e);
+        return false;
+      }
+    }
+    return false;
+  });
+  const [activeBottomPanelId, setActiveBottomPanelId] = useState<BottomPanelTabId>(() => {
+    const saved = localStorage.getItem('portfolio-activeBottomPanelId') as BottomPanelTabId | null;
+    return saved || 'terminal';
+  });
+  const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
+  const [isTerminalRunningCommand, setIsTerminalRunningCommand] = useState(false);
+  const terminalAnimationIntervalRef = useRef<number | null>(null);
+
+
   const setActiveTabId = useCallback((id: string | null) => {
     setActiveTabIdState(id);
     if (id) {
@@ -108,26 +176,28 @@ const App: React.FC = () => {
     }
   }, [updateTabHistoryOnActivation]);
 
-  useEffect(() => localStorage.setItem('portfolio-openTabs', JSON.stringify(openTabs)), [openTabs]);
-  useEffect(() => localStorage.setItem('portfolio-activeTabId', activeTabId || ''), [activeTabId]);
-  useEffect(() => localStorage.setItem('portfolio-isSidebarVisible', JSON.stringify(isSidebarVisible)), [isSidebarVisible]);
-  useEffect(() => localStorage.setItem('portfolio-isSearchPanelVisible', JSON.stringify(isSearchPanelVisible)), [isSearchPanelVisible]);
-  useEffect(() => localStorage.setItem('portfolio-isArticlesPanelVisible', JSON.stringify(isArticlesPanelVisible)), [isArticlesPanelVisible]);
+  useEffect(() => { localStorage.setItem('portfolio-openTabs', JSON.stringify(openTabs)); }, [openTabs]);
+  useEffect(() => { localStorage.setItem('portfolio-activeTabId', activeTabId || ''); }, [activeTabId]);
+  useEffect(() => { localStorage.setItem('portfolio-isSidebarVisible', JSON.stringify(isSidebarVisible)); }, [isSidebarVisible]);
+  useEffect(() => { localStorage.setItem('portfolio-isSearchPanelVisible', JSON.stringify(isSearchPanelVisible)); }, [isSearchPanelVisible]);
+  useEffect(() => { localStorage.setItem('portfolio-isArticlesPanelVisible', JSON.stringify(isArticlesPanelVisible)); }, [isArticlesPanelVisible]);
   useEffect(() => {
     localStorage.setItem('portfolio-sidebarItemOrder', JSON.stringify(orderedSidebarItems.map(item => item.id)));
   }, [orderedSidebarItems]);
+  useEffect(() => { localStorage.setItem('portfolio-isBottomPanelVisible', JSON.stringify(isBottomPanelVisible)); }, [isBottomPanelVisible]);
+  useEffect(() => { localStorage.setItem('portfolio-activeBottomPanelId', activeBottomPanelId); }, [activeBottomPanelId]);
 
+
+  const currentActiveTab = useMemo(() => openTabs.find(tab => tab.id === activeTabId), [openTabs, activeTabId]);
 
   useEffect(() => {
-    const activeTab = openTabs.find(tab => tab.id === activeTabId);
-    if (activeTab) {
-      document.title = `${activeTab.title} - ${PORTFOLIO_DATA.name} | PORTO CODE`;
+    if (currentActiveTab) {
+      document.title = `${currentActiveTab.title} - ${PORTFOLIO_DATA.name} | PORTO CODE`;
     } else {
       document.title = `PORTO CODE - ${PORTFOLIO_DATA.name}`;
     }
-  }, [activeTabId, openTabs]);
+  }, [currentActiveTab]);
 
-  const currentActiveTab = openTabs.find(tab => tab.id === activeTabId);
 
   useEffect(() => {
     if (currentActiveTab?.type === 'article_detail') {
@@ -145,21 +215,60 @@ const App: React.FC = () => {
     }
   }, [currentActiveTab, isSidebarVisible, isSearchPanelVisible, isArticlesPanelVisible]);
 
+  const appendToTerminalOutput = useCallback((text: string) => {
+    setTerminalOutput(prev => [...prev, text]);
+  }, []);
 
-  const handleOpenTab = useCallback((itemOrConfig: SidebarItemConfig | { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string }) => {
+  const clearTerminalOutput = useCallback(() => {
+    setTerminalOutput([]);
+  }, []);
+  
+  const simulateTerminalRun = useCallback((commandName: string, durationMs: number = 2000) => {
+    if (terminalAnimationIntervalRef.current) {
+      clearInterval(terminalAnimationIntervalRef.current);
+    }
+    setIsBottomPanelVisible(true);
+    setActiveBottomPanelId('terminal');
+    clearTerminalOutput();
+    setIsTerminalRunningCommand(true);
+    appendToTerminalOutput(`> Running ${commandName}...`);
+
+    let dots = 0;
+    const maxDots = 3;
+    const animationSteps = durationMs / 500; 
+    let currentStep = 0;
+
+    terminalAnimationIntervalRef.current = window.setInterval(() => {
+      dots = (dots + 1) % (maxDots + 1);
+      appendToTerminalOutput(`Processing${'.'.repeat(dots)}`);
+      currentStep++;
+      if (currentStep >= animationSteps) {
+        if (terminalAnimationIntervalRef.current) {
+          clearInterval(terminalAnimationIntervalRef.current);
+          terminalAnimationIntervalRef.current = null;
+        }
+        appendToTerminalOutput(`${commandName} finished successfully.`);
+        setIsTerminalRunningCommand(false);
+      }
+    }, 500); 
+
+  }, [appendToTerminalOutput, clearTerminalOutput]);
+
+
+  const handleOpenTab = useCallback((itemOrConfig: SidebarItemConfig | { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string }, isRunAction: boolean = false) => {
     let idToOpen: string;
     let tabTitle: string;
     let tabType: Tab['type'];
     let tabFileName: string | undefined;
     let tabArticleSlug: string | undefined;
 
-    if ('icon' in itemOrConfig) {
+    if ('icon' in itemOrConfig && 'label' in itemOrConfig) { 
         const config = itemOrConfig as SidebarItemConfig;
         idToOpen = config.id;
-        tabTitle = config.fileName;
+        tabTitle = config.title || config.fileName; 
         tabType = config.type || 'file';
         tabFileName = config.fileName;
-    } else {
+    } else { 
         const config = itemOrConfig as { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string };
         idToOpen = config.id || config.fileName || `unknown-tab-${Date.now()}`;
         tabTitle = config.title || config.fileName || "Untitled";
@@ -167,6 +276,20 @@ const App: React.FC = () => {
         tabFileName = config.fileName;
         tabArticleSlug = config.articleSlug;
     }
+
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
+
+    if (isRunAction && tabType === 'json_preview') {
+      simulateTerminalRun(tabTitle); 
+    }
+
+    // For json_preview tabs, content is synchronous, so no artificial loading needed.
+    // For other types, if they were async, loading could be managed here.
+    setIsTabContentLoading(false);
+
 
     const existingTab = openTabs.find(tab => tab.id === idToOpen);
     let newTabToActivateId = idToOpen;
@@ -185,46 +308,51 @@ const App: React.FC = () => {
       setActiveTabId(newTab.id);
       newTabToActivateId = newTab.id;
     }
-
-    // Panel Management based on new tab type
+    
     if (tabType === 'article_detail') {
         setIsSearchPanelVisible(false);
         setIsSidebarVisible(false);
-        // isArticlesPanelVisible state is preserved; set to true in handleOpenArticleTab if needed
+        // setIsArticlesPanelVisible(true) is handled by handleOpenArticleTab
     } else if (tabType === 'ai_chat') {
         setIsSearchPanelVisible(false);
         setIsSidebarVisible(false);
         setIsArticlesPanelVisible(false);
-    } else { // For 'file', 'project_detail', 'json_preview'
+    } else if (!isRunAction) { 
         setIsSearchPanelVisible(false);
         setIsArticlesPanelVisible(false); 
     }
-  }, [openTabs, setActiveTabId]);
+  }, [openTabs, setActiveTabId, simulateTerminalRun]);
 
 
   const handleOpenProjectTab = useCallback((projectId: string, projectTitle: string) => {
     handleOpenTab({
       id: projectId,
-      fileName: projectId,
+      fileName: projectId, 
       title: projectTitle,
       type: 'project_detail',
     });
   }, [handleOpenTab]);
 
-  const handleOpenPreviewTab = useCallback((originalFileTabId: string) => {
-    const originalTab = openTabs.find(tab => tab.id === originalFileTabId);
-    if (!originalTab || originalTab.type !== 'file') return;
+  const handleOpenPreviewTab = useCallback((originalFileTabId: string, isRunContext: boolean = false) => {
+    const originalTab = openTabs.find(tab => tab.id === originalFileTabId) || orderedSidebarItems.find(item => item.id === originalFileTabId);
+    if (!originalTab) return;
+    
+    const fileNameForContent = 'fileName' in originalTab ? originalTab.fileName : undefined;
+    if (!fileNameForContent || (('type' in originalTab) && originalTab.type !== 'file' && originalTab.type !== 'project_detail' && originalTab.type !== undefined) ) { 
+      console.warn("Cannot open preview for non-file or unknown file:", originalFileTabId, originalTab);
+      return;
+    }
 
     const previewTabId = `${originalFileTabId}_preview`;
-    const previewTabTitle = `Preview: ${originalTab.title}`;
+    const previewTabTitle = `Preview: ${originalTab.title || fileNameForContent}`;
 
     handleOpenTab({
       id: previewTabId,
-      fileName: originalTab.fileName,
+      fileName: fileNameForContent, 
       title: previewTabTitle,
       type: 'json_preview',
-    });
-  }, [openTabs, handleOpenTab]);
+    }, isRunContext); 
+  }, [openTabs, handleOpenTab, orderedSidebarItems]);
 
   const handleOpenArticleTab = useCallback((article: ArticleItem) => {
     handleOpenTab({
@@ -233,11 +361,18 @@ const App: React.FC = () => {
         type: 'article_detail',
         articleSlug: article.slug,
     });
-    setIsArticlesPanelVisible(true); // Ensure Articles panel is visible when an article is opened from the panel
+    setIsArticlesPanelVisible(true); 
   }, [handleOpenTab]);
 
 
   const handleSelectTab = useCallback((tabId: string) => {
+    if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+    }
+    // Content for all tabs, including json_preview, is ready synchronously with current setup.
+    // No artificial loading needed.
+    setIsTabContentLoading(false);
     setActiveTabId(tabId);
   }, [setActiveTabId]);
 
@@ -260,6 +395,13 @@ const App: React.FC = () => {
       } else {
         newActiveTabId = activeTabId;
       }
+      
+      // Clear any existing loading state or timeout when tab closes or active tab changes.
+      if (loadingTimeoutRef.current) {
+          clearTimeout(loadingTimeoutRef.current);
+          loadingTimeoutRef.current = null;
+      }
+      setIsTabContentLoading(false);
 
       setActiveTabId(newActiveTabId);
       cleanTabHistoryOnClose(tabIdToClose, newActiveTabId);
@@ -276,7 +418,7 @@ const App: React.FC = () => {
   const handleOpenAIChatTab = useCallback(() => {
     handleOpenTab({
       id: 'ai_chat_tab',
-      fileName: 'AI Assistant',
+      fileName: 'AI Assistant', 
       title: 'AI Assistant',
       type: 'ai_chat',
     });
@@ -300,27 +442,60 @@ const App: React.FC = () => {
           setActiveTabId(tab.id);
           cleanTabHistoryOnClose("all_others", tab.id);
           updateTabHistoryOnActivation(tab.id);
+          // Content for the remaining tab (json_preview or other) is sync.
+          if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+          setIsTabContentLoading(false);
       }, icon: ICONS.minus_icon },
       { label: 'Close All', action: () => {
           setOpenTabs([]);
           setActiveTabId(null);
           cleanTabHistoryOnClose("all", null);
+          if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+          setIsTabContentLoading(false);
       }, icon: ICONS.x_icon },
     ];
+    
+    const canBePreviewed = (tab.type === 'file' && ['about.json', 'experience.json', 'skills.json', 'contact.json', 'projects.json'].includes(tab.fileName || '')) || tab.type === 'project_detail';
 
-    if (tab.type === 'file' && ['about.json', 'experience.json', 'skills.json', 'contact.json'].includes(tab.fileName || '')) {
-      items.push({
-        label: `Preview ${tab.title}`,
-        action: () => handleOpenPreviewTab(tab.id),
-        icon: ICONS.Eye
-      });
+    if (canBePreviewed && tab.fileName && !tab.id.endsWith('_preview')) { 
+         items.push({
+            label: `Preview ${tab.title}`,
+            action: () => handleOpenPreviewTab(tab.id, true), // Changed to true for run context
+            icon: ICONS.Eye
+        });
     }
-
     setContextMenuState({ x, y, items, visible: true, tabId });
   }, [openTabs, handleCloseTab, setActiveTabId, handleOpenPreviewTab, cleanTabHistoryOnClose, updateTabHistoryOnActivation]);
 
   const closeContextMenu = useCallback(() => {
     setContextMenuState(prev => ({ ...prev, visible: false }));
+  }, []);
+
+  const toggleTerminalPanel = useCallback(() => {
+    if (isBottomPanelVisible && activeBottomPanelId === 'terminal') {
+      setIsBottomPanelVisible(false);
+    } else {
+      setIsBottomPanelVisible(true);
+      setActiveBottomPanelId('terminal');
+    }
+  }, [isBottomPanelVisible, activeBottomPanelId]);
+
+  const togglePetsPanel = useCallback(() => {
+    if (isBottomPanelVisible && activeBottomPanelId === 'pets') {
+      setIsBottomPanelVisible(false);
+    } else {
+      setIsBottomPanelVisible(true);
+      setActiveBottomPanelId('pets');
+    }
+  }, [isBottomPanelVisible, activeBottomPanelId]);
+
+  const handleSelectBottomPanelTab = useCallback((panelId: BottomPanelTabId) => {
+    setActiveBottomPanelId(panelId);
+    setIsBottomPanelVisible(true); // Ensure panel is visible when a tab is selected
+  }, []);
+
+  const handleCloseBottomPanel = useCallback(() => {
+    setIsBottomPanelVisible(false);
   }, []);
 
 
@@ -333,6 +508,8 @@ const App: React.FC = () => {
     closeAboutModal,
     contextMenuVisible: contextMenuState.visible,
     setContextMenuVisible: (visible) => setContextMenuState(prev => ({ ...prev, visible })),
+    toggleTerminalVisibility: toggleTerminalPanel,
+    togglePetsPanelVisibility: togglePetsPanel,
   });
 
   const handleToggleSearchPanel = useCallback(() => {
@@ -390,18 +567,28 @@ const App: React.FC = () => {
     icons: ICONS,
     handleToggleSearchPanel,
     handleToggleArticlesPanel,
+    toggleTerminalVisibility: toggleTerminalPanel, 
+    togglePetsPanelVisibility: togglePetsPanel,
   }), [
     orderedSidebarItems, handleOpenTab, closeCommandPalette, isSidebarVisible, toggleSidebarVisibility,
     handleOpenAIChatTab, openCommandPalette, handleThemeChange, currentThemeName,
     handleFontFamilyChange, currentFontFamilyId, handleFontSizeChange, currentFontSizeId,
-    openAboutModal, handleToggleSearchPanel, handleToggleArticlesPanel
+    openAboutModal, handleToggleSearchPanel, handleToggleArticlesPanel, toggleTerminalPanel,
+    togglePetsPanel,
   ]);
 
 
   const activeContentDetails = useMemo(() => {
     if (!currentActiveTab) return "";
 
-    if (currentActiveTab.type === 'file' || (currentActiveTab.type === 'json_preview' && currentActiveTab.fileName)) {
+    if (currentActiveTab.type === 'json_preview' && currentActiveTab.fileName) {
+      if (currentActiveTab.fileName.startsWith('project_')) {
+        return generateProjectDetailContent(currentActiveTab.fileName, PORTFOLIO_DATA);
+      } else { 
+        return generateFileContent(currentActiveTab.fileName, PORTFOLIO_DATA);
+      }
+    }
+    if (currentActiveTab.type === 'file') {
       return generateFileContent(currentActiveTab.fileName || currentActiveTab.id, PORTFOLIO_DATA);
     }
     if (currentActiveTab.type === 'project_detail') {
@@ -413,7 +600,7 @@ const App: React.FC = () => {
           ? { markdown: article.contentMarkdown, imageUrl: article.imageUrl }
           : { markdown: "Article content not found." };
     }
-    return ""; // Should not happen if tab type is known
+    return ""; 
   }, [currentActiveTab]);
 
 
@@ -489,7 +676,8 @@ const App: React.FC = () => {
     if (newSidebarVisible) {
         setIsSearchPanelVisible(false);
         setIsArticlesPanelVisible(false);
-        if (activeTabId !== 'ai_chat_tab' && currentActiveTab?.type !== 'article_detail' && !openTabs.find(tab => tab.id === activeTabId && (tab.type === 'file' || tab.type === 'project_detail'))) {
+        // If no tab is active OR the active tab is not a 'file' or 'project_detail' type, open about.json
+        if (!currentActiveTab || (currentActiveTab.type !== 'file' && currentActiveTab.type !== 'project_detail')) {
             const aboutFile = orderedSidebarItems.find(item => item.id === 'about.json');
             if (aboutFile) {
                 handleOpenTab(aboutFile);
@@ -501,6 +689,17 @@ const App: React.FC = () => {
   const activeArticleSlug = useMemo(() => {
     return currentActiveTab?.type === 'article_detail' ? currentActiveTab.articleSlug : null;
   }, [currentActiveTab]);
+
+  const handleRunItemFromTitleBar = (config: { id: string, fileName: string, title: string, type: Tab['type'] }) => {
+    handleOpenTab(config, true); 
+  };
+
+  const isPreviewTabLoading = isTabContentLoading && currentActiveTab?.type === 'json_preview';
+
+  const bottomPanelTabs: { id: BottomPanelTabId; title: string; icon: React.ElementType }[] = [
+    { id: 'terminal', title: 'TERMINAL', icon: ICONS.TerminalIcon },
+    { id: 'pets', title: 'PETS', icon: ICONS.CatIcon },
+  ];
 
 
   return (
@@ -525,6 +724,11 @@ const App: React.FC = () => {
         onFontSizeChange={handleFontSizeChange}
         isFullscreen={isFullscreen}
         onToggleFullscreen={handleToggleFullscreen}
+        sidebarItems={orderedSidebarItems}
+        projects={PORTFOLIO_DATA.projects}
+        onRunItem={handleRunItemFromTitleBar}
+        onToggleTerminal={toggleTerminalPanel}
+        onTogglePetsPanel={togglePetsPanel} 
       />
       <div className="flex flex-1 min-h-0">
         <ActivityBar
@@ -540,7 +744,7 @@ const App: React.FC = () => {
             articles={SAMPLE_ARTICLES}
             onClose={() => setIsArticlesPanelVisible(false)}
             onSelectArticle={handleOpenArticleTab}
-            activeArticleSlug={activeArticleSlug} // Pass active slug
+            activeArticleSlug={activeArticleSlug} 
           />
         )}
         {isSearchPanelVisible && !isArticlesPanelVisible && (
@@ -556,39 +760,63 @@ const App: React.FC = () => {
         {!isSearchPanelVisible && !isArticlesPanelVisible && (
             <Sidebar
                 items={orderedSidebarItems}
-                onOpenTab={handleOpenTab}
+                onOpenTab={(item) => handleOpenTab(item, false)}
                 isVisible={isSidebarVisible}
                 activeTabId={activeTabId}
                 onReorderItems={handleReorderSidebarItems}
             />
         )}
-        <main className="flex-1 flex flex-col min-w-0">
+        <main className="flex-1 flex flex-col min-w-0 bg-[var(--editor-background)]">
           <EditorTabs
             tabs={openTabs}
             activeTabId={activeTabId}
             onSelectTab={handleSelectTab}
             onCloseTab={handleCloseTab}
             onContextMenuRequest={handleContextMenuRequest}
+            isPreviewTabLoading={isPreviewTabLoading}
           />
-          <Breadcrumbs activeTab={currentActiveTab} portfolioData={PORTFOLIO_DATA} onOpenTab={handleOpenTab} />
-          <div className="flex-1 bg-[var(--editor-background)] overflow-auto animate-fadeIn">
+          <Breadcrumbs activeTab={currentActiveTab} portfolioData={PORTFOLIO_DATA} onOpenTab={(item) => handleOpenTab(item, false)} />
+          <div className="flex-1 overflow-hidden relative animate-fadeIn"> 
             {currentActiveTab ? (
               <TabContent
                 tab={currentActiveTab}
                 content={activeContentDetails}
                 portfolioData={PORTFOLIO_DATA}
                 onOpenProjectTab={handleOpenProjectTab}
-                currentThemeName={currentThemeName}
+                currentThemeName={currentThemeName} 
                 onContextMenuRequest={handleContextMenuRequest}
               />
             ) : (
               <WelcomeView
                 portfolioData={PORTFOLIO_DATA}
-                onOpenTab={handleOpenTab}
+                onOpenTab={(item) => handleOpenTab(item, false)}
                 onOpenAIChat={handleOpenAIChatTab}
               />
             )}
           </div>
+          {isBottomPanelVisible && (
+            <div className="flex flex-col" style={{ height: '30%', minHeight: '150px' }}> {/* Wrapper for bottom panel content */}
+              <BottomPanelTabs
+                tabs={bottomPanelTabs}
+                activeTabId={activeBottomPanelId}
+                onSelectTab={handleSelectBottomPanelTab}
+              />
+              <div className="flex-1 overflow-hidden"> {/* This div will contain the actual panel content */}
+                {activeBottomPanelId === 'terminal' && (
+                  <TerminalPanel
+                    output={terminalOutput}
+                    isRunning={isTerminalRunningCommand}
+                    onClose={handleCloseBottomPanel}
+                  />
+                )}
+                {activeBottomPanelId === 'pets' && (
+                  <PetsPanel
+                    onClose={handleCloseBottomPanel}
+                  />
+                )}
+              </div>
+            </div>
+          )}
         </main>
       </div>
       <footer className="h-6 bg-[var(--statusbar-background)] text-[var(--statusbar-foreground)] text-xs flex items-center justify-between px-3 border-t border-[var(--statusbar-border)] flex-shrink-0">
