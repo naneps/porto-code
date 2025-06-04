@@ -12,19 +12,19 @@ import remarkGfm from 'remark-gfm';
 import { getSyntaxHighlighterTheme } from '../utils/syntaxHighlighterUtils';
 import { ICONS } from '../constants';
 import { Loader2 } from 'lucide-react';
-import CVPreview from './CVPreview'; 
+import CVPreview from './CVPreview'; // Import CVPreview
 
 
 SyntaxHighlighter.registerLanguage('json', json);
-SyntaxHighlighter.registerLanguage('typescript', typescript); 
+SyntaxHighlighter.registerLanguage('typescript', typescript); // Register TypeScript
 
 interface TabContentProps {
   tab: Tab;
-  content: string | { markdown: string; imageUrl?: string } | ProjectDetail | PortfolioData; 
+  content: string | { markdown: string; imageUrl?: string } | ProjectDetail | PortfolioData; // Content can now be PortfolioData for CV Preview
   portfolioData: PortfolioData;
   onOpenProjectTab: (projectId: string, projectTitle: string) => void;
   currentThemeName: string;
-  onContextMenuRequest: (x: number, y: number, tabId: string, isCVGeneratorContext?: boolean) => void; // Updated prop
+  onContextMenuRequest: (x: number, y: number, tabId: string, isCVGeneratorContext?: boolean) => void; // Updated signature
   aiGeneratedProjects: ProjectDetail[]; 
   onSuggestNewAIProject: () => void; 
   isAISuggestingProject: boolean; 
@@ -57,16 +57,17 @@ const TabContent: React.FC<TabContentProps> = ({
         return;
     }
 
-    // Existing logic for other eligible previews
-    const eligibleForPreview = ['about.json', 'experience.json', 'skills.json', 'contact.json', 'projects.json'].includes(tab.fileName || '');
     if (tab.type === 'cv_preview') {
         // No custom context menu for CV Preview tab
         return;
     }
+
+    const eligibleForPreview = ['about.json', 'experience.json', 'skills.json', 'contact.json', 'projects.json'].includes(tab.fileName || '');
     if (((tab.type === 'file' && eligibleForPreview) || (tab.type === 'project_detail' && !tab.id.startsWith('ai_project_'))) && !tab.id.endsWith('_preview')) {
         event.preventDefault();
-        onContextMenuRequest(event.pageX, event.pageY, tab.id, false); // Pass false or undefined
+        onContextMenuRequest(event.pageX, event.pageY, tab.id, false); // Pass false
     }
+    // If none of the above, default browser context menu will show if event.preventDefault() was not called
   };
   
 
@@ -102,6 +103,7 @@ const TabContent: React.FC<TabContentProps> = ({
     );
   }
 
+  // Handle AI Generated Project Detail
   if (tab.type === 'project_detail' && tab.id.startsWith('ai_project_')) {
     const aiProject = content as ProjectDetail; 
     if (aiProject) {

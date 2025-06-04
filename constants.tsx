@@ -1,11 +1,13 @@
 
-import { PortfolioData, SidebarItemConfig, ProjectDetail, Command as AppCommandType, ArticleItem } from './types'; 
-import { User, Briefcase, Code2, FolderKanban, Mail, FileJson2, LucideIcon, FileTerminal, HelpCircle, Eye, Palette, Type as FontIcon, Settings, GitFork, Bell, TerminalSquare, ArrowLeft, ArrowRight, SplitSquareHorizontal, LayoutGrid, UserCircle2 as UserProfileIcon, Minus, Square, X, ChevronDown, ChevronRight, Search, Check, Files, FileCode, Bot, FileText, Link, Phone, MousePointerClick, Command, Newspaper, Play, Cat } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BarChart3, Bell, Bot, Briefcase, Cat, Check, ChevronDown, ChevronRight, Code2, Command, Eye, FileBadge, FileCode2 as FileCodeIcon, FileJson2, Files, FileTerminal, FileText, Folder as FolderClosed, FolderKanban, FolderOpen, Type as FontIcon, GitFork, HelpCircle, LayoutGrid, Link, LucideIcon, Mail, Minus, MousePointerClick, Newspaper, Palette, Phone, Play, Search, Settings, Sparkles, SplitSquareHorizontal, Square, TerminalSquare, User, UserCircle2 as UserProfileIcon, Volume2, VolumeX, X } from 'lucide-react';
+import { MOCK_CV_GENERATOR_CODE } from './assets/generate_cv_code';
+import { ActivityBarItemDefinition, Command as AppCommandType, PortfolioData, ProjectDetail, SidebarItemConfig } from './types';
 
 
 export const PORTFOLIO_DATA: PortfolioData = {
   name: "Nandang Eka Prasetya",
   nickname: "Nande",
+  avatar: "https://github.com/nandangeka.png",
   email: "ekaprasetya2244@gmail.com",
   phone: "+6281802192111",
   address: {
@@ -67,54 +69,33 @@ export const PORTFOLIO_DATA: PortfolioData = {
     "Click Rate game with multiplayer"
   ],
   linkedIn: "https://www.linkedin.com/in/nandang-eka-prasetya",
-  instagram: "https://instagram.com/nandang.prasetya", 
+  instagram: "https://instagram.com/_nannnde", 
   tiktok: "https://tiktok.com/@nandangprasetyaa", 
   otherSocial: { 
     name: "GitHub",
-    url: "https://github.com/nandangeka"
+    url: "https://github.com/naneps"
   }
 };
-
-export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
-  { id: 'about.json', label: 'About Me', fileName: 'about.json', icon: User, type: 'file', title: 'about.json' },
-  { id: 'experience.json', label: 'Work Experience', fileName: 'experience.json', icon: Briefcase, type: 'file', title: 'experience.json' },
-  { id: 'skills.json', label: 'Skills', fileName: 'skills.json', icon: Code2, type: 'file', title: 'skills.json' },
-  { id: 'projects.json', label: 'Projects', fileName: 'projects.json', icon: FolderKanban, type: 'file', title: 'projects.json' },
-  { id: 'contact.json', label: 'Contact', fileName: 'contact.json', icon: Mail, type: 'file', title: 'contact.json' },
-];
 
 export const ICONS: { [key: string]: LucideIcon } = {
   default: FileJson2,
   'about.json': User,
   'experience.json': Briefcase,
   'skills.json': Code2,
-  'projects.json': FolderKanban,
+  'projects.json': FolderKanban, 
   'contact.json': Mail,
   'article_detail': Newspaper, 
-  Mail,
-  Phone,
-  User,
-  Briefcase,
-  Code2,
-  Linkedin: GitFork,
-  Instagram: GitFork,
-  Tiktok: GitFork,
-  GitFork,
-  Link,
-  MousePointerClick,
-  Command, 
-  Search, 
-  Newspaper, 
-  project_detail: FileJson2,
+  'project_detail': FileJson2,
   'command_palette_icon': Command,
   'toggle_sidebar': Eye,
   'about_portfolio': HelpCircle,
   'theme_command': Palette,
   'font_command': FontIcon,
-  'files_icon': Files,
+  'files_icon': Files, 
   'settings_icon': Settings,
   'ai_chat_icon': Bot,
-  'articles_icon': Newspaper,
+  'articles_icon': Newspaper, 
+  'statistics_icon': BarChart3, 
   'bell_icon': Bell,
   'terminal_square_icon': TerminalSquare,
   'arrow_left_icon': ArrowLeft,
@@ -129,16 +110,74 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'chevron_right_icon': ChevronRight,
   'search_icon': Search,
   'check_icon': Check,
-  'file_code_icon': FileCode,
-  FileText,
-  Eye,
-  PlayIcon: Play, 
-  TerminalIcon: FileTerminal,
-  CatIcon: Cat,
+  'file_code_icon': FileCodeIcon, 
+  'FileText': FileText, 
+  'Eye': Eye, 
+  'PlayIcon': Play, 
+  'TerminalIcon': FileTerminal,
+  'CatIcon': Cat,
+  'Volume2Icon': Volume2,
+  'VolumeXIcon': VolumeX,
+  'SparklesIcon': Sparkles,
+  'Mail': Mail,
+  'Phone': Phone,
+  'User': User,
+  'Briefcase': Briefcase,
+  'Code2': Code2,
+  'Linkedin': GitFork,
+  'Instagram': GitFork,
+  'Tiktok': GitFork,
+  'GitFork': GitFork,
+  'Link': Link,
+  'MousePointerClick': MousePointerClick,
+  'Command': Command, 
+  'Search': Search, 
+  'Newspaper': Newspaper, 
+  'folder_open_icon': FolderOpen,
+  'folder_closed_icon': FolderClosed,
+  'generate_cv_icon': FileCodeIcon, // Changed to FileCodeIcon for script file
+  'cv_preview_icon': FileBadge, // Icon for the CV preview tab
 };
 
+export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
+  {
+    id: 'portfolio-folder',
+    label: 'PORTFOLIO',
+    icon: ICONS.folder_closed_icon, 
+    isFolder: true,
+    defaultOpen: true, 
+    actionType: 'open_tab', 
+    children: [
+      { id: 'about.json', label: 'about.json', fileName: 'about.json', icon: ICONS['about.json'], type: 'file', title: 'about.json', actionType: 'open_tab' },
+      { id: 'experience.json', label: 'experience.json', fileName: 'experience.json', icon: ICONS['experience.json'], type: 'file', title: 'experience.json', actionType: 'open_tab' },
+      { id: 'skills.json', label: 'skills.json', fileName: 'skills.json', icon: ICONS['skills.json'], type: 'file', title: 'skills.json', actionType: 'open_tab' },
+      { id: 'projects.json', label: 'projects.json', fileName: 'projects.json', icon: ICONS['projects.json'], type: 'file', title: 'projects.json', actionType: 'open_tab' },
+      { id: 'contact.json', label: 'contact.json', fileName: 'contact.json', icon: ICONS['contact.json'], type: 'file', title: 'contact.json', actionType: 'open_tab' },
+      {
+        id: 'cv-generator-folder',
+        label: 'CV_GENERATOR',
+        icon: ICONS.folder_closed_icon,
+        isFolder: true,
+        defaultOpen: false,
+        actionType: 'open_tab', 
+        children: [
+          {
+            id: 'generate_cv.ts',
+            label: 'generate_cv.ts',
+            icon: ICONS.generate_cv_icon,
+            fileName: 'generate_cv.ts', 
+            title: 'generate_cv.ts', // Title for the tab when viewing code
+            actionType: 'open_tab', // Click opens the code
+          },
+        ],
+      },
+    ],
+  },
+];
+
+
 export const APP_VERSION = "1.8.5"; 
-export const REPO_URL = "https://github.com/nandangeka";
+export const REPO_URL = "https://github.com/naneps";
 
 export const COMMANDS_CONFIG: Omit<AppCommandType, 'action' | 'isSelected'>[] = [];
 
@@ -195,6 +234,8 @@ export function generateFileContent(fileName: string, data: PortfolioData): stri
         content.otherSocial = data.otherSocial;
       }
       break;
+    case 'generate_cv.ts': // New case for the mock CV generator code
+      return MOCK_CV_GENERATOR_CODE;
     default:
       content = { error: 'File not found or content generation not implemented.' };
   }
@@ -232,3 +273,11 @@ export function generateProjectDetailContent(projectId: string, data: PortfolioD
   };
   return JSON.stringify(projectDetail, null, 2);
 }
+
+export const DEFAULT_ACTIVITY_BAR_ITEMS: ActivityBarItemDefinition[] = [
+  { id: 'explorer-activity', label: 'Explorer', iconName: 'files_icon', viewId: 'explorer' },
+  { id: 'search-activity', label: 'Search', iconName: 'search_icon', viewId: 'search' },
+  { id: 'ai_chat-activity', label: 'AI Assistant', iconName: 'ai_chat_icon', viewId: 'ai_chat_tab' },
+  { id: 'articles-activity', label: 'Articles', iconName: 'articles_icon', viewId: 'articles' },
+  { id: 'statistics-activity', label: 'Statistics', iconName: 'statistics_icon', viewId: 'statistics' },
+];

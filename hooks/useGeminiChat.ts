@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 import { ChatMessage, PortfolioData } from '../types';
 import { getContextualPrompt } from '../utils/aiUtils'; // Import the prompt generator
+import { playSound } from '../utils/audioUtils';
 
 export const TYPING_ANIMATION_ID_PREFIX = "ai-typing-";
 
@@ -37,6 +38,7 @@ export const useGeminiChat = (portfolioData: PortfolioData) => {
                 error: true,
                 },
             ]);
+            playSound('error');
         }
     }
   }, [messages.length, setMessages]); // setMessages is stable, messages.length ensures this primarily acts on initialization
@@ -54,6 +56,7 @@ export const useGeminiChat = (portfolioData: PortfolioData) => {
     setInput('');
     setIsLoading(true);
     setError(null);
+    playSound('ui-click'); // Sound for sending a message
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
@@ -73,6 +76,7 @@ export const useGeminiChat = (portfolioData: PortfolioData) => {
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, aiMessage]);
+      playSound('chat-receive');
 
     } catch (e) {
       console.error("Error calling Gemini API:", e);
@@ -85,6 +89,7 @@ export const useGeminiChat = (portfolioData: PortfolioData) => {
         error: true,
       };
       setMessages(prev => [...prev, errorMessage]);
+      playSound('error');
     } finally {
       setIsLoading(false);
     }

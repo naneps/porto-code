@@ -9,7 +9,7 @@ interface SearchPanelProps {
   onSearchTermChange: (term: string) => void;
   results: SearchResultItem[];
   onResultClick: (result: SearchResultItem) => void;
-  onClose: () => void; // To allow closing the panel
+  onClose: () => void; 
 }
 
 const SearchPanel: React.FC<SearchPanelProps> = ({
@@ -33,12 +33,11 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
   return (
     <aside
       className={`
-        ${isVisible ? 'w-64 md:w-72' : 'w-0'}
         bg-[var(--sidebar-background)] border-r border-[var(--sidebar-border)] 
-        text-[var(--sidebar-foreground)] flex flex-col h-full flex-shrink-0
-        overflow-hidden
-        transition-all duration-300 ease-in-out 
+        text-[var(--sidebar-foreground)] flex flex-col h-full w-full flex-shrink-0
+        overflow-hidden min-w-0
       `}
+      style={{ padding: isVisible ? '0.25rem 0.5rem' : '0' }}
       aria-label="Search Panel"
       aria-hidden={!isVisible}
     >
@@ -46,12 +45,12 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
         className={`
           w-full h-full flex flex-col
           transition-opacity duration-200 ease-in-out
-          ${isVisible ? 'opacity-100 delay-100 p-2' : 'opacity-0 p-0'}
+          ${isVisible ? 'opacity-100 delay-100' : 'opacity-0'}
         `}
       >
-        <div className="flex items-center justify-between mb-1">
-            <h2 className="text-xs text-[var(--sidebar-section-header-foreground)] uppercase tracking-wider px-1 whitespace-nowrap">
-            Search
+        <div className="flex items-center justify-between px-2 py-1 mb-2">
+            <h2 className="text-xs text-[var(--sidebar-section-header-foreground)] uppercase tracking-wider whitespace-nowrap">
+            SEARCH
             </h2>
             {CloseIcon && (
                  <button
@@ -64,7 +63,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
                 </button>
             )}
         </div>
-        <div className="relative">
+        <div className="relative mb-1"> {/* Search input area, reduced bottom margin */}
           {SearchIcon && (
             <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
               <SearchIcon size={16} className="text-[var(--text-muted)]" />
@@ -82,13 +81,13 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
         </div>
 
         {searchTerm && (
-          <div className="px-1 py-1 text-xs text-[var(--text-muted)]">
+          <div className="px-1 py-0.5 text-xs text-[var(--text-muted)]"> {/* Reduced padding */}
             {results.length} {results.length === 1 ? 'result' : 'results'}
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto mt-1">
-          {searchTerm && results.length === 0 && !isVisible && ( // Check !isVisible to avoid flash when panel is closing
+        <div className="flex-1 overflow-y-auto overflow-x-hidden mt-1"> 
+          {searchTerm && results.length === 0 && isVisible && (
             <p className="text-sm text-[var(--text-muted)] px-1 py-2">No results found.</p>
           )}
           {results.map((result) => (

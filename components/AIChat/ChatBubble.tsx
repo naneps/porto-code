@@ -4,14 +4,14 @@ import { ChatMessage } from '../../types'; // Adjusted path
 import { Bot, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-// Removed: import CodeBlock from './CodeBlock'; 
+// Removed: import CodeBlock from './CodeBlock';
 
 interface ChatBubbleProps {
   message: ChatMessage;
-  // Removed: currentThemeName?: string; 
+  // Removed: currentThemeName?: string;
 }
 
-const TYPING_SPEED_MS = 35; 
+const TYPING_SPEED_MS = 35;
 // TYPING_ANIMATION_ID_PREFIX is part of message IDs generated in useGeminiChat.ts
 // This component checks for it to enable the typing animation.
 
@@ -24,28 +24,28 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => { // Removed curr
 
   useEffect(() => {
     if (isTypingMessage) {
-      setDisplayedText(''); 
+      setDisplayedText('');
       let charIndex = 0;
       const typingInterval = setInterval(() => {
         const charToAdd = message.text[charIndex];
-        if (charToAdd) { 
+        if (charToAdd) {
           setDisplayedText(prev => prev + charToAdd);
         }
         charIndex++;
-        if (charIndex >= message.text.length) { 
+        if (charIndex >= message.text.length) {
           clearInterval(typingInterval);
         }
       }, TYPING_SPEED_MS);
       return () => clearInterval(typingInterval);
     } else {
-      setDisplayedText(message.text); 
+      setDisplayedText(message.text);
     }
-  }, [message.text, message.id, isTypingMessage]); 
+  }, [message.text, message.id, isTypingMessage]);
 
   const bubbleClasses = isUser
     ? 'bg-[var(--modal-selected-item-background)] text-[var(--modal-selected-item-foreground)] self-end rounded-lg rounded-br-none'
     : 'bg-[var(--sidebar-background)] text-[var(--sidebar-foreground)] self-start rounded-lg rounded-bl-none border border-[var(--border-color)]';
-  
+
   const IconComponent = isUser ? User : Bot;
   const iconColor = isUser ? 'text-[var(--modal-selected-item-foreground)]' : 'text-[var(--text-accent)]';
 

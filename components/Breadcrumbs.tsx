@@ -1,18 +1,19 @@
 
 import React from 'react';
-import { Tab, PortfolioData, SidebarItemConfig } from '../types'; // Added SidebarItemConfig
+import { Tab, PortfolioData, SidebarItemConfig } from '../types'; 
 import { ICONS } from '../constants';
 
 
 interface BreadcrumbsProps {
   activeTab: Tab | undefined | null;
   portfolioData: PortfolioData;
-  onOpenTab: (itemOrConfig: SidebarItemConfig | { id?: string, fileName: string, type?: Tab['type'], title?: string }) => void; 
+  onOpenTab: (itemOrConfig: SidebarItemConfig | { id?: string, fileName?: string, type?: Tab['type'], title?: string }) => void; 
+  className?: string; 
 }
 
-const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onOpenTab }) => {
+const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onOpenTab, className }) => {
   if (!activeTab) {
-    return <div className="h-8 bg-[var(--breadcrumbs-background)] border-t border-[var(--border-color)]"></div>;
+    return <div className={`h-8 bg-[var(--breadcrumbs-background)] border-t border-[var(--border-color)] ${className || ''}`}></div>;
   }
 
   const getProjectTitleFromId = (projectId: string): string => {
@@ -23,20 +24,18 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
         return portfolioData.projects[projectIndex];
       }
     }
-    // Fallback for titles that might not have an index, e.g., if ID format changes
     const genericMatch = projectId.match(/project_\d+_(.+)\.json/);
     if (genericMatch && genericMatch[1]) {
         return genericMatch[1].replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     }
-    // Last resort if no pattern matches, use the tab title if available, or a default
     return activeTab?.title || 'Project Detail';
   };
   
   const RootIcon = ICONS['projects.json']; 
   const SeparatorIcon = ICONS.chevron_right_icon;
-  const ProjectsJSONIcon = ICONS['projects.json']; // Icon for the 'projects.json' link
+  const ProjectsJSONIcon = ICONS['projects.json']; 
+  const CVGeneratorFolderIcon = ICONS.folder_closed_icon; 
 
-  // Determine the icon for the final segment of the breadcrumb
   let FinalSegmentIcon: React.ElementType | undefined = ICONS.default;
   if (activeTab.type === 'file' && activeTab.fileName && ICONS[activeTab.fileName]) {
     FinalSegmentIcon = ICONS[activeTab.fileName];
@@ -48,14 +47,16 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
     FinalSegmentIcon = ICONS.article_detail || ICONS.default;
   } else if (activeTab.type === 'json_preview' && activeTab.fileName && ICONS[activeTab.fileName]) {
     FinalSegmentIcon = ICONS[activeTab.fileName];
+  } else if (activeTab.type === 'cv_preview') {
+    FinalSegmentIcon = ICONS.cv_preview_icon || ICONS.FileText;
   }
 
 
   return (
-    <div className="flex items-center px-3 py-1.5 text-xs text-[var(--breadcrumbs-foreground)] bg-[var(--breadcrumbs-background)] border-t border-[var(--border-color)] shadow-sm">
+    <div className={`flex items-center px-3 py-1.5 text-xs text-[var(--breadcrumbs-foreground)] bg-[var(--breadcrumbs-background)] border-t border-[var(--border-color)] shadow-sm ${className || ''}`}>
       {RootIcon && (
         <button 
-          onClick={() => { /* Optional: Define action for clicking root, e.g., open sidebar or specific file */}} 
+          onClick={() => { /* Optional: Define action for clicking root */}} 
           className="flex items-center hover:text-[var(--breadcrumbs-focus-foreground)] transition-colors duration-150"
           title="Portfolio Root"
         >
@@ -89,7 +90,6 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
       
       {activeTab.type === 'article_detail' && (
         <>
-           {/* Placeholder for "Articles" link - ideally links to ArticlesPanel */}
            {ICONS.articles_icon && (
             <button 
               onClick={() => { /* TODO: Action to show/focus ArticlesPanel */ }}
@@ -108,7 +108,27 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
         </>
       )}
 
-      {(activeTab.type === 'file' || activeTab.type === 'json_preview') && (
+      {(activeTab.type === 'file' && activeTab.fileName === 'generate_cv.ts') && (
+        <>
+          {CVGeneratorFolderIcon && (
+             <button 
+              onClick={() => { /* Optional: Action to focus CV_GENERATOR folder in sidebar */}}
+              className="flex items-center hover:text-[var(--breadcrumbs-focus-foreground)] transition-colors duration-150"
+              title="CV_GENERATOR Folder"
+            >
+              <CVGeneratorFolderIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)] opacity-75" />
+              <span>CV_GENERATOR</span>
+            </button>
+          )}
+          {SeparatorIcon && <SeparatorIcon size={16} className="mx-1 text-[var(--breadcrumbs-separator-color)]" />}
+          <div className="flex items-center text-[var(--breadcrumbs-focus-foreground)]">
+            {FinalSegmentIcon && <FinalSegmentIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />}
+            <span>{activeTab.title}</span>
+          </div>
+        </>
+      )}
+
+      {(activeTab.type === 'file' && activeTab.fileName !== 'generate_cv.ts' || activeTab.type === 'json_preview') && (
          <div className="flex items-center text-[var(--breadcrumbs-focus-foreground)]">
             {FinalSegmentIcon && <FinalSegmentIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />}
             <span>{activeTab.title}</span>
@@ -120,6 +140,26 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
             {FinalSegmentIcon && <FinalSegmentIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />}
             <span>{activeTab.title}</span>
         </div>
+      )}
+
+      {activeTab.type === 'cv_preview' && (
+         <>
+          {CVGeneratorFolderIcon && (
+             <button 
+              onClick={() => { /* Optional: Action to focus CV_GENERATOR folder in sidebar */}}
+              className="flex items-center hover:text-[var(--breadcrumbs-focus-foreground)] transition-colors duration-150"
+              title="CV_GENERATOR Folder"
+            >
+              <CVGeneratorFolderIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)] opacity-75" />
+              <span>CV_GENERATOR</span>
+            </button>
+          )}
+          {SeparatorIcon && <SeparatorIcon size={16} className="mx-1 text-[var(--breadcrumbs-separator-color)]" />}
+          <div className="flex items-center text-[var(--breadcrumbs-focus-foreground)]">
+            {FinalSegmentIcon && <FinalSegmentIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />}
+            <span>{activeTab.title}</span>
+          </div>
+        </>
       )}
     </div>
   );

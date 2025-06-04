@@ -1,7 +1,6 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App'; // Changed to default import
+import App from './App.tsx'; // Changed to default import, added .tsx extension
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

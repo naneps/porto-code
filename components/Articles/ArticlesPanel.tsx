@@ -41,23 +41,21 @@ const ArticlesPanel: React.FC<ArticlesPanelProps> = ({
   }, [filterTerm, articles]);
 
   useEffect(() => {
-    // Reset filter when panel visibility changes or articles data updates
     if (isVisible) {
-        setFilterTerm(''); // Clear filter when panel becomes visible
+        setFilterTerm(''); 
     }
-    setFilteredArticles(articles); // Always ensure filtered articles are up-to-date with props
+    setFilteredArticles(articles); 
   }, [isVisible, articles]);
 
 
   return (
     <aside
       className={`
-        ${isVisible ? 'w-64 md:w-72' : 'w-0'}
         bg-[var(--sidebar-background)] border-r border-[var(--sidebar-border)]
-        text-[var(--sidebar-foreground)] flex flex-col h-full flex-shrink-0
-        overflow-hidden
-        transition-all duration-300 ease-in-out
+        text-[var(--sidebar-foreground)] flex flex-col h-full w-full flex-shrink-0
+        overflow-hidden min-w-0
       `}
+      style={{ padding: isVisible ? '0.25rem 0.5rem' : '0' }}
       aria-label="Articles Panel"
       aria-hidden={!isVisible}
     >
@@ -65,12 +63,12 @@ const ArticlesPanel: React.FC<ArticlesPanelProps> = ({
         className={`
           w-full h-full flex flex-col
           transition-opacity duration-200 ease-in-out
-          ${isVisible ? 'opacity-100 delay-100 p-2' : 'opacity-0 p-0'}
+          ${isVisible ? 'opacity-100 delay-100' : 'opacity-0'}
         `}
       >
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="text-xs text-[var(--sidebar-section-header-foreground)] uppercase tracking-wider px-1 whitespace-nowrap">
-            Articles
+        <div className="flex items-center justify-between px-2 py-1 mb-2">
+          <h2 className="text-xs text-[var(--sidebar-section-header-foreground)] uppercase tracking-wider whitespace-nowrap">
+            ARTICLES
           </h2>
           {CloseIcon && (
             <button
@@ -84,7 +82,7 @@ const ArticlesPanel: React.FC<ArticlesPanelProps> = ({
           )}
         </div>
 
-        <div className="relative mb-2">
+        <div className="relative mb-2"> {/* Filter input area */}
           {SearchIcon && (
             <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
               <SearchIcon size={14} className="text-[var(--text-muted)]" />
@@ -102,8 +100,8 @@ const ArticlesPanel: React.FC<ArticlesPanelProps> = ({
         </div>
 
 
-        <div className="flex-1 overflow-y-auto mt-1 space-y-1.5"> {/* Reduced space-y for tighter packing */}
-          {filteredArticles.length === 0 && isVisible && ( // Only show if panel is visible
+        <div className="flex-1 overflow-y-auto overflow-x-hidden mt-1 space-y-1.5">
+          {filteredArticles.length === 0 && isVisible && (
             <p className="text-sm text-[var(--text-muted)] px-1 py-2 text-center">
               {filterTerm ? "No articles match your filter." : "No articles available yet."}
             </p>
@@ -132,7 +130,7 @@ const ArticlesPanel: React.FC<ArticlesPanelProps> = ({
                   />
                 )}
                 <h3
-                  className={`text-sm font-semibold mb-0.5 truncate ${isActive ? 'text-[var(--sidebar-item-focus-foreground)]' : 'text-[var(--text-accent)]'}`}
+                  className="text-sm font-semibold mb-0.5 truncate text-[var(--text-accent)]"
                 >
                   {article.title}
                 </h3>
@@ -148,8 +146,11 @@ const ArticlesPanel: React.FC<ArticlesPanelProps> = ({
                       <span
                         key={tag}
                         className={`text-xs px-1.5 py-0.5 rounded-sm flex items-center
-                          ${isActive ? 'bg-[var(--sidebar-item-focus-foreground)] bg-opacity-20 text-[var(--sidebar-item-focus-foreground)] opacity-80' : 'bg-[var(--editor-tab-inactive-background)] text-[var(--text-muted)]'}`
-                        }
+                          ${isActive
+                            ? 'bg-[var(--tag-active-background)] text-[var(--tag-active-text)]'
+                            : 'bg-[var(--editor-tab-inactive-background)] text-[var(--text-muted)]'
+                          }
+                        `}
                       >
                         {tag}
                       </span>

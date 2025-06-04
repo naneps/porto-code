@@ -192,26 +192,29 @@
       }
     }
 
-    /* Bottom Panel Tabs Styling (Example, adjust based on BottomPanelTabs.tsx and themes.ts) */
-    /* These are conceptual, actual styles will depend on BottomPanelTabs.tsx structure */
-    /* .bottom-panel-tabs-container {
-      background-color: var(--bottom-panel-tab-background);
-      border-top: 1px solid var(--bottom-panel-tab-border);
+    /* Resizer styles */
+    .resizer {
+        background: var(--border-color);
+        opacity: 0.3; /* Make it subtle initially */
+        z-index: 20; /* Ensure it's above adjacent content for interaction */
+        transition: opacity 0.2s, background-color 0.2s;
+        touch-action: none; /* Prevent scrolling on touch devices */
     }
-    .bottom-panel-tab {
-      background-color: var(--bottom-panel-tab-inactive-background);
-      color: var(--bottom-panel-tab-inactive-foreground);
-      border-right: 1px solid var(--bottom-panel-tab-border);
+    .resizer:hover,
+    .resizer.resizing { /* Add .resizing class while dragging for persistent hover style */
+        opacity: 1;
+        background: var(--focus-border);
     }
-    .bottom-panel-tab:hover {
-      background-color: var(--bottom-panel-tab-hover-background);
+    .resizer-x { /* Vertical bar for horizontal resizing */
+        width: 5px;
+        cursor: col-resize;
+        height: 100%; /* Takes full height of its flex container */
     }
-    .bottom-panel-tab.active {
-      background-color: var(--bottom-panel-tab-active-background);
-      color: var(--bottom-panel-tab-active-foreground);
-      border-bottom: 2px solid var(--bottom-panel-tab-active-border-bottom);
-    } */
-
+    .resizer-y { /* Horizontal bar for vertical resizing */
+        height: 5px;
+        cursor: row-resize;
+        width: 100%; /* Takes full width of its flex container */
+    }
   </style>
 <script type="importmap">
 {
@@ -224,7 +227,11 @@
     "react-syntax-highlighter": "https://esm.sh/react-syntax-highlighter@^15.6.1",
     "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1",
     "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.511.0"
+    "lucide-react": "https://esm.sh/lucide-react@^0.511.0",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+    "firebase/analytics": "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js",
+    "pdf-lib": "https://esm.sh/pdf-lib@^1.17.1",
+    "firebase/": "https://esm.sh/firebase@^11.8.1/"
   }
 }
 </script>

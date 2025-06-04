@@ -1,6 +1,6 @@
 
 import { AppMenuItem, Theme, FontFamilyOption, FontSizeOption, SidebarItemConfig, Tab, ProjectDetail } from '../../types';
-import { LucideIcon, Command, Eye, EyeOff, Check, Play, FileTerminal, Cat } from 'lucide-react';
+import { LucideIcon, Command, Eye, EyeOff, Check, Play, FileTerminal, Cat, Volume2, VolumeX, BarChart3 as StatisticsIconLucide } from 'lucide-react';
 
 interface MenuConfigArgs {
   onOpenCommandPalette: () => void;
@@ -20,8 +20,12 @@ interface MenuConfigArgs {
   sidebarItems: SidebarItemConfig[];
   projects: string[]; 
   onRunItem: (config: { id: string, fileName: string, title: string, type: Tab['type'] }) => void;
+  onRunCVGenerator: () => void; // New prop for running CV generator
   onToggleTerminal: () => void;
   onTogglePetsPanel: () => void; 
+  onToggleStatisticsPanel: () => void; 
+  isSoundMuted: boolean;
+  onToggleSoundMute: () => void;
 }
 
 export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subItems?: AppMenuItem[] }[] => [
@@ -75,9 +79,21 @@ export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subIte
               icon: args.currentFontSizeId === size.id ? Check : undefined,
             })),
           },
+          { separator: true },
+          {
+            label: args.isSoundMuted ? 'Unmute Sound Effects' : 'Mute Sound Effects',
+            action: args.onToggleSoundMute,
+            icon: args.isSoundMuted ? (args.icons.VolumeXIcon || VolumeX) : (args.icons.Volume2Icon || Volume2),
+            isSelected: !args.isSoundMuted,
+          }
         ]
       },
       { separator: true },
+      { 
+        label: 'Toggle Statistics Panel', 
+        action: args.onToggleStatisticsPanel,
+        icon: args.icons.statistics_icon || StatisticsIconLucide,
+      },
       { 
         label: 'Toggle Terminal', 
         action: args.onToggleTerminal, 
@@ -96,17 +112,23 @@ export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subIte
   {
     name: 'Run',
     subItems: [
-      ...args.sidebarItems.map(item => ({
+      {
+        label: 'Run CV Generator Script',
+        action: args.onRunCVGenerator, // Use the new handler
+        icon: args.icons.generate_cv_icon || args.icons.PlayIcon, // Use specific CV icon or Play
+      },
+      { separator: true },
+      ...args.sidebarItems.filter(item => item.fileName !== 'generate_cv.ts').map(item => ({ // Exclude generate_cv.ts from general run
         label: `Run ${item.fileName}`,
         action: () => args.onRunItem({
           id: `${item.id}_preview`, 
-          fileName: item.fileName,  
+          fileName: item.fileName!,  
           title: `Preview: ${item.title || item.fileName}`,
           type: 'json_preview',
         }),
         icon: args.icons.PlayIcon, 
       })),
-      ...(args.projects.length > 0 && args.sidebarItems.length > 0 ? [{ separator: true }] : []),
+      ...(args.projects.length > 0 && args.sidebarItems.filter(item => item.fileName !== 'generate_cv.ts').length > 0 ? [{ separator: true }] : []),
       ...args.projects.map((projectTitle, index) => {
         const projectId = `project_${index}_${projectTitle.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]+/g, '')}.json`;
         return {
@@ -126,7 +148,7 @@ export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subIte
     name: 'Terminal', 
     subItems: [
         {
-            label: 'New Terminal', // This action will toggle and focus terminal tab
+            label: 'New Terminal', 
             action: args.onToggleTerminal,
             icon: args.icons.TerminalIcon || FileTerminal,
         }

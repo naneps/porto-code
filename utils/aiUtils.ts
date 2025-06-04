@@ -1,6 +1,7 @@
 
-import { PortfolioData, WorkExperienceEntry } from '../types';
+import { PortfolioData, WorkExperienceEntry, ProjectDetail } from '../types';
 import { generateFileContent } from '../constants';
+import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 
 export const getContextualPrompt = (userInput: string, portfolioData: PortfolioData): string => {
     const about = JSON.parse(generateFileContent('about.json', portfolioData));
@@ -62,3 +63,75 @@ Based on this information, please answer the following user question:
 User: ${userInput}
 AI:`;
   };
+
+
+export const fetchAIProjectSuggestion = async (developerSkills: string[]): Promise<Omit<ProjectDetail, 'id'> | null> => {
+  if (!process.env.API_KEY) {
+    console.error("API_KEY is not set. Cannot fetch AI project suggestion.");
+    return null;
+  }
+
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+  const prompt = `
+You are an expert project manager and creative software architect.
+Your task is to suggest a new and interesting software project idea.
+The project should be innovative yet feasible. 
+Consider these skills of the developer who might build this: ${developerSkills.join(', ')}.
+Please generate the following details for the project:
+1.  **title**: A catchy and descriptive project title (string).
+2.  **description**: A concise (2-3 sentences) description of what the project does, its purpose, and key features (string).
+3.  **technologies**: An array of 3-5 core technologies or tools that would be suitable for building this project (array of strings).
+4.  **year**: A plausible year of completion (number, e.g., ${new Date().getFullYear() + 1}).
+5.  **related_skills**: An array of 2-4 skills relevant to developing this project, possibly drawing from or complementing the developer's existing skills (array of strings).
+
+Return the response as a single, valid JSON object with exactly these keys: "title", "description", "technologies", "year", "related_skills".
+Do not include any other text or explanation outside of the JSON object.
+Example of the JSON structure:
+{
+  "title": "AI-Powered Recipe Recommender",
+  "description": "A mobile application that suggests recipes based on user dietary preferences, available ingredients, and cooking skill level. Features personalized meal plans and grocery list generation.",
+  "technologies": ["Flutter", "Firebase", "Python", "TensorFlow Lite"],
+  "year": ${new Date().getFullYear() + 1},
+  "related_skills": ["Mobile Development", "Machine Learning", "UI/UX Design"]
+}
+`;
+
+  try {
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: "gemini-2.5-flash-preview-04-17", // Use a powerful model for creative generation
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            temperature: 0.8, // Slightly higher temperature for more creative ideas
+        }
+    });
+    
+    let jsonStr = response.text.trim();
+    const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+    const match = jsonStr.match(fenceRegex);
+    if (match && match[2]) {
+        jsonStr = match[2].trim();
+    }
+
+    const suggestedData = JSON.parse(jsonStr) as Omit<ProjectDetail, 'id'>;
+
+    // Basic validation of the received structure
+    if (
+      suggestedData &&
+      typeof suggestedData.title === 'string' &&
+      typeof suggestedData.description === 'string' &&
+      Array.isArray(suggestedData.technologies) &&
+      typeof suggestedData.year === 'number' &&
+      Array.isArray(suggestedData.related_skills)
+    ) {
+      return suggestedData;
+    } else {
+      console.error("AI project suggestion response has incorrect structure:", suggestedData);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching or parsing AI project suggestion:", error);
+    return null;
+  }
+};

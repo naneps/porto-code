@@ -24,6 +24,7 @@ export interface WorkExperienceEntry extends Position {}
 export interface PortfolioData {
   name: string;
   nickname: string;
+  avatar: string;
   email: string;
   phone: string;
   address: Address;
@@ -54,7 +55,7 @@ export interface ProjectDetail {
 export interface Tab {
   id: string;
   title: string;
-  type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview' | 'article_detail';
+  type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview' | 'article_detail' | 'cv_preview'; // Added 'cv_preview'
   fileName?: string; // For file-based tabs and json_preview of files or projects
   articleSlug?: string; 
 }
@@ -62,11 +63,16 @@ export interface Tab {
 export interface SidebarItemConfig {
   id: string;
   label: string;
-  fileName: string;
-  icon: LucideIcon;
-  type?: 'file';
-  title?: string; // Added title for consistency, can be same as fileName or a more descriptive label
+  icon: LucideIcon; // Icon for the item itself
+  fileName?: string; // For file-like items that open a standard file tab
+  type?: 'file'; // Relevant if it opens a standard file tab
+  title?: string; // Display title, can be same as fileName or label
+  isFolder?: boolean;
+  children?: SidebarItemConfig[];
+  actionType?: 'open_tab' | 'run_cv_generator'; // Default to 'open_tab'
+  defaultOpen?: boolean; // For folders, initial expanded state
 }
+
 
 export interface Command {
   id: string;
@@ -138,7 +144,7 @@ export interface ContextMenuProps {
 }
 
 // For ActivityBar selection
-export type ActivityBarSelection = 'explorer' | 'ai_chat_tab' | 'search' | 'articles' | null;
+export type ActivityBarSelection = 'explorer' | 'ai_chat_tab' | 'search' | 'articles' | 'statistics' | null;
 
 // For Global Search Results
 export interface SearchResultItem {
@@ -161,4 +167,43 @@ export interface ArticleItem {
   contentMarkdown: string;
   slug: string;
   imageUrl?: string; 
+}
+
+// For Statistics Panel
+export interface MockStatistics {
+  liveVisitors: number;
+  todayVisits: number;
+  uptime: string; // e.g., "1h 23m 45s"
+  mostVisitedPage: string;
+  currentlyViewed: string[];
+}
+
+// For reorderable Activity Bar items
+export interface ActivityBarItemDefinition {
+  id: string; // Unique ID for D&D, e.g., 'explorer-activity'
+  label: string;
+  iconName: string; // Key to ICONS map in constants.tsx
+  viewId: ActivityBarSelection; // The view this item activates
+}
+
+export interface ActivityBarItemConfig extends ActivityBarItemDefinition {
+  icon: LucideIcon;
+  action: () => void;
+}
+
+// For Notifications
+export type NotificationType = 'success' | 'error' | 'info' | 'warning';
+
+export interface NotificationAction {
+  label: string;
+  onClick: () => void;
+}
+
+export interface NotificationItem {
+  id: string;
+  message: string;
+  type: NotificationType;
+  duration?: number; // in milliseconds, auto-dismiss if provided
+  actions?: NotificationAction[];
+  icon?: LucideIcon;
 }

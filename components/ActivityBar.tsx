@@ -1,118 +1,125 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ICONS } from '../constants';
-import { ActivityBarSelection } from '../types'; // Import ActivityBarSelection type
+import { ActivityBarSelection, ActivityBarItemConfig } from '../types'; 
+import { playSound } from '../utils/audioUtils';
 
 interface ActivityBarProps {
-  onSelectExplorerView: () => void;
-  onOpenAIChat: () => void;
-  onToggleSearchPanel: () => void; 
-  onToggleArticlesPanel: () => void; // New prop for articles panel
-  activeViewId?: ActivityBarSelection; 
+  items: ActivityBarItemConfig[];
+  onReorder: (draggedItemId: string, targetItemId: string) => void;
+  activeViewId?: ActivityBarSelection;
+  className?: string; 
 }
 
 const ActivityBar: React.FC<ActivityBarProps> = ({ 
-  onSelectExplorerView, 
-  onOpenAIChat, 
-  onToggleSearchPanel, 
-  onToggleArticlesPanel, // Destructure new prop
-  activeViewId 
+  items,
+  onReorder,
+  activeViewId,
+  className
 }) => {
-  const FilesIcon = ICONS.files_icon;
   const SettingsIcon = ICONS.settings_icon;
-  const AIChatIcon = ICONS.ai_chat_icon;
-  const SearchIcon = ICONS.search_icon; 
-  const ArticlesIcon = ICONS.articles_icon; // Get Articles icon
+  const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
+  const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
 
-  const getItemClasses = (viewId: ActivityBarSelection | string) => { 
-    const isActive = activeViewId === viewId;
-    return `p-2.5 rounded text-[var(--activitybar-inactive-foreground)] focus:outline-none transition-colors duration-150 ease-in-out relative ${
-      isActive
-        ? 'text-[var(--activitybar-foreground)] bg-[var(--activitybar-active-background)]'
-        : 'hover:text-[var(--activitybar-foreground)] hover:bg-[var(--activitybar-hover-background)] focus:bg-[var(--activitybar-hover-background)]'
-    }`;
+  const handleDragStart = (e: React.DragEvent<HTMLButtonElement>, itemId: string) => {
+    setDraggedItemId(itemId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', itemId);
+    // Visual feedback for dragged item is handled by direct className manipulation on the item below
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLButtonElement>, targetItemId: string) => {
+    e.preventDefault();
+    if (draggedItemId && targetItemId !== draggedItemId) {
+      setDragOverItemId(targetItemId);
+    }
+  };
+  
+  const handleDragEnter = (e: React.DragEvent<HTMLButtonElement>, targetItemId: string) => {
+    e.preventDefault();
+    if (draggedItemId && targetItemId !== draggedItemId) {
+      setDragOverItemId(targetItemId);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    // Check if the mouse is truly leaving the target element or just moving to a child
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverItemId(null);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLButtonElement>, targetItemId: string) => {
+    e.preventDefault();
+    if (draggedItemId && targetItemId !== draggedItemId) {
+      onReorder(draggedItemId, targetItemId);
+    }
+    setDraggedItemId(null);
+    setDragOverItemId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItemId(null);
+    setDragOverItemId(null);
+  };
+  
+  const handleActionClick = (action: () => void) => {
+    playSound('ui-click');
+    action();
   };
 
   return (
-    <div className="w-12 bg-[var(--activitybar-background)] h-full flex flex-col justify-between items-center py-3 shadow-md flex-shrink-0">
-      <div className="flex flex-col space-y-1">
-        {FilesIcon && (
-          <button
-            onClick={onSelectExplorerView}
-            className={getItemClasses('explorer')}
-            title="Explorer"
-            aria-label="Explorer - Show files and folders"
-            aria-pressed={activeViewId === 'explorer'}
-            aria-current={activeViewId === 'explorer' ? "page" : undefined}
-          >
-            {activeViewId === 'explorer' && (
-              <span 
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 w-0.5 h-6 bg-[var(--activitybar-active-border)] rounded-r-sm"
-                aria-hidden="true"
-              ></span>
-            )}
-            <FilesIcon size={22} />
-          </button>
-        )}
-        {SearchIcon && ( 
-          <button
-            onClick={onToggleSearchPanel}
-            className={getItemClasses('search')}
-            title="Search"
-            aria-label="Search - Open global search panel"
-            aria-pressed={activeViewId === 'search'}
-            aria-current={activeViewId === 'search' ? "page" : undefined}
-          >
-            {activeViewId === 'search' && (
-              <span 
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 w-0.5 h-6 bg-[var(--activitybar-active-border)] rounded-r-sm"
-                aria-hidden="true"
-              ></span>
-            )}
-            <SearchIcon size={22} />
-          </button>
-        )}
-        {AIChatIcon && (
-          <button
-            onClick={onOpenAIChat}
-            className={getItemClasses('ai_chat_tab')}
-            title="AI Assistant"
-            aria-label="Open AI Assistant Chat"
-            aria-current={activeViewId === 'ai_chat_tab' ? "page" : undefined}
-          >
-            {activeViewId === 'ai_chat_tab' && (
-              <span
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 w-0.5 h-6 bg-[var(--activitybar-active-border)] rounded-r-sm"
-                aria-hidden="true"
-              ></span>
-            )}
-            <AIChatIcon size={22} />
-          </button>
-        )}
-         {ArticlesIcon && ( // Add Articles Icon Button
-          <button
-            onClick={onToggleArticlesPanel}
-            className={getItemClasses('articles')}
-            title="Articles"
-            aria-label="Articles - Show articles and posts"
-            aria-pressed={activeViewId === 'articles'}
-            aria-current={activeViewId === 'articles' ? "page" : undefined}
-          >
-            {activeViewId === 'articles' && (
-              <span 
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 w-0.5 h-6 bg-[var(--activitybar-active-border)] rounded-r-sm"
-                aria-hidden="true"
-              ></span>
-            )}
-            <ArticlesIcon size={22} />
-          </button>
-        )}
+    <div className={`w-12 bg-[var(--activitybar-background)] h-full flex flex-col justify-between items-center py-3 shadow-md flex-shrink-0 ${className || ''}`}>
+      <div className="flex flex-col space-y-1 w-full items-center">
+        {items.map((item) => {
+          const isActive = activeViewId === item.viewId;
+          const isBeingDragged = draggedItemId === item.id;
+          const isDragOverTarget = dragOverItemId === item.id && !isBeingDragged;
+
+          let buttonClasses = `p-2.5 rounded text-[var(--activitybar-inactive-foreground)] focus:outline-none transition-colors duration-150 ease-in-out relative w-10 h-10 flex items-center justify-center ${
+            isActive
+              ? 'text-[var(--activitybar-foreground)] bg-[var(--activitybar-active-background)]'
+              : 'hover:text-[var(--activitybar-foreground)] hover:bg-[var(--activitybar-hover-background)] focus:bg-[var(--activitybar-hover-background)]'
+          }`;
+          if (isBeingDragged) buttonClasses += ' opacity-50 border-2 border-dashed border-[var(--focus-border)]';
+          if (isDragOverTarget) buttonClasses += ' border-t-2 border-[var(--focus-border)]';
+
+
+          return (
+            <button
+              key={item.id}
+              draggable="true"
+              onDragStart={(e) => handleDragStart(e, item.id)}
+              onDragOver={(e) => handleDragOver(e, item.id)}
+              onDragEnter={(e) => handleDragEnter(e, item.id)}
+              onDragLeave={(e) => handleDragLeave(e)}
+              onDrop={(e) => handleDrop(e, item.id)}
+              onDragEnd={handleDragEnd}
+              onClick={() => handleActionClick(item.action)}
+              className={buttonClasses}
+              title={item.label}
+              aria-label={item.label}
+              aria-pressed={isActive}
+              aria-current={isActive ? "page" : undefined}
+            >
+              {isActive && !isDragOverTarget && ( // Don't show active bar if it's a drag over target to avoid visual clutter with drop indicator
+                <span 
+                  className="absolute left-0 top-1/2 transform -translate-y-1/2 w-0.5 h-6 bg-[var(--activitybar-active-border)] rounded-r-sm"
+                  aria-hidden="true"
+                ></span>
+              )}
+              <item.icon size={22} />
+            </button>
+          );
+        })}
       </div>
       
       <div className="flex flex-col space-y-1">
         {SettingsIcon && (
           <button
-            className="p-2.5 rounded text-[var(--activitybar-inactive-foreground)] hover:text-[var(--activitybar-foreground)] hover:bg-[var(--activitybar-hover-background)] focus:bg-[var(--activitybar-hover-background)] focus:outline-none transition-colors duration-150 ease-in-out"
+            onClick={() => playSound('ui-click')} // Potentially open settings or command palette for settings
+            className="p-2.5 rounded text-[var(--activitybar-inactive-foreground)] hover:text-[var(--activitybar-foreground)] hover:bg-[var(--activitybar-hover-background)] focus:bg-[var(--activitybar-hover-background)] focus:outline-none transition-colors duration-150 ease-in-out w-10 h-10 flex items-center justify-center"
             title="Manage (Settings - Not Implemented)"
             aria-label="Manage settings (feature not implemented)"
           >
