@@ -1,5 +1,5 @@
 
-import { PortfolioData, WorkExperienceEntry, ProjectDetail } from '../types';
+import { PortfolioData, WorkExperienceEntry, ProjectDetail, LogLevel } from '../types';
 import { generateFileContent } from '../constants';
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 
@@ -65,8 +65,12 @@ AI:`;
   };
 
 
-export const fetchAIProjectSuggestion = async (developerSkills: string[]): Promise<Omit<ProjectDetail, 'id'> | null> => {
+export const fetchAIProjectSuggestion = async (
+    developerSkills: string[],
+    addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void
+  ): Promise<Omit<ProjectDetail, 'id'> | null> => {
   if (!process.env.API_KEY) {
+    addAppLog('error', "API_KEY is not set. Cannot fetch AI project suggestion.", 'AIService');
     console.error("API_KEY is not set. Cannot fetch AI project suggestion.");
     return null;
   }
@@ -96,14 +100,14 @@ Example of the JSON structure:
   "related_skills": ["Mobile Development", "Machine Learning", "UI/UX Design"]
 }
 `;
-
+  addAppLog('debug', 'Requesting AI project suggestion.', 'AIService', { skills: developerSkills });
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash-preview-04-17", // Use a powerful model for creative generation
+        model: "gemini-2.5-flash-preview-04-17", 
         contents: prompt,
         config: {
             responseMimeType: "application/json",
-            temperature: 0.8, // Slightly higher temperature for more creative ideas
+            temperature: 0.8, 
         }
     });
     
@@ -113,10 +117,10 @@ Example of the JSON structure:
     if (match && match[2]) {
         jsonStr = match[2].trim();
     }
+    addAppLog('debug', 'Received AI project suggestion response.', 'AIService', { responseTextLength: jsonStr.length });
 
     const suggestedData = JSON.parse(jsonStr) as Omit<ProjectDetail, 'id'>;
 
-    // Basic validation of the received structure
     if (
       suggestedData &&
       typeof suggestedData.title === 'string' &&
@@ -125,12 +129,15 @@ Example of the JSON structure:
       typeof suggestedData.year === 'number' &&
       Array.isArray(suggestedData.related_skills)
     ) {
+      addAppLog('info', `Successfully parsed AI project suggestion: "${suggestedData.title}"`, 'AIService');
       return suggestedData;
     } else {
+      addAppLog('error', "AI project suggestion response has incorrect structure.", 'AIService', { responseData: suggestedData });
       console.error("AI project suggestion response has incorrect structure:", suggestedData);
       return null;
     }
-  } catch (error) {
+  } catch (error: any) {
+    addAppLog('error', "Error fetching or parsing AI project suggestion.", 'AIService', { error: error.message || String(error) });
     console.error("Error fetching or parsing AI project suggestion:", error);
     return null;
   }

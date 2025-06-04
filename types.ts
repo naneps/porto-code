@@ -1,5 +1,6 @@
 
-import { LucideIcon } from 'lucide-react';
+
+import { LucideIcon, ImageIcon as ImageIconType, ExternalLink as ExternalLinkIcon } from 'lucide-react'; // Added ImageIconType and ExternalLinkIcon
 
 export interface Address {
   city: string;
@@ -21,10 +22,20 @@ export interface Position {
 
 export interface WorkExperienceEntry extends Position {}
 
+export interface ProjectDetail {
+  id: string;
+  title: string;
+  description: string;
+  technologies: string[];
+  year?: number;
+  related_skills?: string[];
+  webLink?: string;
+  imageUrls?: string[];
+}
+
 export interface PortfolioData {
   name: string;
   nickname: string;
-  avatar: string;
   email: string;
   phone: string;
   address: Address;
@@ -33,7 +44,7 @@ export interface PortfolioData {
   current_position: Position;
   work_experience: WorkExperienceEntry[];
   skills: string[];
-  projects: string[]; // Project titles
+  projects: ProjectDetail[]; // Changed from string[]
   linkedIn: string;
   instagram?: string;
   tiktok?: string;
@@ -43,21 +54,13 @@ export interface PortfolioData {
   };
 }
 
-export interface ProjectDetail {
-  id: string;
-  title: string;
-  description: string;
-  technologies: string[];
-  year?: number; 
-  related_skills?: string[]; 
-}
 
 export interface Tab {
   id: string;
   title: string;
-  type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview' | 'article_detail' | 'cv_preview'; // Added 'cv_preview'
+  type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview' | 'article_detail' | 'cv_preview' | 'settings_editor';
   fileName?: string; // For file-based tabs and json_preview of files or projects
-  articleSlug?: string; 
+  articleSlug?: string;
 }
 
 export interface SidebarItemConfig {
@@ -148,7 +151,7 @@ export type ActivityBarSelection = 'explorer' | 'ai_chat_tab' | 'search' | 'arti
 
 // For Global Search Results
 export interface SearchResultItem {
-  id: string;
+  id:string;
   fileId: string;
   fileDisplayPath: string;
   lineNumber: number;
@@ -166,7 +169,7 @@ export interface ArticleItem {
   tags?: string[];
   contentMarkdown: string;
   slug: string;
-  imageUrl?: string; 
+  imageUrl?: string;
 }
 
 // For Statistics Panel
@@ -207,3 +210,40 @@ export interface NotificationItem {
   actions?: NotificationAction[];
   icon?: LucideIcon;
 }
+
+// For content of projects.json
+export interface ProjectListingItem {
+  id: string;
+  title: string;
+  imageUrls?: string[];
+  technologies?: string[]; // Added to display key tech on cards
+}
+
+// Editor Pane Types for Split View
+export type EditorPaneId = 'left' | 'right';
+
+export interface EditorPaneState {
+  openTabs: Tab[];
+  activeTabId: string | null;
+  tabHistory: string[];
+  currentHistoryIndex: number;
+}
+
+// Log Entry Types
+export type LogLevel = 'info' | 'action' | 'warning' | 'error' | 'debug';
+
+export interface LogEntry {
+  id: string;
+  timestamp: Date;
+  level: LogLevel;
+  message: string;
+  source?: string; // e.g., 'User', 'System', 'AI'
+  details?: Record<string, any>; // Optional structured details
+}
+
+// For BottomPanelTabs
+export type BottomPanelTabId = 'terminal' | 'pets' | 'logs';
+
+
+// Adding specific Lucide icons if they are not already part of the general LucideIcon type
+export type { ImageIconType as ImageIcon, ExternalLinkIcon };

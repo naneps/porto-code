@@ -1,30 +1,33 @@
 
-import React, { JSX } from 'react';
+
+import React from 'react';
+import { PortfolioData, EducationEntry, WorkExperienceEntry, Position, ProjectDetail } from '../types';
 import { ICONS } from '../constants';
-import { EducationEntry, PortfolioData, Position, ProjectDetail, WorkExperienceEntry } from '../types';
 
 interface JsonPreviewViewProps {
-  jsonData: any; // Can be parsed JSON or a direct ProjectDetail object for AI projects
-  fileId: string; // Used to determine rendering style (e.g., 'about.json', 'project_xyz.json', or 'ai_project_123')
-  portfolioData: PortfolioData; // For context, like skills list for projects
+  jsonData: any;
+  fileId: string;
+  portfolioData: PortfolioData;
 }
 
-const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId }) => {
+const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, portfolioData }) => {
   const MailIcon = ICONS.Mail;
-  const PhoneIcon = ICONS.Phone || MailIcon; 
+  const PhoneIcon = ICONS.Phone || MailIcon;
   const BriefcaseIcon = ICONS.Briefcase;
   const UserIcon = ICONS.User;
   const Code2Icon = ICONS.Code2;
-  const LinkedinIcon = ICONS.Linkedin || Code2Icon; 
+  const LinkedinIcon = ICONS.Linkedin || Code2Icon;
   const InstagramIcon = ICONS.Instagram || Code2Icon;
   const TiktokIcon = ICONS.Tiktok || Code2Icon;
-  const GithubIcon = ICONS.GitFork; 
+  const GithubIcon = ICONS.GitFork;
   const LinkIcon = ICONS.Link || Code2Icon;
-  const InfoIcon = ICONS.about_portfolio || UserIcon; 
-  const ProjectIcon = ICONS.project_detail || BriefcaseIcon; 
-  const TechIcon = ICONS.Code2; 
-  const CalendarIcon = ICONS.FileText; 
+  const InfoIcon = ICONS.about_portfolio || UserIcon;
+  const ProjectIcon = ICONS.project_detail || BriefcaseIcon;
+  const TechIcon = ICONS.Code2;
+  const CalendarIcon = ICONS.FileText;
   const SparklesIcon = ICONS.SparklesIcon;
+  const ExternalLink = ICONS.ExternalLinkIcon; // Added
+  const ImageIcon = ICONS.ImageIcon; // Added
 
 
   const renderSectionTitle = (title: string, Icon?: React.ElementType, isAISuggestion?: boolean) => (
@@ -36,10 +39,10 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId }) =
   );
 
   const renderClickableLink = (href: string, text: string, Icon?: React.ElementType) => (
-    <a 
-      href={href} 
-      target="_blank" 
-      rel="noopener noreferrer" 
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
       className="inline-flex items-center text-[var(--link-foreground)] hover:text-[var(--link-hover-foreground)] hover:underline break-all text-xs sm:text-sm"
     >
       {Icon && <Icon size={14} className="mr-1 sm:mr-1.5 flex-shrink-0" />}
@@ -49,7 +52,7 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId }) =
 
   const renderDetailItem = (label: string, value: string | JSX.Element | string[] | number | undefined, Icon?: React.ElementType) => {
     if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) {
-        return null; 
+        return null;
     }
     let displayValue: JSX.Element | string | number;
     if (Array.isArray(value)) {
@@ -63,7 +66,6 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId }) =
         </div>
       );
     } else if (typeof value === 'string' && (value.startsWith('http') || value.startsWith('mailto:') || value.startsWith('tel:'))) {
-        // If value itself is a link string but not passed through renderClickableLink
         displayValue = <span className="text-xs sm:text-sm break-all">{value}</span>
     } else {
       displayValue = <span className="text-xs sm:text-sm">{value as string | number}</span>;
@@ -81,18 +83,17 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId }) =
   };
 
 
-  // Handle AI-generated project details or regular project previews
   if (fileId.startsWith('project_') || fileId.startsWith('ai_project_')) {
-    const project = jsonData as ProjectDetail; // jsonData is already the ProjectDetail object for AI projects
+    const project = jsonData as ProjectDetail;
     const isAISuggestion = fileId.startsWith('ai_project_');
-    
+
     return (
       <div className="p-3 sm:p-4 md:p-6 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
         {renderSectionTitle(isAISuggestion ? project.title : `Project Preview: ${project.title}`, ProjectIcon, isAISuggestion)}
         {isAISuggestion && <p className="text-[0.65rem] sm:text-xs text-yellow-500 mb-2 sm:mb-3 ml-6 sm:ml-7 -mt-1 sm:-mt-2">This project idea was suggested by AI.</p>}
-        
+
         {!isAISuggestion && renderDetailItem("ID", project.id)}
-        
+
         {renderSectionTitle("Description", InfoIcon)}
         <p className="text-xs sm:text-sm text-[var(--text-default)] mb-3 sm:mb-4 ml-6 sm:ml-7 whitespace-pre-line leading-relaxed">
           {project.description}
@@ -100,8 +101,39 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId }) =
 
         {renderDetailItem("Technologies", project.technologies, TechIcon)}
         {project.year && renderDetailItem("Year", project.year.toString(), CalendarIcon)}
-        {project.related_skills && project.related_skills.length > 0 && 
+        {project.related_skills && project.related_skills.length > 0 &&
           renderDetailItem("Related Skills", project.related_skills, Code2Icon)}
+
+        {project.imageUrls && project.imageUrls.length > 0 && (
+          <>
+            {renderSectionTitle("Project Visuals", ImageIcon)}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 ml-6 sm:ml-7 mb-3 sm:mb-4">
+              {project.imageUrls.map((url, index) => (
+                <img
+                  key={index}
+                  src={url}
+                  alt={`${project.title} - Visual ${index + 1}`}
+                  className="w-full h-auto object-contain rounded-md border border-[var(--border-color)] shadow-sm max-h-60"
+                  loading="lazy"
+                />
+              ))}
+            </div>
+          </>
+        )}
+
+        {project.webLink && ExternalLink && (
+          <div className="mt-3 sm:mt-4 ml-6 sm:ml-7">
+             <a
+              href={project.webLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-3 py-1.5 bg-[var(--modal-button-background)] text-[var(--modal-button-foreground)] hover:bg-[var(--modal-button-hover-background)] rounded-md text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--focus-border)] transition-colors"
+            >
+              <ExternalLink size={14} className="mr-1.5 sm:mr-2" />
+              Visit Website
+            </a>
+          </div>
+        )}
       </div>
     );
   }
@@ -176,20 +208,20 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId }) =
   }
 
   if (fileId === 'contact.json') {
-    const { email, phone, address, linkedIn, instagram, tiktok, otherSocial } = jsonData as PortfolioData; 
+    const { email, phone, address, linkedIn, instagram, tiktok, otherSocial } = jsonData as PortfolioData;
     return (
       <div className="p-3 sm:p-4 md:p-6 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
         {renderSectionTitle("Contact Information", MailIcon)}
         {email && renderDetailItem("Email", renderClickableLink(`mailto:${email}`, email, MailIcon))}
         {phone && renderDetailItem("Phone", renderClickableLink(`tel:${phone}`, phone, PhoneIcon))}
-        
+
         {address && renderDetailItem("Address", `${address.full}`)}
 
         {renderSectionTitle("Social Media", LinkIcon)}
         {linkedIn && renderDetailItem("LinkedIn", renderClickableLink(linkedIn, "View LinkedIn Profile", LinkedinIcon))}
         {instagram && renderDetailItem("Instagram", renderClickableLink(instagram, `@${instagram.split('/').pop() || 'nandang.prasetya'}`, InstagramIcon))}
         {tiktok && renderDetailItem("TikTok", renderClickableLink(tiktok, `@${tiktok.split('/').pop() || 'nandangprasetyaa'}`, TiktokIcon))}
-        {otherSocial && renderDetailItem(otherSocial.name, renderClickableLink(otherSocial.url, `View ${otherSocial.name} Profile`, 
+        {otherSocial && renderDetailItem(otherSocial.name, renderClickableLink(otherSocial.url, `View ${otherSocial.name} Profile`,
           otherSocial.name.toLowerCase() === 'github' ? GithubIcon : LinkIcon
         ))}
       </div>

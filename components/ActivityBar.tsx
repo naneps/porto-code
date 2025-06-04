@@ -8,6 +8,7 @@ interface ActivityBarProps {
   items: ActivityBarItemConfig[];
   onReorder: (draggedItemId: string, targetItemId: string) => void;
   activeViewId?: ActivityBarSelection;
+  onOpenSettingsEditor: () => void; // New prop to open settings editor tab
   className?: string; 
 }
 
@@ -15,6 +16,7 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
   items,
   onReorder,
   activeViewId,
+  onOpenSettingsEditor, // Destructure new prop
   className
 }) => {
   const SettingsIcon = ICONS.settings_icon;
@@ -25,7 +27,6 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
     setDraggedItemId(itemId);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', itemId);
-    // Visual feedback for dragged item is handled by direct className manipulation on the item below
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLButtonElement>, targetItemId: string) => {
@@ -44,7 +45,6 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
 
   const handleDragLeave = (e: React.DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    // Check if the mouse is truly leaving the target element or just moving to a child
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setDragOverItemId(null);
     }
@@ -67,6 +67,11 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
   const handleActionClick = (action: () => void) => {
     playSound('ui-click');
     action();
+  };
+
+  const handleSettingsIconClick = () => {
+    playSound('ui-click');
+    onOpenSettingsEditor(); // Call the new handler
   };
 
   return (
@@ -103,7 +108,7 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
               aria-pressed={isActive}
               aria-current={isActive ? "page" : undefined}
             >
-              {isActive && !isDragOverTarget && ( // Don't show active bar if it's a drag over target to avoid visual clutter with drop indicator
+              {isActive && !isDragOverTarget && ( 
                 <span 
                   className="absolute left-0 top-1/2 transform -translate-y-1/2 w-0.5 h-6 bg-[var(--activitybar-active-border)] rounded-r-sm"
                   aria-hidden="true"
@@ -118,10 +123,10 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
       <div className="flex flex-col space-y-1">
         {SettingsIcon && (
           <button
-            onClick={() => playSound('ui-click')} // Potentially open settings or command palette for settings
+            onClick={handleSettingsIconClick} // Updated onClick handler
             className="p-2.5 rounded text-[var(--activitybar-inactive-foreground)] hover:text-[var(--activitybar-foreground)] hover:bg-[var(--activitybar-hover-background)] focus:bg-[var(--activitybar-hover-background)] focus:outline-none transition-colors duration-150 ease-in-out w-10 h-10 flex items-center justify-center"
-            title="Manage (Settings - Not Implemented)"
-            aria-label="Manage settings (feature not implemented)"
+            title="Manage Settings" // Updated title
+            aria-label="Manage settings"
           >
             <SettingsIcon size={22} />
           </button>

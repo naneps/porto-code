@@ -1,33 +1,28 @@
 
 import React from 'react';
-import { Tab, PortfolioData, SidebarItemConfig } from '../types'; 
+import { Tab, PortfolioData, SidebarItemConfig, EditorPaneId } from '../types'; 
 import { ICONS } from '../constants';
 
 
 interface BreadcrumbsProps {
   activeTab: Tab | undefined | null;
   portfolioData: PortfolioData;
-  onOpenTab: (itemOrConfig: SidebarItemConfig | { id?: string, fileName?: string, type?: Tab['type'], title?: string }) => void; 
+  onOpenTab: (itemOrConfig: SidebarItemConfig | { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string }) => void; 
   className?: string; 
+  paneId: EditorPaneId;
 }
 
-const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onOpenTab, className }) => {
+const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onOpenTab, className, paneId }) => {
   if (!activeTab) {
     return <div className={`h-8 bg-[var(--breadcrumbs-background)] border-t border-[var(--border-color)] ${className || ''}`}></div>;
   }
 
   const getProjectTitleFromId = (projectId: string): string => {
-    const projectIndexMatch = projectId.match(/project_(\d+)_/);
-    if (projectIndexMatch && projectIndexMatch[1]) {
-      const projectIndex = parseInt(projectIndexMatch[1], 10);
-      if (projectIndex >= 0 && projectIndex < portfolioData.projects.length) {
-        return portfolioData.projects[projectIndex];
-      }
+    const directProject = portfolioData.projects.find(p => p.id === projectId);
+    if (directProject) {
+      return directProject.title;
     }
-    const genericMatch = projectId.match(/project_\d+_(.+)\.json/);
-    if (genericMatch && genericMatch[1]) {
-        return genericMatch[1].replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    }
+    // Fallback logic if needed, though direct ID match should be primary
     return activeTab?.title || 'Project Detail';
   };
   
@@ -49,11 +44,13 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
     FinalSegmentIcon = ICONS[activeTab.fileName];
   } else if (activeTab.type === 'cv_preview') {
     FinalSegmentIcon = ICONS.cv_preview_icon || ICONS.FileText;
+  } else if (activeTab.type === 'settings_editor') {
+    FinalSegmentIcon = ICONS.settings_editor_icon || ICONS.settings_icon;
   }
 
 
   return (
-    <div className={`flex items-center px-3 py-1.5 text-xs text-[var(--breadcrumbs-foreground)] bg-[var(--breadcrumbs-background)] border-t border-[var(--border-color)] shadow-sm ${className || ''}`}>
+    <div className={`flex items-center px-3 py-1.5 text-xs text-[var(--breadcrumbs-foreground)] bg-[var(--breadcrumbs-background)] border-t border-[var(--border-color)] shadow-sm ${className || ''}`} aria-label={`Breadcrumbs for ${paneId} pane`}>
       {RootIcon && (
         <button 
           onClick={() => { /* Optional: Define action for clicking root */}} 
@@ -67,7 +64,6 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
       
       {SeparatorIcon && <SeparatorIcon size={16} className="mx-1 text-[var(--breadcrumbs-separator-color)]" />}
 
-      {/* Path based on activeTab type */}
       {activeTab.type === 'project_detail' && (
         <>
           {ProjectsJSONIcon && (
@@ -160,6 +156,12 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
             <span>{activeTab.title}</span>
           </div>
         </>
+      )}
+      {activeTab.type === 'settings_editor' && (
+        <div className="flex items-center text-[var(--breadcrumbs-focus-foreground)]">
+            {FinalSegmentIcon && <FinalSegmentIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />}
+            <span>{activeTab.title}</span>
+        </div>
       )}
     </div>
   );

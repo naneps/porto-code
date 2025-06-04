@@ -12,6 +12,7 @@ interface UseGlobalEventHandlersProps {
   setContextMenuVisible: (visible: boolean) => void;
   toggleTerminalVisibility: () => void; // Now toggles Terminal tab in bottom panel
   togglePetsPanelVisibility: () => void; // Now toggles Pets tab in bottom panel
+  isDevModeEnabled?: boolean; 
 }
 
 export const useGlobalEventHandlers = ({
@@ -24,12 +25,13 @@ export const useGlobalEventHandlers = ({
   contextMenuVisible,
   setContextMenuVisible,
   toggleTerminalVisibility,
-  togglePetsPanelVisibility, 
+  togglePetsPanelVisibility,
+  isDevModeEnabled,
 }: UseGlobalEventHandlersProps) => {
   useEffect(() => {
     const handleGlobalClick = (event: MouseEvent) => {
         if (contextMenuVisible) {
-            const customContextMenuSelectors = '.fixed.bg-\\[var\\(--menu-dropdown-background\\)\\]'; 
+            const customContextMenuSelectors = '.fixed.bg-\\[var\\(--menu-dropdown-background\\)\\]';
             const isClickInsideCustomMenu = (event.target as HTMLElement).closest(customContextMenuSelectors);
 
             if (!isClickInsideCustomMenu) {
@@ -40,17 +42,17 @@ export const useGlobalEventHandlers = ({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       // Toggle Sidebar
-      if ((event.ctrlKey || event.metaKey) && event.key === 'b') { 
+      if ((event.ctrlKey || event.metaKey) && event.key === 'b') {
         event.preventDefault();
         toggleSidebarVisibility();
       }
       // Open Command Palette
-      if ((event.ctrlKey || event.metaKey) && event.shiftKey && (event.key === 'P' || event.key === 'p')) { 
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && (event.key === 'P' || event.key === 'p')) {
         event.preventDefault();
         openCommandPalette();
       }
       // Toggle Terminal Tab in Bottom Panel
-      if ((event.ctrlKey || event.metaKey) && event.key === '`') { 
+      if ((event.ctrlKey || event.metaKey) && event.key === '`') {
         event.preventDefault();
         toggleTerminalVisibility(); // This now handles terminal tab logic
       }
@@ -68,23 +70,29 @@ export const useGlobalEventHandlers = ({
         if (document.fullscreenElement) document.exitFullscreen().catch(err => console.error("Error exiting fullscreen:", err));
       }
 
-      if (event.key === 'F12') {
-        event.preventDefault();
-      }
-      if ((event.ctrlKey || event.metaKey) && event.shiftKey) {
-        if (event.key === 'I' || event.key === 'i' || 
-            event.key === 'J' || event.key === 'j' || 
-            event.key === 'C' || event.key === 'c') {
+      // Prevent default browser developer tools only if Dev Mode is NOT enabled
+      if (!isDevModeEnabled) {
+        if (event.key === 'F12') {
           event.preventDefault();
         }
-      }
-      if ((event.ctrlKey || event.metaKey) && (event.key === 'U' || event.key === 'u')) {
-        event.preventDefault();
+        if ((event.ctrlKey || event.metaKey) && event.shiftKey) {
+          if (event.key === 'I' || event.key === 'i' ||
+              event.key === 'J' || event.key === 'j' ||
+              event.key === 'C' || event.key === 'c') {
+            event.preventDefault();
+          }
+        }
+        if ((event.ctrlKey || event.metaKey) && (event.key === 'U' || event.key === 'u')) {
+          event.preventDefault();
+        }
       }
     };
 
     const handleContextMenu = (event: MouseEvent) => {
-      event.preventDefault();
+      // Prevent default context menu only if Dev Mode is NOT enabled
+      if (!isDevModeEnabled) {
+        event.preventDefault();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -97,15 +105,16 @@ export const useGlobalEventHandlers = ({
         document.removeEventListener('contextmenu', handleContextMenu);
     };
   }, [
-    toggleSidebarVisibility, 
-    openCommandPalette, 
-    isCommandPaletteOpen, 
-    closeCommandPalette, 
-    isAboutModalOpen, 
-    closeAboutModal, 
-    contextMenuVisible, 
+    toggleSidebarVisibility,
+    openCommandPalette,
+    isCommandPaletteOpen,
+    closeCommandPalette,
+    isAboutModalOpen,
+    closeAboutModal,
+    contextMenuVisible,
     setContextMenuVisible,
     toggleTerminalVisibility,
-    togglePetsPanelVisibility, 
+    togglePetsPanelVisibility,
+    isDevModeEnabled, // Added isDevModeEnabled to dependency array
   ]);
 };

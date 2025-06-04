@@ -1,16 +1,16 @@
 
 import React, { useEffect, useRef } from 'react';
-import { PortfolioData } from '../../types'; // Adjusted path
+import { PortfolioData, LogLevel } from '../../types'; // Adjusted path, added LogLevel
 import ChatBubble from './ChatBubble'; // Updated path
 import { Send, AlertTriangle, Loader2 } from 'lucide-react';
 import { useGeminiChat } from '../../hooks/useGeminiChat'; // Adjusted path
 
 interface AIChatInterfaceProps {
   portfolioData: PortfolioData;
-  // Removed: currentThemeName?: string; 
+  addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void;
 }
 
-const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ portfolioData }) => { // Removed currentThemeName from props
+const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ portfolioData, addAppLog }) => {
   const {
     messages,
     input,
@@ -19,7 +19,7 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ portfolioData }) => {
     error,
     apiKeyAvailable,
     handleSendMessage,
-  } = useGeminiChat(portfolioData);
+  } = useGeminiChat(portfolioData, addAppLog); // Pass addAppLog here
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -31,7 +31,7 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ portfolioData }) => {
     <div className="flex flex-col h-full bg-[var(--editor-background)] text-[var(--editor-foreground)]">
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
         {messages.map(msg => (
-          <ChatBubble key={msg.id} message={msg} /> // Removed currentThemeName
+          <ChatBubble key={msg.id} message={msg} />
         ))}
         <div ref={messagesEndRef} />
       </div>

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Tab } from '../types';
+import { Tab, EditorPaneId } from '../types';
 import { ICONS } from '../constants';
 import { playSound } from '../utils/audioUtils';
 
@@ -11,10 +11,11 @@ interface EditorTabsProps {
   onSelectTab: (tabId: string) => void;
   onCloseTab: (tabId: string) => void;
   onContextMenuRequest: (x: number, y: number, tabId: string, isCVContext?: boolean) => void; 
-  isLoading?: boolean; // Combined loading state for preview or CV generation
+  isLoading?: boolean; 
   onReorderTabs: (draggedTabId: string, targetTabId: string | null) => void; 
-  onRunCVGeneratorFromTab?: () => void; // Optional handler for CV run icon
+  onRunCVGeneratorFromTab?: () => void; 
   className?: string; 
+  paneId: EditorPaneId;
 }
 
 const EditorTabs: React.FC<EditorTabsProps> = ({ 
@@ -26,7 +27,8 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
   isLoading,
   onReorderTabs,
   onRunCVGeneratorFromTab,
-  className
+  className,
+  paneId
 }) => {
   const [draggedTabId, setDraggedTabId] = useState<string | null>(null);
   const [dragOverTabId, setDragOverTabId] = useState<string | null>(null); 
@@ -42,7 +44,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
   const handleDragStart = (e: React.DragEvent<HTMLButtonElement>, tabId: string) => {
     setDraggedTabId(tabId);
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', tabId);
+    e.dataTransfer.setData('text/plain', JSON.stringify({ tabId, sourcePaneId: paneId }));
     playSound('ui-click'); 
   };
 
@@ -83,10 +85,27 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
   const handleDrop = (e: React.DragEvent<HTMLElement>, targetTabId: string | null) => {
     e.preventDefault();
     if (draggedTabId) {
-      if (targetTabId === null) { 
-        onReorderTabs(draggedTabId, null);
-      } else if (targetTabId !== draggedTabId) {
-        onReorderTabs(draggedTabId, targetTabId);
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        if (data.sourcePaneId === paneId) { 
+             if (targetTabId === null) { 
+                onReorderTabs(draggedTabId, null);
+              } else if (targetTabId !== draggedTabId) {
+                onReorderTabs(draggedTabId, targetTabId);
+              }
+        } else {
+            // This part would be handled by App.tsx if it listened to the drop event on the main container
+            console.log("Cross-pane drop detected. Source:", data.sourcePaneId, "Target:", paneId, "Tab:", data.tabId);
+            // For now, App.tsx's handleMoveEditorToOtherPane is command-driven, not D&D driven for cross-pane.
+        }
+      } catch (error) {
+           if (draggedTabId) { // Fallback for simple text/plain if parsing fails
+               if (targetTabId === null) { 
+                    onReorderTabs(draggedTabId, null);
+                } else if (targetTabId !== draggedTabId) {
+                    onReorderTabs(draggedTabId, targetTabId);
+                }
+           }
       }
     }
     resetDragState();
@@ -102,12 +121,11 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
     setIsDragOverEndZone(false);
   };
 
-
   return (
     <div 
       className={`relative flex bg-[var(--editor-tab-background)] border-b border-[var(--editor-tab-border)] overflow-x-auto ${className || ''}`}
       role="tablist"
-      aria-label="Editor open files"
+      aria-label={`Editor open files for ${paneId} pane`}
       onDragLeave={handleDragLeave} 
     >
       {tabs.map((tab) => {
@@ -121,6 +139,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
         else if (tab.type === 'article_detail') iconKey = 'article_detail';
         else if (tab.type === 'cv_preview') iconKey = 'cv_preview_icon'; 
         else if (tab.fileName === 'generate_cv.ts') iconKey = 'generate_cv_icon';
+        else if (tab.type === 'settings_editor') iconKey = 'settings_editor_icon';
         else if (tab.type === 'json_preview' && tab.fileName) iconKey = ICONS[tab.fileName] ? tab.fileName : 'default'; 
         
         const IconComponent = ICONS[iconKey] || ICONS.default;
@@ -133,7 +152,6 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
         let dynamicClasses = `${tabBackgroundClass} ${activeBorderClass}`;
         if (isBeingDragged) dynamicClasses += ' opacity-50 ring-2 ring-[var(--focus-border)] ring-inset';
         if (isDropTarget) dynamicClasses += ' border-l-2 border-[var(--focus-border)]';
-
 
         return (
           <button
@@ -191,7 +209,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
         onDrop={(e) => handleDrop(e, null)}
       ></div>
       
-      {isLoading && ( // Use combined isLoading prop
+      {isLoading && ( 
         <div className="linear-progress-bar" aria-label="Loading content">
           <div className="linear-progress-bar-indicator"></div>
         </div>

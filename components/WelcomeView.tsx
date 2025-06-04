@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { APP_VERSION, ICONS, REPO_URL, SIDEBAR_ITEMS } from '../constants';
+import { ICONS, REPO_URL, SIDEBAR_ITEMS, APP_VERSION } from '../constants';
 import { PortfolioData, SidebarItemConfig } from '../types';
 
 interface WelcomeViewProps {
@@ -17,7 +17,7 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ portfolioData, onOpenTab, onO
   const GithubIcon = ICONS.GitFork || ICONS.default;
   const ContactFileIcon = ICONS.Mail || ICONS.default;
   const ExplorerIcon = ICONS.Eye || ICONS.default;
-  const CommandPaletteIcon = ICONS.Command || ICONS.default; // Use the Command icon
+  const CommandPaletteIcon = ICONS.Command || ICONS.default;
   const RightClickIcon = ICONS.MousePointerClick || ICONS.default;
 
 

@@ -1,7 +1,8 @@
 
+
 import React from 'react';
 import { ICONS } from '../constants';
-import { BottomPanelTabId } from '../App'; // Assuming BottomPanelTabId is exported from App.tsx
+import { BottomPanelTabId } from '../types'; 
 
 interface BottomPanelTabConfig {
   id: BottomPanelTabId;

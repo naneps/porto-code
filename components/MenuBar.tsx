@@ -1,5 +1,5 @@
 
-import React, { JSX } from 'react';
+import React from 'react';
 import { AppMenuItem } from '../types'; // For type consistency if used directly by MenuBar
 
 interface MenuBarProps {

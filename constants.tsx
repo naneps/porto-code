@@ -1,13 +1,13 @@
 
-import { ArrowLeft, ArrowRight, BarChart3, Bell, Bot, Briefcase, Cat, Check, ChevronDown, ChevronRight, Code2, Command, Eye, FileBadge, FileCode2 as FileCodeIcon, FileJson2, Files, FileTerminal, FileText, Folder as FolderClosed, FolderKanban, FolderOpen, Type as FontIcon, GitFork, HelpCircle, LayoutGrid, Link, LucideIcon, Mail, Minus, MousePointerClick, Newspaper, Palette, Phone, Play, Search, Settings, Sparkles, SplitSquareHorizontal, Square, TerminalSquare, User, UserCircle2 as UserProfileIcon, Volume2, VolumeX, X } from 'lucide-react';
+
+import { ArrowLeft, ArrowRight, BarChart3, Bell, Bot, Briefcase, Cat, Check, ChevronDown, ChevronRight, Code2, Command, ExternalLink as ExternalLinkIcon, Eye, FileBadge, FileCode2 as FileCodeIcon, FileJson2, Files, FileTerminal, FileText, Folder as FolderClosed, FolderKanban, FolderOpen, Type as FontIcon, GitFork, HelpCircle, Image as ImageIcon, LayoutGrid, Link, ListChecks, LucideIcon, Mail, Minus, MousePointerClick, Newspaper, Palette, Phone, Play, Search, Settings, Sparkles, SplitSquareHorizontal, Square, TerminalSquare, User, UserCircle2 as UserProfileIcon, Volume2, VolumeX, X } from 'lucide-react'; // Added ExternalLinkIcon, ImageIcon, ListChecks
 import { MOCK_CV_GENERATOR_CODE } from './assets/generate_cv_code';
-import { ActivityBarItemDefinition, Command as AppCommandType, PortfolioData, ProjectDetail, SidebarItemConfig } from './types';
+import { ActivityBarItemDefinition, Command as AppCommandType, PortfolioData, ProjectListingItem, SidebarItemConfig } from './types';
 
 
 export const PORTFOLIO_DATA: PortfolioData = {
   name: "Nandang Eka Prasetya",
   nickname: "Nande",
-  avatar: "https://github.com/nandangeka.png",
   email: "ekaprasetya2244@gmail.com",
   phone: "+6281802192111",
   address: {
@@ -38,7 +38,7 @@ export const PORTFOLIO_DATA: PortfolioData = {
     {
       role: "Mobile Developer",
       company: "PT ACQ Teknologi Indonesia",
-      period: "Jul 2024 - Jan 2025", 
+      period: "Jul 2024 - Jan 2025",
       description: "Developed and maintained a mobile app for a startup, ensuring reliable communication and a seamless user experience, leading to an increase in positive user feedback and higher daily active users. Collaborated with the team to design and implement key features, enhancing app usability and simplifying the booking process, reducing steps from 5 to 3 and cutting booking time by 10 seconds. Focused on delivering a user-friendly interface and optimizing app performance, reducing app load time by 2 seconds and improving session duration per user."
     },
     {
@@ -54,24 +54,88 @@ export const PORTFOLIO_DATA: PortfolioData = {
       description: "Developed and designed user interfaces (UI) for web applications using Vue.js, ensuring a visually appealing and user-friendly experience. Collaborated with backend teams in an Agile Scrum environment to align frontend and backend logic, enhancing overall functionality. Integrated APIs from various sources, ensuring accurate data presentation and improving app functionality."
     }
   ],
-  skills: [ 
+  skills: [
     "Flutter", "Dart", "REST API", "Firebase", "State Management (Provider, GetX)",
     "Freezed", "Google ML Kit", "POS System", "HR Apps", "Warehouse System",
-    "Self-Service Kiosk Integration", "Git & GitHub", "NuxtJS", "Vue.js" 
+    "Self-Service Kiosk Integration", "Git & GitHub", "NuxtJS", "Vue.js"
   ],
-  projects: [ 
-    "POS mobile system (offline & online)",
-    "HR attendance mobile app",
-    "Technician reporting system",
-    "Widget builder & portal (Buildyf)",
-    "Self-development platform (Wheel of Life concept)",
-    "AI-based Mobile Legends stats predictor",
-    "Click Rate game with multiplayer"
+  projects: [
+    {
+      id: "project_0_buildify",
+      title: "Buildify",
+      description: "Buildify is a web platform designed to simplify Flutter widget creation for developers without writing code. It provides various UI development tools like Gradient Builder, Box Shadow Builder, and a Figma-like drag-and-drop Widget Builder. Additionally, users can share their projects publicly and engage in discussions with available community features.",
+      technologies: ["Flutter", "Firebase"],
+      related_skills: ["Flutter", "Firebase"],
+      webLink: "https://buildify-x.web.app/#/home",
+      imageUrls: ["https://github.com/naneps/cv-md/blob/main/assets/buildify.png?raw=true"]
+    },
+    {
+      id: "project_1_easy-h",
+      title: "EASY-H",
+      description: "EASY-H is an application designed to simplify employee management and HR needs within a company. It offers key features such as: Attendance, Leave Requests, Approvals, Salary Reports, and other supplementary features. With a user-friendly interface, EASY-H helps improve the efficiency of human resource management processes.",
+      technologies: ["Flutter", "Laravel"],
+      related_skills: ["Flutter", "Laravel"],
+      imageUrls: [
+        "https://github.com/naneps/cv-md/blob/main/assets/easy-h1.png?raw=true",
+        "https://github.com/naneps/cv-md/blob/main/assets/easy-h2.png?raw=true",
+        "https://github.com/naneps/cv-md/blob/main/assets/easy-h3.png?raw=true",
+        "https://github.com/naneps/cv-md/blob/main/assets/easy-h4.png?raw=true"
+      ]
+    },
+    {
+      id: "project_2_yubi_pos",
+      title: "YUBI POS",
+      description: "YUBI POS is a Point of Sale (POS) application specifically designed for restaurants and cafes. It provides comprehensive features including order management, inventory, sales reporting, and payment integration. The system runs on Android and Desktop devices.",
+      technologies: ["Flutter", "Dart", "Laravel", "Firebase"],
+      related_skills: ["Flutter", "Dart", "Laravel", "Firebase"],
+      imageUrls: ["https://github.com/naneps/cv-md/blob/main/assets/yubipos-convensional.png?raw=true"]
+    },
+    {
+      id: "project_3_yubi_pos_mart",
+      title: "YUBI POS MART",
+      description: "YUBI POS MART is a POS application tailored for the operational needs of minimarkets and retail stores. It offers features for stock management, sales tracking, cashier system integration, and detailed financial reports. The application supports Android and Desktop platforms.",
+      technologies: ["Flutter", "Dart", "Laravel", "Firebase"],
+      related_skills: ["Flutter", "Dart", "Laravel", "Firebase"],
+      imageUrls: ["https://github.com/naneps/cv-md/blob/main/assets/yubipos-mart.png?raw=true"]
+    },
+    {
+      id: "project_4_inventory_app",
+      title: "Inventory APP",
+      description: "Inventory APP is designed to assist staff in managing the inflow and outflow of goods across various store branches or stock marts. It features real-time stock tracking, goods movement data management, and inventory reports.",
+      technologies: ["Flutter", "Laravel", "Firebase"],
+      related_skills: ["Flutter", "Laravel", "Firebase"],
+      imageUrls: [
+        "https://github.com/naneps/cv-md/blob/main/assets/ventoryaopp1.png?raw=true",
+        "https://github.com/naneps/cv-md/blob/main/assets/ventoryapp2.png?raw=true"
+      ]
+    },
+    {
+      id: "project_5_kios-k",
+      title: "KIOS-K",
+      description: "KIOS-K is a self-service application for ordering coffee and non-coffee beverages prepared by a robot barista. It allows customers to easily order their favorite drinks through an intuitive interface, integrating directly with the robot barista and digital payment systems.",
+      technologies: ["Flutter", "Laravel", "Firebase"],
+      related_skills: ["Flutter", "Laravel", "Firebase"],
+      imageUrls: [
+        "https://github.com/naneps/cv-md/blob/main/assets/kiosk1.png?raw=true",
+        "https://github.com/naneps/cv-md/blob/main/assets/kiosk2.png?raw=true"
+      ]
+    },
+    {
+      id: "project_6_counting_system",
+      title: "Counting System",
+      description: "Counting System is an application specifically designed for factory environments to assist in counting goods on each production line. It facilitates monitoring the number of items that pass criteria (ok) and those that do not meet standards (not ok).",
+      technologies: ["Flutter", "Laravel"],
+      related_skills: ["Flutter", "Laravel"],
+      imageUrls: [
+        "https://github.com/naneps/cv-md/blob/main/assets/cs1.png?raw=true",
+        "https://github.com/naneps/cv-md/blob/main/assets/cs2.png?raw=true"
+      ]
+    }
   ],
   linkedIn: "https://www.linkedin.com/in/nandang-eka-prasetya",
-  instagram: "https://instagram.com/_nannnde", 
-  tiktok: "https://tiktok.com/@nandangprasetyaa", 
-  otherSocial: { 
+  instagram: "https://instagram.com/nandang.prasetya",
+  tiktok: "https://tiktok.com/@nandangprasetyaa",
+  otherSocial: {
     name: "GitHub",
     url: "https://github.com/naneps"
   }
@@ -82,20 +146,21 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'about.json': User,
   'experience.json': Briefcase,
   'skills.json': Code2,
-  'projects.json': FolderKanban, 
+  'projects.json': FolderKanban,
   'contact.json': Mail,
-  'article_detail': Newspaper, 
+  'article_detail': Newspaper,
   'project_detail': FileJson2,
   'command_palette_icon': Command,
   'toggle_sidebar': Eye,
   'about_portfolio': HelpCircle,
   'theme_command': Palette,
   'font_command': FontIcon,
-  'files_icon': Files, 
+  'files_icon': Files,
   'settings_icon': Settings,
+  'settings_editor_icon': Settings,
   'ai_chat_icon': Bot,
-  'articles_icon': Newspaper, 
-  'statistics_icon': BarChart3, 
+  'articles_icon': Newspaper,
+  'statistics_icon': BarChart3,
   'bell_icon': Bell,
   'terminal_square_icon': TerminalSquare,
   'arrow_left_icon': ArrowLeft,
@@ -110,10 +175,10 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'chevron_right_icon': ChevronRight,
   'search_icon': Search,
   'check_icon': Check,
-  'file_code_icon': FileCodeIcon, 
-  'FileText': FileText, 
-  'Eye': Eye, 
-  'PlayIcon': Play, 
+  'file_code_icon': FileCodeIcon,
+  'FileText': FileText,
+  'Eye': Eye,
+  'PlayIcon': Play,
   'TerminalIcon': FileTerminal,
   'CatIcon': Cat,
   'Volume2Icon': Volume2,
@@ -130,23 +195,26 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'GitFork': GitFork,
   'Link': Link,
   'MousePointerClick': MousePointerClick,
-  'Command': Command, 
-  'Search': Search, 
-  'Newspaper': Newspaper, 
+  'Command': Command,
+  'Search': Search,
+  'Newspaper': Newspaper,
   'folder_open_icon': FolderOpen,
   'folder_closed_icon': FolderClosed,
-  'generate_cv_icon': FileCodeIcon, // Changed to FileCodeIcon for script file
-  'cv_preview_icon': FileBadge, // Icon for the CV preview tab
+  'generate_cv_icon': FileCodeIcon,
+  'cv_preview_icon': FileBadge,
+  'ExternalLinkIcon': ExternalLinkIcon, // Added
+  'ImageIcon': ImageIcon, // Added
+  'LogsIcon': ListChecks, // Added for Logs panel
 };
 
 export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
   {
     id: 'portfolio-folder',
     label: 'PORTFOLIO',
-    icon: ICONS.folder_closed_icon, 
+    icon: ICONS.folder_closed_icon,
     isFolder: true,
-    defaultOpen: true, 
-    actionType: 'open_tab', 
+    defaultOpen: true,
+    actionType: 'open_tab',
     children: [
       { id: 'about.json', label: 'about.json', fileName: 'about.json', icon: ICONS['about.json'], type: 'file', title: 'about.json', actionType: 'open_tab' },
       { id: 'experience.json', label: 'experience.json', fileName: 'experience.json', icon: ICONS['experience.json'], type: 'file', title: 'experience.json', actionType: 'open_tab' },
@@ -159,15 +227,15 @@ export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
         icon: ICONS.folder_closed_icon,
         isFolder: true,
         defaultOpen: false,
-        actionType: 'open_tab', 
+        actionType: 'open_tab',
         children: [
           {
             id: 'generate_cv.ts',
             label: 'generate_cv.ts',
             icon: ICONS.generate_cv_icon,
-            fileName: 'generate_cv.ts', 
-            title: 'generate_cv.ts', // Title for the tab when viewing code
-            actionType: 'open_tab', // Click opens the code
+            fileName: 'generate_cv.ts',
+            title: 'generate_cv.ts',
+            actionType: 'open_tab',
           },
         ],
       },
@@ -176,7 +244,7 @@ export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
 ];
 
 
-export const APP_VERSION = "1.8.5"; 
+export const APP_VERSION = "1.8.5";
 export const REPO_URL = "https://github.com/naneps";
 
 export const COMMANDS_CONFIG: Omit<AppCommandType, 'action' | 'isSelected'>[] = [];
@@ -210,11 +278,14 @@ export function generateFileContent(fileName: string, data: PortfolioData): stri
       };
       break;
     case 'projects.json':
+      const projectListItems: ProjectListingItem[] = data.projects.map(p => ({
+        id: p.id,
+        title: p.title,
+        imageUrls: p.imageUrls,
+        technologies: p.technologies.slice(0, 3), // Extract first 3 technologies
+      }));
       content = {
-        projects: data.projects.map((title, index) => ({
-          id: `project_${index}_${title.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]+/g, '')}.json`,
-          title: title,
-        })),
+        projects: projectListItems,
       };
       break;
     case 'contact.json':
@@ -234,7 +305,7 @@ export function generateFileContent(fileName: string, data: PortfolioData): stri
         content.otherSocial = data.otherSocial;
       }
       break;
-    case 'generate_cv.ts': // New case for the mock CV generator code
+    case 'generate_cv.ts':
       return MOCK_CV_GENERATOR_CODE;
     default:
       content = { error: 'File not found or content generation not implemented.' };
@@ -243,35 +314,20 @@ export function generateFileContent(fileName: string, data: PortfolioData): stri
 }
 
 export function generateProjectDetailContent(projectId: string, data: PortfolioData): string {
-  const projectIndexMatch = projectId.match(/project_(\d+)_/);
-  let projectTitle = "Unknown Project";
-  if (projectIndexMatch && projectIndexMatch[1]) {
-    const index = parseInt(projectIndexMatch[1], 10);
-    if (index >= 0 && index < data.projects.length) {
-      projectTitle = data.projects[index];
-    }
+  const project = data.projects.find(p => p.id === projectId);
+
+  if (project) {
+    return JSON.stringify(project, null, 2);
   }
 
-  let detailedDescription = `This is a detailed description for ${projectTitle}. It showcases various aspects of the project including its goals, challenges, and outcomes. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`;
-
-  if (projectTitle.toLowerCase().includes("pos mobile system")) {
-    detailedDescription = "Developed a comprehensive Point of Sale (POS) mobile system designed for both offline and online operations. Features include inventory management, sales tracking, customer relationship management, and integration with payment gateways. Built with Flutter for cross-platform compatibility.";
-  } else if (projectTitle.toLowerCase().includes("hr attendance mobile app")) {
-    detailedDescription = "Created an HR attendance mobile application allowing employees to clock in/out using geolocation and facial recognition. The app also supports leave requests and provides administrators with real-time attendance dashboards. Utilized Flutter and Firebase.";
-  }
-
-  const projectDetail: ProjectDetail = {
+  console.warn(`Project with ID '${projectId}' not found in PORTFOLIO_DATA.projects.`);
+  return JSON.stringify({
     id: projectId,
-    title: projectTitle,
-    description: detailedDescription,
-    technologies: ["Flutter", "Dart", "Firebase", "REST API"], 
-    year: 2023, 
-    related_skills: data.skills.filter(skill => 
-        detailedDescription.toLowerCase().includes(skill.toLowerCase()) || 
-        projectTitle.toLowerCase().includes(skill.toLowerCase())
-    ).slice(0,4), 
-  };
-  return JSON.stringify(projectDetail, null, 2);
+    title: "Project Not Found",
+    description: "Details for this project could not be loaded. Please check the project ID or data source.",
+    technologies: [],
+    related_skills: [],
+  }, null, 2);
 }
 
 export const DEFAULT_ACTIVITY_BAR_ITEMS: ActivityBarItemDefinition[] = [
@@ -281,3 +337,4 @@ export const DEFAULT_ACTIVITY_BAR_ITEMS: ActivityBarItemDefinition[] = [
   { id: 'articles-activity', label: 'Articles', iconName: 'articles_icon', viewId: 'articles' },
   { id: 'statistics-activity', label: 'Statistics', iconName: 'statistics_icon', viewId: 'statistics' },
 ];
+export const MAX_LOG_ENTRIES = 250;

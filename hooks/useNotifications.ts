@@ -14,6 +14,17 @@ export const useNotifications = () => {
       actions?: NotificationAction[],
       icon?: LucideIcon
     ) => {
+      // Check if an identical notification (same message and type) already exists
+      const isDuplicate = notifications.some(
+        n => n.message === message && n.type === type
+      );
+
+      if (isDuplicate) {
+        // Do not add the notification if an identical one is already visible
+        // This prevents stacking, as seen in the user's screenshot.
+        return;
+      }
+
       const id = crypto.randomUUID();
       const newNotification: NotificationItem = { id, message, type, duration, actions, icon };
       setNotifications(prev => [newNotification, ...prev]); // Add to the top
@@ -24,7 +35,7 @@ export const useNotifications = () => {
         }, duration);
       }
     },
-    []
+    [notifications] // Added notifications to the dependency array for the duplicate check
   );
 
   const removeNotification = useCallback((id: string) => {

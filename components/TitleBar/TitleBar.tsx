@@ -1,7 +1,8 @@
 
+
 import React, { useEffect, useRef, useState } from 'react';
 import { ICONS, PORTFOLIO_DATA } from '../../constants';
-import { AppMenuItem, FontFamilyOption, FontSizeOption, SidebarItemConfig, Tab, Theme } from '../../types';
+import { AppMenuItem, SidebarItemConfig, Tab, ProjectDetail, EditorPaneId } from '../../types';
 import { playSound } from '../../utils/audioUtils';
 import MenuBar from '../MenuBar';
 import { generateMenuConfig } from './titleBarMenu';
@@ -16,40 +17,38 @@ interface TitleBarProps {
   canNavigateForward: boolean;
   onNavigateBack: () => void;
   onNavigateForward: () => void;
-  themes: Theme[];
-  currentThemeName: string;
-  onThemeChange: (themeName: string) => void;
-  fontFamilies: FontFamilyOption[];
-  currentFontFamilyId: string;
-  onFontFamilyChange: (fontId: string) => void;
-  fontSizes: FontSizeOption[];
-  currentFontSizeId: string;
-  onFontSizeChange: (sizeId: string) => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   sidebarItems: SidebarItemConfig[];
-  projects: string[]; 
+  projectsData: ProjectDetail[];
   onRunItem: (config: { id: string, fileName: string, title: string, type: Tab['type'] }) => void;
-  onRunCVGenerator: () => void; // New prop
+  onRunCVGenerator: () => void;
   onToggleTerminal: () => void;
   onTogglePetsPanel: () => void;
-  onToggleStatisticsPanel: () => void; 
-  isSoundMuted: boolean; 
-  onToggleSoundMute: () => void; 
-  className?: string; 
+  onToggleLogsPanel: () => void;
+  onToggleStatisticsPanel: () => void;
+  isSoundMuted: boolean;
+  onToggleSoundMute: () => void;
+  onOpenSettingsEditor: () => void;
+  className?: string;
+  onToggleRightEditorPane: () => void;
+  onFocusEditorPane: (paneId: EditorPaneId) => void;
+  onMoveEditorToOtherPane: () => void;
 }
 
 const TitleBar: React.FC<TitleBarProps> = (props) => {
-  const { 
+  const {
     onToggleSidebar, isSidebarVisible, onOpenCommandPalette, onOpenAboutModal,
     canNavigateBack, canNavigateForward, onNavigateBack, onNavigateForward,
-    themes, currentThemeName, onThemeChange,
-    fontFamilies, currentFontFamilyId, onFontFamilyChange,
-    fontSizes, currentFontSizeId, onFontSizeChange,
     isFullscreen, onToggleFullscreen,
-    sidebarItems, projects, onRunItem, onRunCVGenerator, // Destructure new prop
-    onToggleTerminal, onTogglePetsPanel, onToggleStatisticsPanel, 
-    isSoundMuted, onToggleSoundMute, className
+    sidebarItems, projectsData, onRunItem, onRunCVGenerator,
+    onToggleTerminal, onTogglePetsPanel, onToggleLogsPanel, onToggleStatisticsPanel,
+    isSoundMuted, onToggleSoundMute,
+    onOpenSettingsEditor,
+    className,
+    onToggleRightEditorPane,
+    onFocusEditorPane,
+    onMoveEditorToOtherPane
   } = props;
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -57,7 +56,7 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
 
   const toggleMenu = (menuName: string) => {
     setActiveMenu(activeMenu === menuName ? null : menuName);
-    if (activeMenu !== menuName && menuName) { 
+    if (activeMenu !== menuName && menuName) {
         playSound('ui-click');
     }
   };
@@ -65,7 +64,7 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        if (activeMenu) { 
+        if (activeMenu) {
             setActiveMenu(null);
         }
       }
@@ -78,35 +77,31 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
     onOpenCommandPalette,
     onToggleSidebar,
     isSidebarVisible,
-    themes,
-    currentThemeName,
-    onThemeChange,
-    fontFamilies,
-    currentFontFamilyId,
-    onFontFamilyChange,
-    fontSizes,
-    currentFontSizeId,
-    onFontSizeChange,
     onOpenAboutModal,
     icons: ICONS,
     sidebarItems,
-    projects,
+    projectsData,
     onRunItem,
-    onRunCVGenerator, // Pass to menu config
+    onRunCVGenerator,
     onToggleTerminal,
-    onTogglePetsPanel, 
-    onToggleStatisticsPanel, 
-    isSoundMuted,
-    onToggleSoundMute,
+    onTogglePetsPanel,
+    onToggleLogsPanel, // Passed here
+    onToggleStatisticsPanel,
+    onOpenSettingsEditor,
+    isSoundMuted, 
+    onToggleSoundMute, 
+    onToggleRightEditorPane,
+    onFocusEditorPane,
+    onMoveEditorToOtherPane,
   });
-  
+
   const MenuDropdownIcon = ICONS.chevron_down_icon;
 
   const renderSubItems = (items: AppMenuItem[], level = 0): JSX.Element => (
-    <div 
+    <div
         className={`
-          ${level === 0 ? 'absolute top-full left-0 mt-1' : 'relative'} 
-          bg-[var(--menu-dropdown-background)] border border-[var(--menu-dropdown-border)] 
+          ${level === 0 ? 'absolute top-full left-0 mt-1' : 'relative'}
+          bg-[var(--menu-dropdown-background)] border border-[var(--menu-dropdown-border)]
           rounded shadow-lg py-1 z-50 min-w-[220px] text-[var(--menu-item-foreground)]
         `}
     >
@@ -114,14 +109,14 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
         if (subItem.separator) {
           return <hr key={`sep-${index}`} className="my-1 border-[var(--menubar-separator-color)]" />;
         }
-        const itemKey = subItem.label || `menu-item-${index}`; 
+        const itemKey = subItem.label || `menu-item-${index}`;
 
         return subItem.subItems ? (
           <div key={itemKey} className="relative group/submenu">
             <button
               className={`w-full text-left px-3 py-1.5 text-xs flex justify-between items-center transition-colors
                           ${subItem.isSelected ? 'bg-[var(--menu-item-selected-background)] text-[var(--menu-item-selected-foreground)]' : 'hover:bg-[var(--menu-item-hover-background)] hover:text-[var(--menu-item-hover-foreground)]'}`}
-              onMouseEnter={() => playSound('ui-click')} 
+              onMouseEnter={() => playSound('ui-click')}
             >
               <div className="flex items-center">
                 {subItem.icon && <subItem.icon size={14} className="mr-2 text-[var(--menu-item-icon-foreground)]" />}
@@ -139,19 +134,15 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
             onClick={() => {
               if (subItem.action) {
                   subItem.action();
-                  if (!['Theme:', 'Font:', 'Font Size:'].some(prefix => subItem.label?.startsWith(prefix)) && 
-                      subItem.label !== 'Toggle Sound Effects' && 
-                      subItem.label !== 'Command Palette...' &&
-                      subItem.label !== 'About Portfolio' &&
-                      !subItem.label?.startsWith('Run ')) {
+                  if (!subItem.label?.startsWith('Run ') && subItem.label !== 'Settings') {
                      playSound('command-execute');
                   }
               }
-              setActiveMenu(null); 
+              setActiveMenu(null);
             }}
             className={`w-full text-left px-3 py-1.5 text-xs flex items-center transition-colors
                         ${subItem.isSelected ? 'bg-[var(--menu-item-selected-background)] text-[var(--menu-item-selected-foreground)]' : 'hover:bg-[var(--menu-item-hover-background)] hover:text-[var(--menu-item-hover-foreground)]'}`}
-             onMouseEnter={() => playSound('ui-click')} 
+             onMouseEnter={() => playSound('ui-click')}
           >
             {subItem.icon && <subItem.icon size={14} className={`mr-2 ${subItem.isSelected ? 'text-[var(--menu-item-selected-foreground)]' : 'text-[var(--menu-item-icon-foreground)]'}`} />}
             <span className="flex-grow">{subItem.label}</span>
@@ -168,8 +159,8 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
         <ICONS.file_code_icon size={20} className="text-[var(--titlebar-icon-blue)] ml-1" />
         <MenuBar menuItems={menuConfig} activeMenu={activeMenu} toggleMenu={toggleMenu} renderSubItems={renderSubItems} />
 
-        <button 
-            title="Back" 
+        <button
+            title="Back"
             onClick={onNavigateBack}
             disabled={!canNavigateBack}
             className="p-1 rounded hover:bg-[var(--titlebar-button-hover-background)] focus:outline-none transition-colors duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
@@ -177,8 +168,8 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
         >
             <ICONS.arrow_left_icon size={18} className="text-[var(--titlebar-icon-blue)]" />
         </button>
-        <button 
-            title="Forward" 
+        <button
+            title="Forward"
             onClick={onNavigateForward}
             disabled={!canNavigateForward}
             className="p-1 rounded hover:bg-[var(--titlebar-button-hover-background)] focus:outline-none transition-colors duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
@@ -201,7 +192,11 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
       </div>
 
       <div className="flex items-center space-x-0.5 sm:space-x-1.5">
-        <button title="Split Editor (Not Implemented)" className="hidden md:inline-flex p-1 hover:bg-[var(--titlebar-button-hover-background)] rounded text-[var(--titlebar-foreground)] items-center justify-center" onClick={() => playSound('ui-click')}>
+        <button 
+            title="Toggle Second Editor Group" 
+            className="md:inline-flex p-1 hover:bg-[var(--titlebar-button-hover-background)] rounded text-[var(--titlebar-foreground)] items-center justify-center" 
+            onClick={onToggleRightEditorPane}
+        >
           <ICONS.split_square_horizontal_icon size={16} />
         </button>
         <button title="Toggle Panel Layout (Not Implemented)" className="hidden md:inline-flex p-1 hover:bg-[var(--titlebar-button-hover-background)] rounded text-[var(--titlebar-foreground)] items-center justify-center" onClick={() => playSound('ui-click')}>
@@ -210,18 +205,18 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
         <button title="Profile (Not Implemented)" className="p-1 hover:bg-[var(--titlebar-button-hover-background)] rounded text-[var(--titlebar-foreground)]" onClick={() => playSound('ui-click')}>
           <ICONS.user_profile_icon size={16} />
         </button>
-        
+
         <div className="h-4 w-px bg-[var(--menubar-separator-color)] mx-0.5 sm:mx-1"></div>
 
-        <button 
-          title="Minimize (Not Implemented)" 
+        <button
+          title="Minimize (Not Implemented)"
           className="p-1 sm:p-1.5 hover:bg-[var(--titlebar-button-hover-background)] rounded text-[var(--titlebar-foreground)]"
           aria-label="Minimize window (feature not implemented)"
           onClick={() => playSound('ui-click')}
         >
           <ICONS.minus_icon size={16} />
         </button>
-        <button 
+        <button
           title={isFullscreen ? "Restore Down" : "Maximize"}
           onClick={onToggleFullscreen}
           className="p-1 sm:p-1.5 hover:bg-[var(--titlebar-button-hover-background)] rounded text-[var(--titlebar-foreground)]"
@@ -229,8 +224,8 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
         >
           <ICONS.square_icon size={14} />
         </button>
-        <button 
-          title="Close (Not Implemented)" 
+        <button
+          title="Close (Not Implemented)"
           className="p-1 sm:p-1.5 hover:bg-red-600 rounded text-[var(--titlebar-foreground)] hover:text-white"
           aria-label="Close window (feature not implemented)"
           onClick={() => playSound('ui-click')}

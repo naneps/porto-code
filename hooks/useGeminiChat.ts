@@ -1,13 +1,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
-import { ChatMessage, PortfolioData } from '../types';
+import { ChatMessage, PortfolioData, LogLevel } from '../types';
 import { getContextualPrompt } from '../utils/aiUtils'; // Import the prompt generator
 import { playSound } from '../utils/audioUtils';
 
 export const TYPING_ANIMATION_ID_PREFIX = "ai-typing-";
 
-export const useGeminiChat = (portfolioData: PortfolioData) => {
+export const useGeminiChat = (
+  portfolioData: PortfolioData,
+  addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void
+) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -17,38 +20,44 @@ export const useGeminiChat = (portfolioData: PortfolioData) => {
   useEffect(() => {
     const keyExists = !!process.env.API_KEY;
     setApiKeyAvailable(keyExists);
+    addAppLog('debug', `Gemini API Key Available: ${keyExists}`, 'AIChatHook');
 
     if (messages.length === 0) { // Only set initial message if messages array is empty
         if (keyExists) {
+            const initialMessage = "Hello! I'm Nandang's AI Portfolio Assistant, running on his VSCode-themed website. How can I help you today? Ask me about his skills, projects, or experience!";
             setMessages([
                 {
                 id: `${TYPING_ANIMATION_ID_PREFIX}${crypto.randomUUID()}`,
-                text: "Hello! I'm Nandang's AI Portfolio Assistant, running on his VSCode-themed website. How can I help you today? Ask me about his skills, projects, or experience!",
+                text: initialMessage,
                 sender: 'ai',
                 timestamp: new Date(),
                 },
             ]);
+            addAppLog('info', 'AI Assistant initialized.', 'AI', { initialMessage });
         } else {
+            const errorMsg = "AI Assistant is currently unavailable. The API key has not been configured for this application.";
             setMessages([
                 {
                 id: crypto.randomUUID(),
-                text: "AI Assistant is currently unavailable. The API key has not been configured for this application.",
+                text: errorMsg,
                 sender: 'ai',
                 timestamp: new Date(),
                 error: true,
                 },
             ]);
+            addAppLog('error', errorMsg, 'AI');
             playSound('error');
         }
     }
-  }, [messages.length, setMessages]); // setMessages is stable, messages.length ensures this primarily acts on initialization
+  }, [messages.length, setMessages, addAppLog]);
 
   const handleSendMessage = useCallback(async () => {
     if (!input.trim() || isLoading || !apiKeyAvailable) return;
 
+    const userMessageText = input.trim();
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
-      text: input.trim(),
+      text: userMessageText,
       sender: 'user',
       timestamp: new Date(),
     };
@@ -56,11 +65,13 @@ export const useGeminiChat = (portfolioData: PortfolioData) => {
     setInput('');
     setIsLoading(true);
     setError(null);
-    playSound('ui-click'); // Sound for sending a message
+    playSound('ui-click');
+    addAppLog('action', `User message sent to AI: "${userMessageText.substring(0,100)}${userMessageText.length > 100 ? '...' : ''}"`, 'User');
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const prompt = getContextualPrompt(userMessage.text, portfolioData);
+      addAppLog('debug', 'Generated contextual prompt for AI.', 'AI', { promptLength: prompt.length });
       
       const response: GenerateContentResponse = await ai.models.generateContent({
         model: 'gemini-2.5-flash-preview-04-17', 
@@ -68,19 +79,22 @@ export const useGeminiChat = (portfolioData: PortfolioData) => {
       });
 
       const aiResponseText = response.text;
+      const aiMsgText = aiResponseText || "Sorry, I couldn't generate a response.";
 
       const aiMessage: ChatMessage = {
         id: `${TYPING_ANIMATION_ID_PREFIX}${crypto.randomUUID()}`,
-        text: aiResponseText || "Sorry, I couldn't generate a response.",
+        text: aiMsgText,
         sender: 'ai',
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, aiMessage]);
+      addAppLog('info', `AI response received: "${aiMsgText.substring(0,100)}${aiMsgText.length > 100 ? '...' : ''}"`, 'AI');
       playSound('chat-receive');
 
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error calling Gemini API:", e);
-      setError("Sorry, an error occurred while contacting the AI. Please try again.");
+      const errorMsg = "Sorry, an error occurred while contacting the AI. Please try again.";
+      setError(errorMsg);
       const errorMessage: ChatMessage = {
         id: crypto.randomUUID(),
         text: "Sorry, I faced an issue trying to respond. Please check the connection or try again later.",
@@ -89,11 +103,12 @@ export const useGeminiChat = (portfolioData: PortfolioData) => {
         error: true,
       };
       setMessages(prev => [...prev, errorMessage]);
+      addAppLog('error', 'Error calling Gemini API.', 'AI', { error: e.message || String(e) });
       playSound('error');
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, apiKeyAvailable, portfolioData, setMessages]); // Added setMessages to dependencies
+  }, [input, isLoading, apiKeyAvailable, portfolioData, setMessages, addAppLog]); 
 
   return {
     messages,

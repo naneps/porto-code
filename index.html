@@ -81,6 +81,12 @@
        width: 500px;
        max-width: 90%;
     }
+    .passkey-prompt-content {
+       z-index: 50;
+       margin-top: 20vh;
+       width: 400px; /* Smaller width for a simple prompt */
+       max-width: 80%;
+    }
 
     /* Markdown styling for chat bubbles and articles */
     .markdown-content pre {
@@ -195,26 +201,43 @@
     /* Resizer styles */
     .resizer {
         background: var(--border-color);
-        opacity: 0.3; /* Make it subtle initially */
-        z-index: 20; /* Ensure it's above adjacent content for interaction */
+        opacity: 0.3; 
+        z-index: 20; 
         transition: opacity 0.2s, background-color 0.2s;
-        touch-action: none; /* Prevent scrolling on touch devices */
+        touch-action: none; 
     }
     .resizer:hover,
-    .resizer.resizing { /* Add .resizing class while dragging for persistent hover style */
+    .resizer.resizing { 
         opacity: 1;
         background: var(--focus-border);
     }
-    .resizer-x { /* Vertical bar for horizontal resizing */
+    .resizer-x { 
         width: 5px;
         cursor: col-resize;
-        height: 100%; /* Takes full height of its flex container */
+        height: 100%; 
     }
-    .resizer-y { /* Horizontal bar for vertical resizing */
+    .resizer-y { 
         height: 5px;
         cursor: row-resize;
-        width: 100%; /* Takes full width of its flex container */
+        width: 100%; 
     }
+    /* Styles for the vertical editor pane resizer */
+    .editor-resizer-x {
+        width: 5px; /* Or your desired width for the editor resizer */
+        cursor: col-resize;
+        height: 100%; /* Full height of the main editor area */
+        background: var(--border-color); /* Or transparent, with hover effect */
+        opacity: 0.3;
+        z-index: 20;
+        transition: opacity 0.2s, background-color 0.2s;
+        touch-action: none;
+    }
+    .editor-resizer-x:hover,
+    .editor-resizer-x.resizing {
+        opacity: 1;
+        background: var(--focus-border);
+    }
+
   </style>
 <script type="importmap">
 {
