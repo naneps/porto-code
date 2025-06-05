@@ -5,32 +5,32 @@
 
 
 
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Tab, PortfolioData, SidebarItemConfig, Command, ContextMenuItem, ActivityBarSelection, SearchResultItem, Theme, FontFamilyOption, FontSizeOption, ArticleItem, ProjectDetail, MockStatistics, ActivityBarItemDefinition, ActivityBarItemConfig, NotificationItem, EditorPaneId, EditorPaneState, LogEntry, LogLevel, NotificationType, BottomPanelTabId } from './types';
-import { PORTFOLIO_DATA, SIDEBAR_ITEMS as DEFAULT_SIDEBAR_ITEMS, generateFileContent, generateProjectDetailContent, ICONS, REPO_URL, APP_VERSION, DEFAULT_ACTIVITY_BAR_ITEMS, MAX_LOG_ENTRIES } from './constants';
-import { SAMPLE_ARTICLES } from './components/Articles/articlesData';
-import { PREDEFINED_THEMES, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS, TERMINAL_FONT_SIZE_OPTIONS, DEFAULT_TERMINAL_FONT_SIZE_ID } from './themes';
-import TitleBar from './components/TitleBar/TitleBar';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import AboutModal from './components/AboutModal';
 import ActivityBar from './components/ActivityBar';
-import { Sidebar } from './components/Sidebar';
-import EditorTabs from './components/EditorTabs';
-import TabContent from './components/TabContent';
+import { SAMPLE_ARTICLES } from './components/Articles/articlesData';
+import ArticlesPanel from './components/Articles/ArticlesPanel';
+import BottomPanelTabs from './components/BottomPanelTabs';
 import Breadcrumbs from './components/Breadcrumbs';
 import CommandPalette from './components/CommandPalette';
-import AboutModal from './components/AboutModal';
 import ContextMenu from './components/ContextMenu';
-import WelcomeView from './components/WelcomeView';
-import SearchPanel from './components/Search/SearchPanel';
-import ArticlesPanel from './components/Articles/ArticlesPanel';
-import StatisticsPanel from './components/StatisticsPanel';
-import TerminalPanel from './components/TerminalPanel';
-import PetsPanel from './components/PetsPanel';
+import EditorTabs from './components/EditorTabs';
 import LogsPanel from './components/LogsPanel'; // Import LogsPanel
-import BottomPanelTabs from './components/BottomPanelTabs';
 import NotificationContainer from './components/notifications/NotificationContainer';
 import PasskeyPromptModal from './components/PasskeyPromptModal'; // Import new modal
-import StatusBar from './components/StatusBar'; // Import StatusBar
+import PetsPanel from './components/PetsPanel';
 import ProfilePopup from './components/ProfilePopup'; // Import ProfilePopup
+import SearchPanel from './components/Search/SearchPanel';
+import { Sidebar } from './components/Sidebar';
+import StatisticsPanel from './components/StatisticsPanel';
+import StatusBar from './components/StatusBar'; // Import StatusBar
+import TabContent from './components/TabContent';
+import TerminalPanel from './components/TerminalPanel';
+import TitleBar from './components/TitleBar/TitleBar';
+import WelcomeView from './components/WelcomeView';
+import { APP_VERSION, DEFAULT_ACTIVITY_BAR_ITEMS, SIDEBAR_ITEMS as DEFAULT_SIDEBAR_ITEMS, generateFileContent, generateProjectDetailContent, ICONS, MAX_LOG_ENTRIES, PORTFOLIO_DATA } from './constants';
+import { DEFAULT_TERMINAL_FONT_SIZE_ID, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS, PREDEFINED_THEMES, TERMINAL_FONT_SIZE_OPTIONS } from './themes';
+import { ActivityBarItemConfig, ActivityBarItemDefinition, ActivityBarSelection, ArticleItem, BottomPanelTabId, ContextMenuItem, EditorPaneId, EditorPaneState, LogEntry, LogLevel, MockStatistics, NotificationType, ProjectDetail, SearchResultItem, SidebarItemConfig, Tab } from './types';
 
 
 import { useThemeManager } from './hooks/useThemeManager';
@@ -38,11 +38,11 @@ import { useThemeManager } from './hooks/useThemeManager';
 import { useFullscreen } from './hooks/useFullscreen';
 import { useGlobalEventHandlers } from './hooks/useGlobalEventHandlers';
 import { useNotifications } from './hooks/useNotifications';
-import { generateCommands } from './utils/commandUtils';
-import { playSound, toggleMute, getMuteStatus } from './utils/audioUtils';
 import { fetchAIProjectSuggestion } from './utils/aiUtils';
-import './utils/firebase';
+import { getMuteStatus, playSound, toggleMute } from './utils/audioUtils';
+import { generateCommands } from './utils/commandUtils';
 import { createCV_PDF } from './utils/cvGenerator'; // Added import
+import './utils/firebase';
 
 
 const DEFAULT_LEFT_PANEL_WIDTH = 256;

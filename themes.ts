@@ -1,5 +1,5 @@
 
-import { Theme, ThemeProperties, FontFamilyOption, FontSizeOption } from './types';
+import { FontFamilyOption, FontSizeOption, Theme, ThemeProperties } from './types';
 
 // VSCode Dark+ (Based on default VSCode dark theme)
 const vscodeDarkPlusProperties: ThemeProperties = {
@@ -78,7 +78,7 @@ const vscodeDarkPlusProperties: ThemeProperties = {
   '--breadcrumbs-icon-foreground': '#4EC9B0',
 
   // Status Bar
-  '--statusbar-background': '#007ACC',
+  '--statusbar-background': '#252526',
   '--statusbar-foreground': '#FFFFFF',
   '--statusbar-border': 'transparent',
   '--statusbar-item-hover-background': 'rgba(255, 255, 255, 0.12)',
@@ -245,8 +245,8 @@ const vscodeLightPlusProperties: ThemeProperties = {
 
 
   // Status Bar
-  '--statusbar-background': '#007ACC',
-  '--statusbar-foreground': '#FFFFFF',
+  '--statusbar-background': '#F3F3F3',
+  '--statusbar-foreground': '#333333FF',
   '--statusbar-border': 'transparent',
   '--statusbar-item-hover-background': 'rgba(0, 0, 0, 0.08)',
 
