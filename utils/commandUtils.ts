@@ -1,7 +1,6 @@
 
-
 import { Command, SidebarItemConfig, Theme, FontFamilyOption, FontSizeOption, Tab, EditorPaneId, LogLevel } from '../types';
-import { LucideIcon, EyeOff, Eye, Command as CommandIcon, Bot as BotIcon, Search as SearchIconLucide, Newspaper as ArticlesIconLucide, BarChart3 as StatisticsIconLucide, FileTerminal, Cat, Volume2, VolumeX, Play, Settings, Palette, Type as FontTypeIcon, Columns, Rows, ArrowLeftRight, ListChecks, Github } from 'lucide-react';
+import { LucideIcon, EyeOff, Eye, Command as CommandIcon, Bot as BotIcon, Search as SearchIconLucide, Newspaper as ArticlesIconLucide, BarChart3 as StatisticsIconLucide, FileTerminal, Cat, Volume2, VolumeX, Play, Settings, Palette, Type as FontTypeIcon, Columns, Rows, ArrowLeftRight, ListChecks, Github, MessageSquare } from 'lucide-react';
 import { playSound } from './audioUtils';
 
 
@@ -42,6 +41,7 @@ interface GenerateCommandsArgs {
   handleFocusEditorPane: (paneId: EditorPaneId) => void;
   handleMoveEditorToOtherPane: () => void;
   addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void; 
+  handleOpenGlobalGuestbookTab: () => void; // Added for global guestbook
 }
 
 const createCommandAction = (action: () => void, closePalette: () => void, soundName: string = 'command-execute', commandLabel: string, addAppLog: GenerateCommandsArgs['addAppLog']) => {
@@ -79,6 +79,7 @@ export const generateCommands = ({
   handleFocusEditorPane,
   handleMoveEditorToOtherPane,
   addAppLog, 
+  handleOpenGlobalGuestbookTab, // Destructure new handler
 }: GenerateCommandsArgs): Command[] => {
   const allCommands: Command[] = [];
 
@@ -149,6 +150,16 @@ export const generateCommands = ({
     icon: icons.github_icon || Github,
     group: "View",
     description: "Open the GitHub Profile tab." // Updated description
+  });
+
+  const openGuestbookLabel = 'View: Open Global Guestbook';
+  allCommands.push({
+    id: 'open_global_guestbook',
+    label: openGuestbookLabel,
+    action: createCommandAction(handleOpenGlobalGuestbookTab, closeCommandPalette, 'ui-click', openGuestbookLabel, addAppLog),
+    icon: icons.guestbook_icon || MessageSquare,
+    group: "View",
+    description: "Open the Global Guestbook tab to leave a message.",
   });
 
   const toggleTerminalLabel = 'Toggle Terminal';

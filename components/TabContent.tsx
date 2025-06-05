@@ -15,6 +15,7 @@ import { Loader2 } from 'lucide-react';
 import CVPreview from './CVPreview'; // Import CVPreview
 import SettingsEditor from './Settings/SettingsEditor';
 import GitHubProfileView from './GitHubProfileView'; // Import GitHubProfileView
+import RealtimeComments from './RealtimeComments'; // Import RealtimeComments
 
 
 SyntaxHighlighter.registerLanguage('json', json);
@@ -76,13 +77,20 @@ const TabContent: React.FC<TabContentProps> = ({
         onContextMenuRequest(event.pageX, event.pageY, tab.id, true);
         return;
     }
-    if (tab.type === 'cv_preview' || tab.type === 'settings_editor' || tab.type === 'github_profile_view') return; 
+    // Removed CV_PREVIEW, SETTINGS_EDITOR, GITHUB_PROFILE_VIEW, AI_CHAT as they don't need this context menu
+    // Also removed global_guestbook from needing this specific file context menu.
+    if (tab.type === 'cv_preview' || tab.type === 'settings_editor' || tab.type === 'github_profile_view' || tab.type === 'ai_chat' || tab.type === 'global_guestbook') return;
+    
     const eligibleForPreview = ['about.json', 'experience.json', 'skills.json', 'contact.json', 'projects.json'].includes(tab.fileName || '');
     if (((tab.type === 'file' && eligibleForPreview) || (tab.type === 'project_detail' && !tab.id.startsWith('ai_project_'))) && !tab.id.endsWith('_preview')) {
         event.preventDefault();
         onContextMenuRequest(event.pageX, event.pageY, tab.id, false);
     }
   };
+  
+  if (tab.type === 'global_guestbook') {
+    return <RealtimeComments addAppLog={addAppLog} />;
+  }
 
   if (tab.type === 'ai_chat') {
     const aiChatProps = content as AIChatContentProps; 
@@ -171,7 +179,7 @@ const TabContent: React.FC<TabContentProps> = ({
   if (tab.type === 'project_detail' && tab.id.startsWith('ai_project_')) {
     const aiProject = content as ProjectDetail;
     if (aiProject) {
-      return <JsonPreviewView jsonData={aiProject} fileId={tab.id} portfolioData={portfolioData} />;
+        return <JsonPreviewView jsonData={aiProject} fileId={tab.id} portfolioData={portfolioData} />;
     }
   }
 
@@ -184,7 +192,7 @@ const TabContent: React.FC<TabContentProps> = ({
         : (articleContentData.markdown as string || '');
 
     return (
-      <div className="p-0 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
+      <div className="p-0 bg-[var(--editor-background)] text-[var(--editor-foreground)] flex-grow overflow-auto">
         {articleContentData.imageUrl && (
           <img
             src={articleContentData.imageUrl}
@@ -290,8 +298,21 @@ const TabContent: React.FC<TabContentProps> = ({
      }
   }
 
-  if (tab.type === 'file') {
-    const displayContent = getSyntaxHighlighterContent(codeContentString, 'json');
+  if (tab.type === 'file') { // This includes 'guestbook.chat' if it falls through
+    const displayContent = getSyntaxHighlighterContent(codeContentString, 'json'); // Default to JSON for other files
+    if (tab.fileName === 'guestbook.chat') { // Simple placeholder for guestbook "file"
+        return (
+            <div className="p-4 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
+                <h2 className="text-xl font-semibold text-[var(--text-accent)] mb-3">// {tab.title}</h2>
+                <p className="text-sm text-[var(--text-muted)]">
+                    This file represents the Global Guestbook. The actual comments are loaded dynamically in this tab.
+                </p>
+                <p className="text-sm text-[var(--text-muted)] mt-2">
+                    Feel free to leave a message for Nandang!
+                </p>
+            </div>
+        );
+    }
     return (
       <div onContextMenu={handleContextMenu} className="h-full w-full">
         <SyntaxHighlighter

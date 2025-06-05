@@ -8,7 +8,7 @@ import { playSound } from '../utils/audioUtils';
 interface SidebarProps {
   items: SidebarItemConfig[];
   onOpenTab: (item: SidebarItemConfig) => void;
-  onRunAction: (actionType: SidebarItemConfig['actionType'], item: SidebarItemConfig) => void;
+  onRunAction: (item: SidebarItemConfig) => void; // Changed to pass the full item
   isVisible: boolean;
   activeTabId: string | null;
   onReorderItems: (draggedItemId: string, targetItemId: string, parentId?: string) => void; 
@@ -44,8 +44,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, onOpenTab, onRunAction,
   const handleItemClick = (item: SidebarItemConfig) => {
     if (item.isFolder) {
       toggleFolder(item.id);
-    } else if (item.actionType === 'run_cv_generator') { // This condition might be obsolete if run is only via context/menu
-      onRunAction(item.actionType, item);
+    } else if (item.actionType === 'run_cv_generator' || item.actionType === 'open_global_guestbook') {
+      onRunAction(item); // Pass the full item for specific actions
     } else if (item.actionType === 'open_tab' || !item.actionType) { 
       onOpenTab(item);
     }
@@ -167,9 +167,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, onOpenTab, onRunAction,
     });
   };
   
-  const portfolioFolder = items.find(item => item.id === 'portfolio-folder' && item.isFolder);
-  const portfolioFolderOpen = portfolioFolder ? openFolders[portfolioFolder.id] : false;
-  const PortfolioChevronIcon = portfolioFolderOpen ? ICONS.chevron_down_icon : ICONS.chevron_right_icon;
+  // Render root items directly (includes folders and standalone files like guestbook.chat)
+  const rootItemsToRender = items.filter(item => !item.isFolder || (item.isFolder && item.id === 'portfolio-folder'));
+  const otherRootFiles = items.filter(item => !item.isFolder && item.id !== 'guestbook.chat'); // Example, adjust if more root files
+  const guestbookItem = items.find(item => item.id === 'guestbook.chat');
 
 
   return (
@@ -190,23 +191,83 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, onOpenTab, onRunAction,
       >
         <div className="text-xs text-[var(--sidebar-section-header-foreground)] uppercase tracking-wider mb-2 px-2 py-1 whitespace-nowrap">Explorer</div>
         
-        {portfolioFolder && (
-           <div className="mb-1"> 
-            <button 
-                onClick={() => toggleFolder(portfolioFolder.id)}
-                className="flex items-center w-full text-left text-sm font-semibold text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-item-hover-background)] px-2 py-1 rounded transition-colors duration-150 ease-in-out"
-                aria-expanded={portfolioFolderOpen}
-            >
-                {PortfolioChevronIcon && <PortfolioChevronIcon size={16} className="mr-1 flex-shrink-0" />}
-                <span className="whitespace-nowrap">{portfolioFolder.label}</span>
-            </button>
-            {portfolioFolderOpen && portfolioFolder.children && (
-                <ul className="mt-0.5"> 
-                {renderItems(portfolioFolder.children, 0, portfolioFolder.id)}
-                </ul>
-            )}
-          </div>
-        )}
+        <ul className="space-y-0.5">
+          {items.map((item) => {
+            const isOpen = item.isFolder ? openFolders[item.id] : false;
+            const IconComponent = item.isFolder 
+              ? (isOpen ? ICONS.folder_open_icon : ICONS.folder_closed_icon) 
+              : item.icon;
+            const ChevronIcon = item.isFolder 
+              ? (isOpen ? ICONS.chevron_down_icon : ICONS.chevron_right_icon) 
+              : null;
+            
+            const isActive = !item.isFolder && item.id === activeTabId;
+            const isDragOverTarget = dragOverItemInfo?.id === item.id && draggedItemInfo?.id !== item.id;
+
+            // Handle both top-level folders and top-level files like guestbook.chat
+            if (item.isFolder) {
+              return (
+                <React.Fragment key={item.id}>
+                  <li
+                    className={`rounded ${isDragOverTarget ? 'border-t-2 border-[var(--focus-border)]' : 'border-t-2 border-transparent'}`}
+                  >
+                    <button
+                      onClick={() => handleItemClick(item)}
+                      className={`flex items-center w-full text-left py-1 px-2 rounded text-sm font-semibold focus:outline-none transition-colors duration-150 ease-in-out
+                        text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-item-hover-background)] focus:bg-[var(--sidebar-item-focus-background)] focus:text-[var(--sidebar-item-focus-foreground)]
+                      `}
+                      title={item.title || item.label}
+                      aria-expanded={isOpen}
+                    >
+                      {ChevronIcon && <ChevronIcon size={16} className="mr-1 flex-shrink-0" />}
+                      <span className="whitespace-nowrap">{item.label}</span>
+                    </button>
+                  </li>
+                  {isOpen && item.children && (
+                    <li>
+                      <ul className="mt-0.5"> 
+                        {renderItems(item.children, 0, item.id)}
+                      </ul>
+                    </li>
+                  )}
+                </React.Fragment>
+              );
+            } else { // Top-level file (e.g., guestbook.chat)
+              return (
+                <li
+                  key={item.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, item, undefined)}
+                  onDragOver={(e) => handleDragOver(e, item, undefined)}
+                  onDragEnter={(e) => handleDragEnter(e, item, undefined)}
+                  onDragLeave={(e) => handleDragLeave(e)}
+                  onDrop={(e) => handleDrop(e, item, undefined)}
+                  onDragEnd={handleDragEnd}
+                  onContextMenu={(e) => handleItemContextMenu(e, item)}
+                  className={`
+                    sidebar-drag-item cursor-grab rounded
+                    ${isDragOverTarget ? 'border-t-2 border-[var(--focus-border)]' : 'border-t-2 border-transparent'}
+                  `}
+                >
+                  <button
+                    onClick={() => handleItemClick(item)}
+                    className={`flex items-center w-full text-left py-1 px-2 rounded text-sm focus:outline-none transition-colors duration-150 ease-in-out
+                      ${isActive
+                        ? 'bg-[var(--sidebar-item-focus-background)] text-[var(--sidebar-item-focus-foreground)]'
+                        : 'text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-item-hover-background)] focus:bg-[var(--sidebar-item-focus-background)] focus:text-[var(--sidebar-item-focus-foreground)]'
+                      }
+                    `}
+                    title={item.title || item.label}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    {IconComponent && <IconComponent size={16} className="ml-[16px] mr-2 flex-shrink-0" />} 
+                    <span className="truncate max-w-[100px] sm:max-w-[120px] lg:max-w-[150px]">{item.label}</span>
+                  </button>
+                </li>
+              );
+            }
+          })}
+        </ul>
       </div>
     </aside>
   );

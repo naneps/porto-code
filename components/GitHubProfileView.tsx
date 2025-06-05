@@ -81,15 +81,22 @@ const GitHubProfileView: React.FC<GitHubProfileViewProps> = ({ username, mockSta
       </a>
     );
 
+    let actionText = event.payload.action ? `${event.payload.action.charAt(0).toUpperCase() + event.payload.action.slice(1)} ` : '';
+    if (event.type === 'PullRequestEvent' && event.payload.action === 'opened') actionText = 'Opened ';
+    if (event.type === 'PullRequestEvent' && event.payload.action === 'closed' && event.payload.pull_request?.merged) actionText = 'Merged ';
+    else if (event.type === 'PullRequestEvent' && event.payload.action === 'closed') actionText = 'Closed ';
+
+
     switch (event.type) {
       case 'PushEvent':
-        return <>Pushed to {repoLink}</>;
+        const branch = event.payload.ref?.replace('refs/heads/', '');
+        return <>Pushed to {branch ? <code className="text-xs bg-[var(--editor-tab-inactive-background)] px-1 py-0.5 rounded">{branch}</code> : ''} at {repoLink}</>;
       case 'CreateEvent':
         return <>Created {event.payload.ref_type || 'item'} {event.payload.ref ? <code className="text-xs bg-[var(--editor-tab-inactive-background)] px-1 py-0.5 rounded">{event.payload.ref}</code> : ''} in {repoLink}</>;
       case 'PullRequestEvent':
-        return <>{event.payload.action || 'Interacted with'} PR <a href={event.payload.pull_request?.html_url} target="_blank" rel="noopener noreferrer" className="text-[var(--link-foreground)] hover:underline">#{event.payload.pull_request?.number}</a> in {repoLink}</>;
+        return <>{actionText}PR <a href={event.payload.pull_request?.html_url} target="_blank" rel="noopener noreferrer" className="text-[var(--link-foreground)] hover:underline">#{event.payload.pull_request?.number}</a> in {repoLink}</>;
       case 'IssuesEvent':
-        return <>{event.payload.action || 'Interacted with'} issue <a href={event.payload.issue?.html_url} target="_blank" rel="noopener noreferrer" className="text-[var(--link-foreground)] hover:underline">#{event.payload.issue?.number}</a> in {repoLink}</>;
+        return <>{actionText}issue <a href={event.payload.issue?.html_url} target="_blank" rel="noopener noreferrer" className="text-[var(--link-foreground)] hover:underline">#{event.payload.issue?.number}</a> in {repoLink}</>;
       case 'ForkEvent':
         return <>Forked {repoLink} to <a href={event.payload.forkee?.html_url} target="_blank" rel="noopener noreferrer" className="text-[var(--link-foreground)] hover:underline">{event.payload.forkee?.full_name}</a></>;
       case 'WatchEvent': // Starred
@@ -99,7 +106,7 @@ const GitHubProfileView: React.FC<GitHubProfileViewProps> = ({ username, mockSta
       case 'ReleaseEvent':
         return <>Published release <a href={event.payload.release?.html_url} target="_blank" rel="noopener noreferrer" className="text-[var(--link-foreground)] hover:underline">{event.payload.release?.name || event.payload.release?.tag_name}</a> in {repoLink}</>;
       default:
-        return <>Performed {event.type} on {repoLink}</>;
+        return <>{actionText || `${event.type.replace(/([A-Z])/g, ' $1').trim()} on `}{repoLink}</>;
     }
   };
   
@@ -107,15 +114,13 @@ const GitHubProfileView: React.FC<GitHubProfileViewProps> = ({ username, mockSta
     switch (event.type) {
         case 'PushEvent':
             const commits = event.payload.commits?.slice(0, 3) || []; // Show max 3 commits
-            if (commits.length === 0) return <p className="text-xs text-[var(--text-muted)] pl-5">No commit details available.</p>;
+            if (commits.length === 0) return null;
             return (
-                <ul className="pl-5 mt-1 space-y-0.5">
+                <ul className="pl-7 mt-1 space-y-0.5">
                 {commits.map(commit => (
                     <li key={commit.sha} className="text-xs text-[var(--text-muted)] flex items-start">
                     <GitCommit size={12} className="mr-1.5 mt-0.5 text-[var(--text-accent)] flex-shrink-0" />
                     <span className="truncate" title={commit.message}>{commit.message.split('\n')[0]}</span>
-                    {/* Optional: Link to commit */}
-                    {/* <a href={`https://github.com/${event.repo.name}/commit/${commit.sha}`} target="_blank" rel="noopener noreferrer" className="ml-1 text-[var(--link-foreground)] opacity-75 hover:opacity-100">({commit.sha.substring(0, 7)})</a> */}
                     </li>
                 ))}
                 {event.payload.commits && event.payload.commits.length > 3 && (
@@ -125,17 +130,17 @@ const GitHubProfileView: React.FC<GitHubProfileViewProps> = ({ username, mockSta
             );
         case 'PullRequestEvent':
             if (event.payload.pull_request?.title) {
-                 return <p className="text-xs text-[var(--text-muted)] pl-5 mt-0.5 flex items-start"><MessageSquare size={12} className="mr-1.5 mt-0.5 text-[var(--text-accent)] flex-shrink-0" /> <span className="truncate" title={event.payload.pull_request.title}>{event.payload.pull_request.title}</span></p>;
+                 return <p className="text-xs text-[var(--text-muted)] pl-7 mt-0.5 flex items-start"><MessageSquare size={12} className="mr-1.5 mt-0.5 text-[var(--text-accent)] flex-shrink-0" /> <span className="truncate" title={event.payload.pull_request.title}>{event.payload.pull_request.title}</span></p>;
             }
             return null;
         case 'IssuesEvent':
             if (event.payload.issue?.title) {
-                 return <p className="text-xs text-[var(--text-muted)] pl-5 mt-0.5 flex items-start"><MessageSquare size={12} className="mr-1.5 mt-0.5 text-[var(--text-accent)] flex-shrink-0" />  <span className="truncate" title={event.payload.issue.title}>{event.payload.issue.title}</span></p>;
+                 return <p className="text-xs text-[var(--text-muted)] pl-7 mt-0.5 flex items-start"><MessageSquare size={12} className="mr-1.5 mt-0.5 text-[var(--text-accent)] flex-shrink-0" />  <span className="truncate" title={event.payload.issue.title}>{event.payload.issue.title}</span></p>;
             }
             return null;
         case 'ReleaseEvent':
-             if (event.payload.release?.body) {
-                 return <p className="text-xs text-[var(--text-muted)] pl-5 mt-0.5 line-clamp-2"><Tag size={12} className="mr-1.5 mt-0.5 text-[var(--text-accent)] flex-shrink-0 inline-block" /> {event.payload.release.body}</p>;
+             if (event.payload.release?.body) { // Check if body exists and is not null/empty
+                 return <p className="text-xs text-[var(--text-muted)] pl-7 mt-0.5 line-clamp-2 flex items-start"><Tag size={12} className="mr-1.5 mt-0.5 text-[var(--text-accent)] flex-shrink-0" /> {event.payload.release.body}</p>;
             }
             return null;
         default:
@@ -143,11 +148,10 @@ const GitHubProfileView: React.FC<GitHubProfileViewProps> = ({ username, mockSta
     }
   };
 
-
   const featuredRepos = repos
     .filter(repo => !repo.fork)
-    .sort((a, b) => b.stargazers_count - a.stargazers_count)
-    .slice(0, 3);
+    .sort((a, b) => (b.stargazers_count + b.forks_count) - (a.stargazers_count + a.forks_count)) // Sort by stars + forks
+    .slice(0, 6); // Show up to 6 featured repos
 
   if (loading) {
     return (
@@ -219,10 +223,12 @@ const GitHubProfileView: React.FC<GitHubProfileViewProps> = ({ username, mockSta
             <h2 className="text-xl font-semibold mb-3 text-[var(--editor-tab-active-foreground)]">Featured Repositories</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {featuredRepos.map(repo => (
-                <div key={repo.id} className="p-3 bg-[var(--sidebar-background)] border border-[var(--border-color)] rounded-md hover:border-[var(--focus-border)] transition-colors">
-                  <a href={repo.html_url} target="_blank" rel="noopener noreferrer" className="text-md font-semibold text-[var(--link-foreground)] hover:underline block truncate">{repo.name}</a>
-                  <p className="text-xs text-[var(--text-muted)] mt-0.5 mb-1.5 h-8 overflow-hidden line-clamp-2">{repo.description || 'No description available.'}</p>
-                  <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+                <div key={repo.id} className="p-3 bg-[var(--sidebar-background)] border border-[var(--border-color)] rounded-md hover:border-[var(--focus-border)] transition-colors flex flex-col justify-between h-full">
+                  <div>
+                    <a href={repo.html_url} target="_blank" rel="noopener noreferrer" className="text-md font-semibold text-[var(--link-foreground)] hover:underline block truncate">{repo.name}</a>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5 mb-1.5 h-8 overflow-hidden line-clamp-2">{repo.description || 'No description available.'}</p>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-[var(--text-muted)] mt-auto pt-1">
                     <span className="flex items-center"><Star size={12} className="mr-1 text-yellow-400" /> {repo.stargazers_count}</span>
                     {repo.language && <span className="px-1.5 py-0.5 bg-[var(--editor-tab-inactive-background)] rounded-sm">{repo.language}</span>}
                     <span className="flex items-center"><GitFork size={12} className="mr-1" /> {repo.forks_count}</span>

@@ -1,5 +1,4 @@
 
-
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Tab, PortfolioData, SidebarItemConfig, Command, ContextMenuItem, ActivityBarSelection, SearchResultItem, Theme, FontFamilyOption, FontSizeOption, ArticleItem, ProjectDetail, MockStatistics, ActivityBarItemDefinition, ActivityBarItemConfig, NotificationItem, EditorPaneId, EditorPaneState, LogEntry, LogLevel, NotificationType, BottomPanelTabId, ChatMessage } from './types';
 import { PORTFOLIO_DATA, SIDEBAR_ITEMS as DEFAULT_SIDEBAR_ITEMS, generateFileContent, generateProjectDetailContent, ICONS, REPO_URL, APP_VERSION, DEFAULT_ACTIVITY_BAR_ITEMS, MAX_LOG_ENTRIES, MOCK_GITHUB_STATS } from './constants';
@@ -345,12 +344,14 @@ const App: React.FC = () => {
     if (currentTab?.type === 'article_detail') setActivityBarSelection('articles');
     else if (currentTab?.type === 'ai_chat') setActivityBarSelection('ai_chat_tab');
     else if (currentTab?.type === 'github_profile_view') setActivityBarSelection('github_profile_view');
+    else if (currentTab?.type === 'global_guestbook') setActivityBarSelection('global_guestbook_view');
     else if (isStatisticsPanelVisible) setActivityBarSelection('statistics');
     else if (isArticlesPanelVisible) setActivityBarSelection('articles');
     else if (isSearchPanelVisible) setActivityBarSelection('search');
     else if (isSidebarVisible) setActivityBarSelection('explorer');
     else setActivityBarSelection(null);
   }, [currentActiveTabForFocusedPane, isSidebarVisible, isSearchPanelVisible, isArticlesPanelVisible, isStatisticsPanelVisible]);
+
 
   const appendToTerminalOutput = useCallback((text: string) => { setTerminalOutput(prev => { const newOutput = [...prev, text]; return newOutput.length > 200 ? newOutput.slice(newOutput.length - 200) : newOutput; }); }, []);
   const clearTerminalOutput = useCallback(() => setTerminalOutput([]), []);
@@ -378,8 +379,18 @@ const App: React.FC = () => {
       idToOpen = config.id; tabTitle = config.title || config.fileName || config.label; tabType = config.type || 'file'; tabFileName = config.fileName;
     } else { // Direct config object
       const config = itemOrConfig as { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string, githubUsername?: string };
-      idToOpen = config.id || config.fileName || (config.type === 'github_profile_view' && config.githubUsername ? `github_profile_${config.githubUsername}` : (config.type === 'ai_chat' ? 'ai_chat_tab' : `unknown-tab-${Date.now()}` ) );
-      tabTitle = config.title || config.fileName || (config.type === 'github_profile_view' && config.githubUsername ? `${config.githubUsername} - GitHub` : (config.type === 'ai_chat' ? 'AI Assistant' : "Untitled") );
+      // Determine idToOpen based on type for special tabs
+      if (config.type === 'github_profile_view' && config.githubUsername) idToOpen = `github_profile_${config.githubUsername}`;
+      else if (config.type === 'ai_chat') idToOpen = 'ai_chat_tab';
+      else if (config.type === 'global_guestbook') idToOpen = 'global_guestbook_tab';
+      else idToOpen = config.id || config.fileName || `unknown-tab-${Date.now()}`;
+      
+      // Determine tabTitle based on type
+      if (config.type === 'github_profile_view' && config.githubUsername) tabTitle = `${config.githubUsername} - GitHub`;
+      else if (config.type === 'ai_chat') tabTitle = 'AI Assistant';
+      else if (config.type === 'global_guestbook') tabTitle = 'Global Guestbook';
+      else tabTitle = config.title || config.fileName || "Untitled";
+
       tabType = config.type || 'file';
       tabFileName = config.fileName;
       tabArticleSlug = config.articleSlug;
@@ -393,9 +404,10 @@ const App: React.FC = () => {
       simulateTerminalRun(tabTitle);
       setIsPreviewTabLoading(true);
       loadingTimeoutRef.current = window.setTimeout(() => setIsPreviewTabLoading(false), 1200);
-    } else if (tabType !== 'cv_preview' && tabType !== 'settings_editor' && tabType !== 'github_profile_view') {
+    } else if (!['cv_preview', 'settings_editor', 'github_profile_view', 'global_guestbook', 'ai_chat'].includes(tabType)) {
       playSound('tab-open');
     }
+
 
     setEditorPanes(prevPanes => {
       const pane = prevPanes[targetPaneId];
@@ -404,7 +416,7 @@ const App: React.FC = () => {
 
       if (existingTab) {
         newPaneState.activeTabId = existingTab.id;
-        if(tabType !== 'cv_preview' && tabType !== 'settings_editor' && tabType !== 'github_profile_view') playSound('tab-select');
+        if(!['cv_preview', 'settings_editor', 'github_profile_view', 'global_guestbook', 'ai_chat'].includes(tabType)) playSound('tab-select');
       } else {
         const newTab: Tab = { id: idToOpen, title: tabTitle, type: tabType, fileName: tabFileName, articleSlug: tabArticleSlug, githubUsername: tabGitHubUsername };
         newPaneState.openTabs = [...pane.openTabs, newTab];
@@ -426,16 +438,38 @@ const App: React.FC = () => {
     }
     setFocusedEditorPaneId(targetPaneId);
 
-    if (tabType === 'article_detail' || tabType === 'ai_chat' || tabType === 'settings_editor' || tabType === 'github_profile_view') {
+    if (['article_detail', 'ai_chat', 'settings_editor', 'github_profile_view', 'global_guestbook'].includes(tabType)) {
       setIsSearchPanelVisible(false); setIsSidebarVisible(false); setIsStatisticsPanelVisible(false); 
-      if (tabType === 'ai_chat' || tabType === 'settings_editor' || tabType === 'github_profile_view') setIsArticlesPanelVisible(false);
+      if (['ai_chat', 'settings_editor', 'github_profile_view', 'global_guestbook'].includes(tabType)) setIsArticlesPanelVisible(false);
     } else if (!isRunAction && tabType !== 'cv_preview') {
       setIsSearchPanelVisible(false); setIsArticlesPanelVisible(false); setIsStatisticsPanelVisible(false);
     }
   }, [focusedEditorPaneId, simulateTerminalRun, isRightEditorPaneVisible, addAppLog]);
 
+
+  const handleOpenGlobalGuestbookTab = useCallback(() => {
+    handleOpenTab({
+      id: 'global_guestbook_tab',
+      title: 'Global Guestbook',
+      type: 'global_guestbook',
+    }, false, focusedEditorPaneId);
+    addAppLog('action', 'Opened Global Guestbook tab.', 'User');
+  }, [handleOpenTab, focusedEditorPaneId, addAppLog]);
+
+
   const handleRunCVGenerator = useCallback(async () => { addAppLog('action', 'CV generation process started.', 'User'); setIsGeneratingCV(true); const cvSteps = [ "Starting CV generation...", "Fetching portfolio data...", "Initializing PDF document with pdf-lib...", "Formatting header and contact information...", "Adding summary section...", "Processing work experience entries...", "Detailing education background...", "Listing key skills...", "Compiling PDF structure...", "Finalizing PDF document...", ]; simulateTerminalRun("generate_cv.ts", 5000, cvSteps); let pdfBytes: Uint8Array | null = null; try { pdfBytes = await createCV_PDF(PORTFOLIO_DATA); appendToTerminalOutput("PDF bytes generated successfully."); } catch (error) { console.error("Error generating CV PDF:", error); appendToTerminalOutput(`Error during PDF generation: ${error instanceof Error ? error.message : String(error)}`); addNotificationAndLog("Failed to generate CV PDF.", 'error', 7000, undefined, ICONS.FileText); addAppLog('error', 'CV PDF generation failed.', 'System', { error }); playSound('error'); setIsGeneratingCV(false); return; } setTimeout(() => { setIsGeneratingCV(false); const cvTabId = 'cv_nandang_eka_prasetya.pdf'; const cvTabTitle = 'Nandang_Eka_Prasetya_CV.pdf'; if (pdfBytes) { const blob = new Blob([pdfBytes], { type: 'application/pdf' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = cvTabTitle; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href); appendToTerminalOutput(`${cvTabTitle} download initiated.`); addNotificationAndLog( `CV downloaded: ${cvTabTitle}`, 'success', 7000, [{ label: 'Open Preview', onClick: () => handleOpenTab({ id: cvTabId, title: cvTabTitle, type: 'cv_preview' }) }], ICONS.cv_preview_icon ); addAppLog('info', `CV downloaded: ${cvTabTitle}.`, 'System'); } else { addNotificationAndLog("CV PDF generation failed. Preview unavailable.", 'error', 7000, undefined, ICONS.FileText); addAppLog('error', 'CV PDF generation failed, preview unavailable.', 'System'); } handleOpenTab({ id: cvTabId, title: cvTabTitle, type: 'cv_preview', fileName: cvTabId, }, false, focusedEditorPaneId); playSound('notification'); }, 5100); }, [simulateTerminalRun, handleOpenTab, addNotificationAndLog, appendToTerminalOutput, focusedEditorPaneId, addAppLog]);
-  const handleSidebarAction = useCallback((actionType: SidebarItemConfig['actionType'], item: SidebarItemConfig) => { if (item.actionType === 'open_tab' || !item.actionType) { handleOpenTab(item, false, focusedEditorPaneId); } else { console.warn("Unhandled sidebar action type:", actionType); addAppLog('warning', `Unhandled sidebar action: ${actionType} for item ${item.label}.`, 'System'); } }, [handleOpenTab, focusedEditorPaneId, addAppLog]);
+  
+  const handleSidebarAction = useCallback((item: SidebarItemConfig) => {
+    if (item.actionType === 'open_global_guestbook') {
+        handleOpenGlobalGuestbookTab();
+    } else if (item.actionType === 'open_tab' || !item.actionType) {
+        handleOpenTab(item, false, focusedEditorPaneId);
+    } else {
+        console.warn("Unhandled sidebar action type:", item.actionType);
+        addAppLog('warning', `Unhandled sidebar action: ${item.actionType} for item ${item.label}.`, 'System');
+    }
+  }, [handleOpenTab, focusedEditorPaneId, handleOpenGlobalGuestbookTab, addAppLog]);
+
   const handleOpenProjectTab = useCallback((projectId: string, projectTitle: string) => { handleOpenTab({ id: projectId, fileName: projectId, type: 'project_detail', title: projectTitle }, false, focusedEditorPaneId); }, [handleOpenTab, focusedEditorPaneId]);
 
   const handleOpenPreviewTab = useCallback((originalFileTabId: string, isRunContext: boolean = false, targetPaneId: EditorPaneId = focusedEditorPaneId) => {
@@ -544,7 +578,7 @@ const App: React.FC = () => {
     if (!targetTab) return;
     let items: ContextMenuItem[] = [];
     if (isCVGeneratorContext && targetTab.fileName === 'generate_cv.ts') { items.push({ label: 'Run CV Generator Script', action: () => { handleRunCVGenerator(); playSound('command-execute'); }, icon: ICONS.PlayIcon, }); }
-    else if (targetTab.type !== 'settings_editor' && targetTab.type !== 'github_profile_view') { 
+    else if (targetTab.type !== 'settings_editor' && targetTab.type !== 'github_profile_view' && targetTab.type !== 'global_guestbook') { 
       items.push({ label: `Close ${targetTab.title}`, action: () => handleCloseTab(paneId, tabId) });
       items.push({ label: 'Close Others', action: () => { setEditorPanes(prev => ({ ...prev, [paneId]: { ...prev[paneId], openTabs: [targetTab], activeTabId: targetTab.id, tabHistory: [targetTab.id], currentHistoryIndex: 0 }})); addAppLog('action', `Closed other tabs, kept ${targetTab.title} in ${paneId} pane.`, 'User'); playSound('ui-click'); }});
       items.push({ label: 'Close All', action: () => { setEditorPanes(prev => ({ ...prev, [paneId]: { ...initialPaneState }})); addAppLog('action', `Closed all tabs in ${paneId} pane.`, 'User'); playSound('ui-click'); }});
@@ -648,7 +682,7 @@ const App: React.FC = () => {
   const handleReorderSidebarItems = useCallback((draggedItemId: string, targetItemId: string, parentId?: string) => { setOrderedSidebarItems(prevItems => { const reorder = (items: SidebarItemConfig[], currentParentId?: string): SidebarItemConfig[] => { if (currentParentId === parentId) { const newItems = [...items]; const draggedIndex = newItems.findIndex(item => item.id === draggedItemId); const targetIndex = newItems.findIndex(item => item.id === targetItemId); if (draggedIndex !== -1 && targetIndex !== -1 && draggedIndex !== targetIndex) { const [dragged] = newItems.splice(draggedIndex, 1); newItems.splice(targetIndex, 0, dragged); playSound('ui-click'); addAppLog('debug', `Reordered sidebar item ${draggedItemId} to be near ${targetItemId}.`, 'User'); return newItems; } return items; } return items.map(item => { if (item.isFolder && item.children) { return { ...item, children: reorder(item.children, item.id) }; } return item; }); }; return reorder(prevItems, undefined); }); }, [addAppLog]);
   const handleReorderActivityBarItems = useCallback((draggedItemId: string, targetItemId: string) => { setOrderedActivityBarItemDefinitions(prevItems => { const draggedItemIndex = prevItems.findIndex(item => item.id === draggedItemId); const targetItemIndex = prevItems.findIndex(item => item.id === targetItemId); if (draggedItemIndex === -1 || targetItemIndex === -1 || draggedItemIndex === targetItemIndex) { return prevItems; } const newItems = [...prevItems]; const [draggedItem] = newItems.splice(draggedItemIndex, 1); newItems.splice(targetItemIndex, 0, draggedItem); playSound('ui-click'); addAppLog('debug', `Reordered activity bar item ${draggedItemId} to be near ${targetItemId}.`, 'User'); return newItems; }); }, [addAppLog]);
 
-  const activityBarItems: ActivityBarItemConfig[] = useMemo(() => { return orderedActivityBarItemDefinitions.map(def => { let actionToCall: () => void; switch (def.viewId) { case 'explorer': actionToCall = toggleSidebarVisibility; break; case 'search': actionToCall = handleToggleSearchPanel; break; case 'articles': actionToCall = handleToggleArticlesPanel; break; case 'statistics': actionToCall = handleToggleStatisticsPanel; break; case 'github_profile_view': actionToCall = handleOpenGitHubProfileTab; break; case 'ai_chat_tab':actionToCall = handleOpenAIChatTab; break; default: actionToCall = () => {console.warn("Unknown activity bar item:", def.viewId); addAppLog('warning', `Unknown activity bar item action: ${def.viewId}`, 'System');} } return { ...def, icon: ICONS[def.iconName] || ICONS.default, action: actionToCall, }; }); }, [ orderedActivityBarItemDefinitions, toggleSidebarVisibility, handleToggleSearchPanel, handleToggleArticlesPanel, handleToggleStatisticsPanel, handleOpenGitHubProfileTab, handleOpenAIChatTab, addAppLog ]);
+  const activityBarItems: ActivityBarItemConfig[] = useMemo(() => { return orderedActivityBarItemDefinitions.map(def => { let actionToCall: () => void; switch (def.viewId) { case 'explorer': actionToCall = toggleSidebarVisibility; break; case 'search': actionToCall = handleToggleSearchPanel; break; case 'articles': actionToCall = handleToggleArticlesPanel; break; case 'statistics': actionToCall = handleToggleStatisticsPanel; break; case 'github_profile_view': actionToCall = handleOpenGitHubProfileTab; break; case 'ai_chat_tab':actionToCall = handleOpenAIChatTab; break; case 'global_guestbook_view': actionToCall = handleOpenGlobalGuestbookTab; break; default: actionToCall = () => {console.warn("Unknown activity bar item:", def.viewId); addAppLog('warning', `Unknown activity bar item action: ${def.viewId}`, 'System');} } return { ...def, icon: ICONS[def.iconName] || ICONS.default, action: actionToCall, }; }); }, [ orderedActivityBarItemDefinitions, toggleSidebarVisibility, handleToggleSearchPanel, handleToggleArticlesPanel, handleToggleStatisticsPanel, handleOpenGitHubProfileTab, handleOpenAIChatTab, handleOpenGlobalGuestbookTab, addAppLog ]);
   const handleThemeChange = useCallback((themeName: string) => { rawHandleThemeChange(themeName); playSound('setting-change'); addAppLog('action', `Theme changed to: ${themeName}.`, 'User'); }, [rawHandleThemeChange, addAppLog]);
   const handleEditorFontFamilyChange = useCallback((fontId: string) => { rawHandleFontFamilyChange(fontId); playSound('setting-change'); const fontLabel = FONT_FAMILY_OPTIONS.find(f=>f.id === fontId)?.label || fontId; addAppLog('action', `Editor font family changed to: ${fontLabel}.`, 'User'); }, [rawHandleFontFamilyChange, addAppLog]);
   const handleEditorFontSizeChange = useCallback((sizeId: string) => { rawHandleEditorFontSizeChange(sizeId); playSound('setting-change'); const sizeLabel = FONT_SIZE_OPTIONS.find(s=>s.id === sizeId)?.label || sizeId; addAppLog('action', `Editor font size changed to: ${sizeLabel}.`, 'User'); }, [rawHandleEditorFontSizeChange, addAppLog]);
@@ -763,6 +797,7 @@ const App: React.FC = () => {
     handleToggleSoundMute, isSoundMuted, handleRunCVGenerator, handleOpenSettingsEditor,
     terminalFontSizes: TERMINAL_FONT_SIZE_OPTIONS, currentTerminalFontSizeId, handleTerminalFontSizeChange,
     handleToggleRightEditorPane, handleFocusEditorPane, handleMoveEditorToOtherPane, addAppLog,
+    handleOpenGlobalGuestbookTab, // Added for global guestbook
   }), [
     orderedSidebarItems, handleOpenTab, closeCommandPalette, isSidebarVisible, toggleSidebarVisibility, handleOpenAIChatTab,
     openCommandPalette, PREDEFINED_THEMES, handleThemeChange, currentThemeName, FONT_FAMILY_OPTIONS, handleEditorFontFamilyChange,
@@ -772,6 +807,7 @@ const App: React.FC = () => {
     handleToggleSoundMute, isSoundMuted, handleRunCVGenerator, handleOpenSettingsEditor,
     currentTerminalFontSizeId, handleTerminalFontSizeChange,
     handleToggleRightEditorPane, handleFocusEditorPane, handleMoveEditorToOtherPane, addAppLog,
+    handleOpenGlobalGuestbookTab, // Added for global guestbook
   ]);
 
   const getGitHubUsername = (): string | undefined => {
@@ -805,9 +841,10 @@ const App: React.FC = () => {
     if (activeTab.type === 'cv_preview') return PORTFOLIO_DATA;
     if (activeTab.type === 'settings_editor') return { isSoundMuted, handleToggleSoundMute, themes: PREDEFINED_THEMES, currentThemeName, onThemeChange: handleThemeChange, fontFamilies: FONT_FAMILY_OPTIONS, currentFontFamilyId, onFontFamilyChange: handleEditorFontFamilyChange, editorFontSizes: FONT_SIZE_OPTIONS, currentEditorFontSizeId, onEditorFontSizeChange: handleEditorFontSizeChange, terminalFontSizes: TERMINAL_FONT_SIZE_OPTIONS, currentTerminalFontSizeId, onTerminalFontSizeChange: handleTerminalFontSizeChange, isDevModeEnabled, onToggleDevMode: handleToggleDevMode, };
     if (activeTab.type === 'github_profile_view') return { username: activeTab.githubUsername || getGitHubUsername(), mockStats: MOCK_GITHUB_STATS };
+    if (activeTab.type === 'global_guestbook') return { addAppLog }; // Pass addAppLog or any other needed props
     if (activeTab.fileName) return generateFileContent(activeTab.fileName, PORTFOLIO_DATA);
     return null;
-  }, [editorPanes.left.activeTabId, editorPanes.left.openTabs, PORTFOLIO_DATA, orderedSidebarItems, aiGeneratedProjects, isSoundMuted, handleToggleSoundMute, currentThemeName, handleThemeChange, currentFontFamilyId, handleEditorFontFamilyChange, currentEditorFontSizeId, handleEditorFontSizeChange, currentTerminalFontSizeId, handleTerminalFontSizeChange, isDevModeEnabled, handleToggleDevMode, chatMessages, chatInput, setChatInput, chatIsLoading, chatError, chatApiKeyAvailable, handleChatSendMessage, handleOpenTab]);
+  }, [editorPanes.left.activeTabId, editorPanes.left.openTabs, PORTFOLIO_DATA, orderedSidebarItems, aiGeneratedProjects, isSoundMuted, handleToggleSoundMute, currentThemeName, handleThemeChange, currentFontFamilyId, handleEditorFontFamilyChange, currentEditorFontSizeId, handleEditorFontSizeChange, currentTerminalFontSizeId, handleTerminalFontSizeChange, isDevModeEnabled, handleToggleDevMode, chatMessages, chatInput, setChatInput, chatIsLoading, chatError, chatApiKeyAvailable, handleChatSendMessage, handleOpenTab, addAppLog]);
   
   const activeContentDetailsForRightPane = useMemo(() => {
     const activeTab = editorPanes.right.openTabs.find(tab => tab.id === editorPanes.right.activeTabId);
@@ -831,9 +868,10 @@ const App: React.FC = () => {
     if (activeTab.type === 'cv_preview') return PORTFOLIO_DATA;
     if (activeTab.type === 'settings_editor') return { isSoundMuted, handleToggleSoundMute, themes: PREDEFINED_THEMES, currentThemeName, onThemeChange: handleThemeChange, fontFamilies: FONT_FAMILY_OPTIONS, currentFontFamilyId, onFontFamilyChange: handleEditorFontFamilyChange, editorFontSizes: FONT_SIZE_OPTIONS, currentEditorFontSizeId, onEditorFontSizeChange: handleEditorFontSizeChange, terminalFontSizes: TERMINAL_FONT_SIZE_OPTIONS, currentTerminalFontSizeId, onTerminalFontSizeChange: handleTerminalFontSizeChange, isDevModeEnabled, onToggleDevMode: handleToggleDevMode, };
     if (activeTab.type === 'github_profile_view') return { username: activeTab.githubUsername || getGitHubUsername(), mockStats: MOCK_GITHUB_STATS };
+    if (activeTab.type === 'global_guestbook') return { addAppLog }; // Pass addAppLog or any other needed props
     if (activeTab.fileName) return generateFileContent(activeTab.fileName, PORTFOLIO_DATA);
     return null;
-  }, [editorPanes.right.activeTabId, editorPanes.right.openTabs, PORTFOLIO_DATA, orderedSidebarItems, aiGeneratedProjects, isSoundMuted, handleToggleSoundMute, currentThemeName, handleThemeChange, currentFontFamilyId, handleEditorFontFamilyChange, currentEditorFontSizeId, handleEditorFontSizeChange, currentTerminalFontSizeId, handleTerminalFontSizeChange, isDevModeEnabled, handleToggleDevMode, chatMessages, chatInput, setChatInput, chatIsLoading, chatError, chatApiKeyAvailable, handleChatSendMessage, handleOpenTab]);
+  }, [editorPanes.right.activeTabId, editorPanes.right.openTabs, PORTFOLIO_DATA, orderedSidebarItems, aiGeneratedProjects, isSoundMuted, handleToggleSoundMute, currentThemeName, handleThemeChange, currentFontFamilyId, handleEditorFontFamilyChange, currentEditorFontSizeId, handleEditorFontSizeChange, currentTerminalFontSizeId, handleTerminalFontSizeChange, isDevModeEnabled, handleToggleDevMode, chatMessages, chatInput, setChatInput, chatIsLoading, chatError, chatApiKeyAvailable, handleChatSendMessage, handleOpenTab, addAppLog]);
 
   const renderEditorPane = (paneId: EditorPaneId) => {
     const paneState = editorPanes[paneId];

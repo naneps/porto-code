@@ -1,6 +1,4 @@
 
-
-
 import { LucideIcon, ImageIcon as ImageIconType, ExternalLink as ExternalLinkIcon } from 'lucide-react'; // Added ImageIconType and ExternalLinkIcon
 
 export interface Address {
@@ -61,7 +59,7 @@ export interface PortfolioData {
 export interface Tab {
   id: string;
   title: string;
-  type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview' | 'article_detail' | 'cv_preview' | 'settings_editor' | 'github_profile_view'; // Added 'github_profile_view'
+  type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview' | 'article_detail' | 'cv_preview' | 'settings_editor' | 'github_profile_view' | 'global_guestbook'; // Added 'global_guestbook'
   fileName?: string; // For file-based tabs and json_preview of files or projects
   articleSlug?: string;
   githubUsername?: string; // For github_profile_view tab
@@ -72,11 +70,11 @@ export interface SidebarItemConfig {
   label: string;
   icon: LucideIcon; // Icon for the item itself
   fileName?: string; // For file-like items that open a standard file tab
-  type?: 'file'; // Relevant if it opens a standard file tab
+  type?: Tab['type']; // Relevant if it opens a standard file tab, or for special tabs like 'global_guestbook'
   title?: string; // Display title, can be same as fileName or label
   isFolder?: boolean;
   children?: SidebarItemConfig[];
-  actionType?: 'open_tab' | 'run_cv_generator'; // Default to 'open_tab'
+  actionType?: 'open_tab' | 'run_cv_generator' | 'open_global_guestbook'; // Default to 'open_tab'
   defaultOpen?: boolean; // For folders, initial expanded state
 }
 
@@ -152,7 +150,7 @@ export interface ContextMenuProps {
 }
 
 // For ActivityBar selection - github is now a tab, not a panel itself.
-export type ActivityBarSelection = 'explorer' | 'ai_chat_tab' | 'search' | 'articles' | 'statistics' | 'github_profile_view' | null;
+export type ActivityBarSelection = 'explorer' | 'ai_chat_tab' | 'search' | 'articles' | 'statistics' | 'github_profile_view' | 'global_guestbook_view' | null; // Added 'global_guestbook_view'
 
 
 // For Global Search Results
@@ -343,6 +341,15 @@ export interface MockGitHubStats {
     topLanguages: { name: string; percentage: number; color: string }[];
     // For the mock contribution graph (52 weeks, 7 days)
     contributionGraphData: number[][]; // Array of weeks, each week is an array of 7 day activity levels (0-4)
+}
+
+// Firebase Page Comments
+export interface PageComment {
+  id?: string; // Firestore document ID
+  text: string;
+  author: string; // Defaults to "Anonymous"
+  timestamp: any; // Firebase ServerTimestamp placeholder, will be Date on client
+  avatarColor: string; // Hex color for avatar
 }
 
 

@@ -1,5 +1,5 @@
 
-import { ArrowLeft, ArrowRight, BarChart3, Bell, Bot, Briefcase, Cat, Check, ChevronDown, ChevronRight, Code2, Command, ExternalLink as ExternalLinkIcon, Eye, FileBadge, FileCode2 as FileCodeIcon, FileJson2, Files, FileTerminal, FileText, Folder as FolderClosed, FolderKanban, FolderOpen, Type as FontIcon, GitFork, Github, HelpCircle, Image as ImageIcon, LayoutGrid, Link, ListChecks, LucideIcon, Mail, Minus, MousePointerClick, Newspaper, Palette, Phone, Play, Search, Settings, Sparkles, SplitSquareHorizontal, Square, TerminalSquare, User, UserCircle2 as UserProfileIcon, Volume2, VolumeX, X } from 'lucide-react'; // Added Github
+import { ArrowLeft, ArrowRight, BarChart3, Bell, Bot, Briefcase, Cat, Check, ChevronDown, ChevronRight, Code2, Command, ExternalLink as ExternalLinkIcon, Eye, FileBadge, FileCode2 as FileCodeIcon, FileJson2, Files, FileTerminal, FileText, Folder as FolderClosed, FolderKanban, FolderOpen, Type as FontIcon, GitFork, Github, HelpCircle, Image as ImageIcon, LayoutGrid, Link, ListChecks, LucideIcon, Mail, MessageSquare, Minus, MousePointerClick, Newspaper, Palette, Phone, Play, Search, Settings, Sparkles, SplitSquareHorizontal, Square, TerminalSquare, User, UserCircle2 as UserProfileIcon, Volume2, VolumeX, X } from 'lucide-react'; // Added Github, MessageSquare
 import { MOCK_CV_GENERATOR_CODE } from './assets/generate_cv_code';
 import { ActivityBarItemDefinition, Command as AppCommandType, MockGitHubStats, PortfolioData, ProjectListingItem, SidebarItemConfig } from './types';
 
@@ -194,6 +194,7 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'article_detail': Newspaper,
   'project_detail': FileJson2, // Used for project detail tabs
   'github_profile_view': Github, // Icon for GitHub Profile Tab
+  'guestbook_icon': MessageSquare, // Icon for Guestbook
   'command_palette_icon': Command,
   'toggle_sidebar': Eye,
   'about_portfolio': HelpCircle,
@@ -205,7 +206,7 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'ai_chat_icon': Bot,
   'articles_icon': Newspaper,
   'statistics_icon': BarChart3,
-  'github_icon': Github, 
+  'github_icon': Github,
   'bell_icon': Bell,
   'terminal_square_icon': TerminalSquare,
   'arrow_left_icon': ArrowLeft,
@@ -247,9 +248,10 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'folder_closed_icon': FolderClosed,
   'generate_cv_icon': FileCodeIcon,
   'cv_preview_icon': FileBadge,
-  'ExternalLinkIcon': ExternalLinkIcon, 
-  'ImageIcon': ImageIcon, 
-  'LogsIcon': ListChecks, 
+  'ExternalLinkIcon': ExternalLinkIcon,
+  'ImageIcon': ImageIcon,
+  'LogsIcon': ListChecks,
+  'guestbook.chat': MessageSquare, // For sidebar item
 };
 
 export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
@@ -285,6 +287,14 @@ export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
         ],
       },
     ],
+  },
+  {
+    id: 'guestbook.chat',
+    label: 'guestbook.chat',
+    icon: ICONS['guestbook.chat'],
+    title: 'Global Guestbook',
+    actionType: 'open_global_guestbook',
+    type: 'global_guestbook', // Helps identify this as a special tab opener
   },
 ];
 
@@ -329,7 +339,7 @@ export function generateFileContent(fileName: string, data: PortfolioData): stri
         id: p.id,
         title: p.title,
         imageUrls: p.imageUrls,
-        technologies: p.technologies.slice(0, 3), // Extract first 3 technologies
+        technologies: p.technologies ? p.technologies.slice(0, 3) : [], // Ensure technologies exist
       }));
       content = {
         projects: projectListItems,
@@ -354,6 +364,8 @@ export function generateFileContent(fileName: string, data: PortfolioData): stri
       break;
     case 'generate_cv.ts':
       return MOCK_CV_GENERATOR_CODE;
+    case 'guestbook.chat': // Special case for guestbook "file"
+        return "// Global Guestbook: Comments are loaded in real-time. This file just acts as an opener.";
     default:
       content = { error: 'File not found or content generation not implemented.' };
   }
@@ -383,7 +395,8 @@ export const DEFAULT_ACTIVITY_BAR_ITEMS: ActivityBarItemDefinition[] = [
   { id: 'ai_chat-activity', label: 'AI Assistant', iconName: 'ai_chat_icon', viewId: 'ai_chat_tab' },
   { id: 'articles-activity', label: 'Articles', iconName: 'articles_icon', viewId: 'articles' },
   { id: 'statistics-activity', label: 'Statistics', iconName: 'statistics_icon', viewId: 'statistics' },
-  { id: 'github-activity', label: 'GitHub Profile', iconName: 'github_icon', viewId: 'github_profile_view' }, // Updated viewId
+  { id: 'github-activity', label: 'GitHub Profile', iconName: 'github_icon', viewId: 'github_profile_view' },
+  { id: 'guestbook-activity', label: 'Guestbook', iconName: 'guestbook_icon', viewId: 'global_guestbook_view' }, // Added Guestbook
 ];
 export const MAX_LOG_ENTRIES = 250;
 
