@@ -34,6 +34,7 @@ interface TitleBarProps {
   onToggleRightEditorPane: () => void;
   onFocusEditorPane: (paneId: EditorPaneId) => void;
   onMoveEditorToOtherPane: () => void;
+  onToggleProfilePopup: (event: React.MouseEvent<HTMLButtonElement>) => void; // Added
 }
 
 const TitleBar: React.FC<TitleBarProps> = (props) => {
@@ -48,7 +49,8 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
     className,
     onToggleRightEditorPane,
     onFocusEditorPane,
-    onMoveEditorToOtherPane
+    onMoveEditorToOtherPane,
+    onToggleProfilePopup // Destructure new prop
   } = props;
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -202,7 +204,12 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
         <button title="Toggle Panel Layout (Not Implemented)" className="hidden md:inline-flex p-1 hover:bg-[var(--titlebar-button-hover-background)] rounded text-[var(--titlebar-foreground)] items-center justify-center" onClick={() => playSound('ui-click')}>
           <ICONS.layout_grid_icon size={16} />
         </button>
-        <button title="Profile (Not Implemented)" className="p-1 hover:bg-[var(--titlebar-button-hover-background)] rounded text-[var(--titlebar-foreground)]" onClick={() => playSound('ui-click')}>
+        <button 
+            onClick={onToggleProfilePopup} 
+            title="Profile" 
+            className="p-1 hover:bg-[var(--titlebar-button-hover-background)] rounded text-[var(--titlebar-foreground)]"
+            aria-label="Toggle profile popup"
+        >
           <ICONS.user_profile_icon size={16} />
         </button>
 

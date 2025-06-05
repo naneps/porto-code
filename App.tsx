@@ -1,5 +1,10 @@
 
 
+
+
+
+
+
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Tab, PortfolioData, SidebarItemConfig, Command, ContextMenuItem, ActivityBarSelection, SearchResultItem, Theme, FontFamilyOption, FontSizeOption, ArticleItem, ProjectDetail, MockStatistics, ActivityBarItemDefinition, ActivityBarItemConfig, NotificationItem, EditorPaneId, EditorPaneState, LogEntry, LogLevel, NotificationType, BottomPanelTabId } from './types';
 import { PORTFOLIO_DATA, SIDEBAR_ITEMS as DEFAULT_SIDEBAR_ITEMS, generateFileContent, generateProjectDetailContent, ICONS, REPO_URL, APP_VERSION, DEFAULT_ACTIVITY_BAR_ITEMS, MAX_LOG_ENTRIES } from './constants';
@@ -24,7 +29,8 @@ import LogsPanel from './components/LogsPanel'; // Import LogsPanel
 import BottomPanelTabs from './components/BottomPanelTabs';
 import NotificationContainer from './components/notifications/NotificationContainer';
 import PasskeyPromptModal from './components/PasskeyPromptModal'; // Import new modal
-import { createCV_PDF } from './utils/cvGenerator';
+import StatusBar from './components/StatusBar'; // Import StatusBar
+import ProfilePopup from './components/ProfilePopup'; // Import ProfilePopup
 
 
 import { useThemeManager } from './hooks/useThemeManager';
@@ -36,6 +42,7 @@ import { generateCommands } from './utils/commandUtils';
 import { playSound, toggleMute, getMuteStatus } from './utils/audioUtils';
 import { fetchAIProjectSuggestion } from './utils/aiUtils';
 import './utils/firebase';
+import { createCV_PDF } from './utils/cvGenerator'; // Added import
 
 
 const DEFAULT_LEFT_PANEL_WIDTH = 256;
@@ -138,6 +145,9 @@ const App: React.FC = () => {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [isPasskeyPromptOpen, setIsPasskeyPromptOpen] = useState(false); // State for new modal
+  const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false); // State for ProfilePopup
+  const [profilePopupAnchorEl, setProfilePopupAnchorEl] = useState<HTMLElement | null>(null); // Anchor for ProfilePopup
+
   const [editorContextMenuState, setEditorContextMenuState] = useState<{ x: number; y: number; items: ContextMenuItem[]; visible: boolean; tabId?: string, paneId?: EditorPaneId }>({ x: 0, y: 0, items: [], visible: false });
   const [sidebarContextMenuState, setSidebarContextMenuState] = useState<{ x: number; y: number; items: ContextMenuItem[]; visible: boolean; itemId?: string }>({ x: 0, y: 0, items: [], visible: false });
   const [isPreviewTabLoading, setIsPreviewTabLoading] = useState(false);
@@ -546,6 +556,21 @@ const App: React.FC = () => {
     }
   }, [isDevModeEnabled, addNotificationAndLog, addAppLog]);
 
+  const handleToggleProfilePopup = (event?: React.MouseEvent<HTMLButtonElement>) => {
+    const currentAnchor = event ? event.currentTarget : null;
+    setIsProfilePopupOpen(prevIsOpen => {
+      const newIsOpen = !prevIsOpen;
+      if (newIsOpen) {
+        setProfilePopupAnchorEl(currentAnchor);
+      } else {
+        setProfilePopupAnchorEl(null);
+      }
+      addAppLog('action', `Profile popup ${newIsOpen ? 'opened' : 'closed'}.`, 'User');
+      return newIsOpen;
+    });
+    playSound('ui-click');
+  };
+
 
   useGlobalEventHandlers({ toggleSidebarVisibility, openCommandPalette, isCommandPaletteOpen, closeCommandPalette, isAboutModalOpen, closeAboutModal, contextMenuVisible: editorContextMenuState.visible || sidebarContextMenuState.visible, setContextMenuVisible: (visible) => { if (!visible) { closeEditorContextMenu(); closeSidebarContextMenu();}}, toggleTerminalVisibility: toggleTerminalPanel, togglePetsPanelVisibility: togglePetsPanel, isDevModeEnabled });
 
@@ -777,6 +802,7 @@ const App: React.FC = () => {
         onToggleRightEditorPane={handleToggleRightEditorPane}
         onFocusEditorPane={handleFocusEditorPane}
         onMoveEditorToOtherPane={handleMoveEditorToOtherPane}
+        onToggleProfilePopup={handleToggleProfilePopup} // Pass new handler
       />
       <main className="flex-1 flex overflow-hidden">
         <ActivityBar
@@ -849,9 +875,24 @@ const App: React.FC = () => {
           )}
         </div>
       </main>
+      <StatusBar
+        version={APP_VERSION}
+        currentThemeName={currentThemeName}
+        isSoundMuted={isSoundMuted}
+        onToggleSoundMute={handleToggleSoundMute}
+        notificationsCount={notificationsHook.notifications.length}
+        onOpenCommandPalette={openCommandPalette}
+        onOpenAboutModal={openAboutModal}
+      />
       {isCommandPaletteOpen && <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeCommandPalette} commands={commands} />}
       {isAboutModalOpen && <AboutModal isOpen={isAboutModalOpen} onClose={closeAboutModal} />}
       {isPasskeyPromptOpen && <PasskeyPromptModal isOpen={isPasskeyPromptOpen} onClose={() => { setIsPasskeyPromptOpen(false); handlePasskeySubmit(null);}} onSubmit={handlePasskeySubmit} />}
+      <ProfilePopup 
+        isOpen={isProfilePopupOpen} 
+        onClose={() => { setIsProfilePopupOpen(false); setProfilePopupAnchorEl(null); }} 
+        anchorEl={profilePopupAnchorEl} 
+        portfolioData={PORTFOLIO_DATA}
+      />
       <ContextMenu {...editorContextMenuState} onClose={closeEditorContextMenu} />
       <ContextMenu {...sidebarContextMenuState} onClose={closeSidebarContextMenu} />
       <NotificationContainer notifications={notificationsHook.notifications} onDismissNotification={notificationsHook.removeNotification} />

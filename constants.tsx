@@ -10,6 +10,8 @@ export const PORTFOLIO_DATA: PortfolioData = {
   nickname: "Nande",
   email: "ekaprasetya2244@gmail.com",
   phone: "+6281802192111",
+  avatarUrl: "https://media.licdn.com/dms/image/D5603AQFovS5UWc6iAA/profile-displayphoto-shrink_200_200/0/1738660203129?e=1754524800&v=beta&t=qovbV5WiLMKwY4d72QXJbRGEnFVmxOpxqSMQ642p8ZY", // Added avatar URL
+  role: "Mobile Developer", // Added top-level role
   address: {
     city: "Indramayu",
     full: "Indramayu, Indonesia"
@@ -260,6 +262,8 @@ export function generateFileContent(fileName: string, data: PortfolioData): stri
         summary: data.summary,
         current_position: data.current_position,
         education: data.education,
+        role: data.role, // Include top-level role
+        avatarUrl: data.avatarUrl, // Include avatarUrl
       };
       break;
     case 'experience.json':

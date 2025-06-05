@@ -52,6 +52,8 @@ export interface PortfolioData {
     name: string;
     url: string;
   };
+  avatarUrl?: string; // Added avatarUrl
+  role?: string; // Added top-level role
 }
 
 

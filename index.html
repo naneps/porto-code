@@ -5,6 +5,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PORTO CODE</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@^19.1.0",
+      "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+      "react/": "https://esm.sh/react@^19.1.0/",
+      "lucide-react": "https://esm.sh/lucide-react@^0.513.0",
+      "react-syntax-highlighter": "https://esm.sh/react-syntax-highlighter@^15.6.1",
+      "react-syntax-highlighter/": "https://esm.sh/react-syntax-highlighter@^15.6.1/",
+      "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
+      "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1",
+      "@google/genai": "https://esm.sh/@google/genai@^1.3.0",
+      "firebase/": "https://esm.sh/firebase@^11.8.1/",
+      "pdf-lib": "https://esm.sh/pdf-lib@^1.17.1",
+      "@/": "./",
+      "@/App": "./App.tsx"
+    }
+  }
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     html {
@@ -87,6 +106,22 @@
        width: 400px; /* Smaller width for a simple prompt */
        max-width: 80%;
     }
+    .profile-popup-content {
+      position: absolute; /* Positioned relative to its anchor */
+      background-color: var(--menu-dropdown-background, #252526);
+      border: 1px solid var(--menu-dropdown-border, #3E3E3E);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 60; /* Higher than most elements */
+      width: 280px; /* Adjust as needed */
+      padding: 12px;
+      color: var(--menu-item-foreground, #CCCCCC);
+    }
+    .profile-popup-content img {
+      border-radius: 50%;
+      border: 2px solid var(--focus-border, #007ACC);
+    }
+
 
     /* Markdown styling for chat bubbles and articles */
     .markdown-content pre {
@@ -239,29 +274,11 @@
     }
 
   </style>
-<script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "react": "https://esm.sh/react@^19.1.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.3.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "react-syntax-highlighter/": "https://esm.sh/react-syntax-highlighter@^15.6.1/",
-    "react-syntax-highlighter": "https://esm.sh/react-syntax-highlighter@^15.6.1",
-    "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1",
-    "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.511.0",
-    "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
-    "firebase/analytics": "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js",
-    "pdf-lib": "https://esm.sh/pdf-lib@^1.17.1",
-    "firebase/": "https://esm.sh/firebase@^11.8.1/"
-  }
-}
-</script>
 <link rel="stylesheet" href="/index.css">
 </head>
 <body>
   <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
+  <script type="module" src="./index.tsx"></script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>

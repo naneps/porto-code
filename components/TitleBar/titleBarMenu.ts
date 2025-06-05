@@ -14,7 +14,7 @@ interface MenuConfigArgs {
   onRunCVGenerator: () => void;
   onToggleTerminal: () => void;
   onTogglePetsPanel: () => void;
-  onToggleLogsPanel: () => void; // Added
+  onToggleLogsPanel: () => void;
   onToggleStatisticsPanel: () => void;
   onOpenSettingsEditor: () => void;
   onToggleRightEditorPane: () => void;
@@ -24,7 +24,26 @@ interface MenuConfigArgs {
   onToggleSoundMute: () => void;
 }
 
-export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subItems?: AppMenuItem[] }[] => [
+export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subItems?: AppMenuItem[] }[] => {
+  // Helper to get a flat list of all file items from the sidebar structure
+  const getAllFileItems = (items: SidebarItemConfig[]): SidebarItemConfig[] => {
+    const files: SidebarItemConfig[] = [];
+    const collect = (currentItems: SidebarItemConfig[]) => {
+      currentItems.forEach(item => {
+        if (item.isFolder && item.children) {
+          collect(item.children);
+        } else if (!item.isFolder && item.fileName) {
+          files.push(item);
+        }
+      });
+    };
+    collect(items);
+    return files;
+  };
+
+  const allSidebarFiles = getAllFileItems(args.sidebarItems);
+
+  return [
   { name: 'File' },
   { name: 'Edit' },
   { name: 'Selection' },
@@ -93,17 +112,19 @@ export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subIte
         icon: args.icons.generate_cv_icon || Play,
       },
       { separator: true },
-      ...args.sidebarItems.filter(item => item.fileName !== 'generate_cv.ts').map(item => ({
-        label: `Run ${item.fileName}`,
-        action: () => args.onRunItem({
-          id: `${item.id}_preview`,
-          fileName: item.fileName!,
-          title: `Preview: ${item.title || item.fileName}`,
-          type: 'json_preview',
-        }),
-        icon: args.icons.PlayIcon || Play,
-      })),
-      ...(args.projectsData.length > 0 && args.sidebarItems.filter(item => item.fileName !== 'generate_cv.ts').length > 0 ? [{ separator: true }] : []),
+      ...allSidebarFiles
+        .filter(item => item.fileName !== 'generate_cv.ts') // fileName is guaranteed by getAllFileItems
+        .map(item => ({
+          label: `Run ${item.fileName}`, // item.fileName will be defined here
+          action: () => args.onRunItem({
+            id: `${item.id}_preview`,
+            fileName: item.fileName!, // Safe due to filtering and collection logic
+            title: `Preview: ${item.title || item.fileName}`,
+            type: 'json_preview',
+          }),
+          icon: args.icons.PlayIcon || Play,
+        })),
+      ...(args.projectsData.length > 0 && allSidebarFiles.filter(item => item.fileName !== 'generate_cv.ts').length > 0 ? [{ separator: true }] : []),
       ...args.projectsData.map((project) => {
         return {
           label: `Run Project: ${project.title}`,
@@ -145,3 +166,4 @@ export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subIte
     ]
   },
 ];
+}
