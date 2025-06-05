@@ -1,5 +1,5 @@
 
-import { FontFamilyOption, FontSizeOption, Theme, ThemeProperties } from './types';
+import { Theme, ThemeProperties, FontFamilyOption, FontSizeOption } from './types';
 
 // VSCode Dark+ (Based on default VSCode dark theme)
 const vscodeDarkPlusProperties: ThemeProperties = {
@@ -78,7 +78,7 @@ const vscodeDarkPlusProperties: ThemeProperties = {
   '--breadcrumbs-icon-foreground': '#4EC9B0',
 
   // Status Bar
-  '--statusbar-background': '#252526',
+  '--statusbar-background': '#007ACC',
   '--statusbar-foreground': '#FFFFFF',
   '--statusbar-border': 'transparent',
   '--statusbar-item-hover-background': 'rgba(255, 255, 255, 0.12)',
@@ -196,7 +196,7 @@ const vscodeLightPlusProperties: ThemeProperties = {
   '--menu-dropdown-background': '#F3F3F3',
   '--menu-dropdown-border': '#D1D1D1',
   '--menu-item-hover-background': '#0060C0',
-  '--menu-item-hover-foreground': '#FFFFFF',
+  '--menu-item-hover-foreground': '#FFFFFF', // Text color for item on hover
   '--menu-item-selected-background': '#0052CC',
   '--menu-item-selected-foreground': '#FFFFFF',
   '--menu-item-foreground': '#1F1F1F',
@@ -245,8 +245,8 @@ const vscodeLightPlusProperties: ThemeProperties = {
 
 
   // Status Bar
-  '--statusbar-background': '#F3F3F3',
-  '--statusbar-foreground': '#333333FF',
+  '--statusbar-background': '#007ACC',
+  '--statusbar-foreground': '#FFFFFF',
   '--statusbar-border': 'transparent',
   '--statusbar-item-hover-background': 'rgba(0, 0, 0, 0.08)',
 
@@ -332,9 +332,172 @@ const vscodeLightPlusProperties: ThemeProperties = {
   '--terminal-line-height': '1.5', // Default, will be overridden by JS
 };
 
+const githubDarkDefaultProperties: ThemeProperties = {
+  // App & General UI
+  '--app-background': '#0d1117',
+  '--text-default': '#c9d1d9',
+  '--text-muted': '#8b949e',
+  '--text-accent': '#58a6ff',
+  '--text-inverse': '#0d1117',
+  '--border-color': '#30363d',
+  '--focus-border': '#58a6ff',
+  '--link-foreground': '#58a6ff',
+  '--link-hover-foreground': '#80baff',
+
+  // Title Bar
+  '--titlebar-background': '#161b22',
+  '--titlebar-foreground': '#c9d1d9',
+  '--titlebar-inactive-foreground': '#8b949e',
+  '--titlebar-border': '#30363d',
+  '--titlebar-button-hover-background': '#21262d',
+  '--titlebar-icon-blue': '#58a6ff',
+  '--titlebar-menu-active-background': '#21262d',
+
+  // Menu Bar
+  '--menubar-background': '#161b22',
+  '--menubar-foreground': '#c9d1d9',
+  '--menubar-hover-background': '#21262d',
+  '--menubar-separator-color': '#30363d',
+  '--menu-dropdown-background': '#161b22',
+  '--menu-dropdown-border': '#30363d',
+  '--menu-item-hover-background': '#21262d',
+  '--menu-item-selected-background': '#58a6ff',
+  '--menu-item-selected-foreground': '#0d1117',
+  '--menu-item-foreground': '#c9d1d9',
+  '--menu-item-icon-foreground': '#8b949e',
+
+  // Activity Bar
+  '--activitybar-background': '#0d1117',
+  '--activitybar-foreground': '#c9d1d9',
+  '--activitybar-inactive-foreground': '#8b949e',
+  '--activitybar-active-border': '#f78166', // GitHub orange accent
+  '--activitybar-active-background': '#21262d',
+  '--activitybar-hover-background': '#21262d',
+
+  // Sidebar
+  '--sidebar-background': '#0d1117',
+  '--sidebar-foreground': '#c9d1d9',
+  '--sidebar-border': '#30363d',
+  '--sidebar-section-header-foreground': '#8b949e',
+  '--sidebar-item-hover-background': '#21262d',
+  '--sidebar-item-focus-background': '#58a6ff',
+  '--sidebar-item-focus-foreground': '#0d1117',
+
+  // Editor Area & Tabs
+  '--editor-background': '#0d1117',
+  '--editor-foreground': '#c9d1d9',
+  '--editor-line-number-foreground': '#484f58',
+  '--editor-tab-background': '#0d1117',
+  '--editor-tab-inactive-background': '#0d1117',
+  '--editor-tab-active-background': '#161b22',
+  '--editor-tab-active-foreground': '#c9d1d9',
+  '--editor-tab-inactive-foreground': '#8b949e',
+  '--editor-tab-hover-background': '#21262d',
+  '--editor-tab-border': '#30363d',
+  '--editor-tab-active-border-top': '#f78166', // Orange accent for active tab top border
+  '--editor-tab-icon-foreground': '#8b949e',
+  '--editor-tab-icon-active-foreground': '#58a6ff',
+
+  // Breadcrumbs
+  '--breadcrumbs-background': '#0d1117',
+  '--breadcrumbs-foreground': '#8b949e',
+  '--breadcrumbs-focus-foreground': '#c9d1d9',
+  '--breadcrumbs-separator-color': '#30363d',
+  '--breadcrumbs-icon-foreground': '#58a6ff',
+
+  // Status Bar
+  '--statusbar-background': '#161b22',
+  '--statusbar-foreground': '#c9d1d9',
+  '--statusbar-border': '#30363d',
+  '--statusbar-item-hover-background': '#21262d',
+
+  // Modals
+  '--modal-backdrop-background': 'rgba(0, 0, 0, 0.4)',
+  '--modal-background': '#161b22',
+  '--modal-foreground': '#c9d1d9',
+  '--modal-border': '#30363d',
+  '--modal-input-background': '#0d1117',
+  '--modal-input-placeholder': '#484f58',
+  '--modal-input-border': '#30363d',
+  '--modal-selected-item-background': '#21262d',
+  '--modal-selected-item-foreground': '#58a6ff',
+  '--modal-button-background': '#238636', // GitHub green
+  '--modal-button-hover-background': '#2ea043', // Lighter GitHub green
+  '--modal-button-foreground': '#ffffff',
+
+  // Scrollbar
+  '--scrollbar-track-background': '#0d1117',
+  '--scrollbar-thumb-background': '#21262d',
+  '--scrollbar-thumb-hover-background': '#30363d',
+
+  // Terminal Panel
+  '--terminal-background': '#0d1117',
+  '--terminal-foreground': '#c9d1d9',
+  '--terminal-border': '#30363d',
+  '--terminal-cursor-color': '#58a6ff',
+  '--terminal-toolbar-background': '#161b22',
+  '--terminal-close-button-hover-background': '#21262d',
+
+  // Bottom Panel Tabs
+  '--bottom-panel-tab-background': '#0d1117',
+  '--bottom-panel-tab-inactive-background': '#0d1117',
+  '--bottom-panel-tab-active-background': '#161b22',
+  '--bottom-panel-tab-active-foreground': '#c9d1d9',
+  '--bottom-panel-tab-inactive-foreground': '#8b949e',
+  '--bottom-panel-tab-hover-background': '#21262d',
+  '--bottom-panel-tab-border': '#30363d',
+  '--bottom-panel-tab-active-border-bottom': '#f78166', // Orange accent
+  '--bottom-panel-tab-icon-foreground': '#8b949e',
+  '--bottom-panel-tab-icon-active-foreground': '#58a6ff',
+
+  // Linear Progress Bar
+  '--progress-bar-background': '#30363d',
+  '--progress-bar-indicator': '#58a6ff',
+
+  // Article Tags (Active State)
+  '--tag-active-background': '#58a6ff',
+  '--tag-active-text': '#0d1117',
+
+  // Syntax Highlighting (GitHub Inspired)
+  '--syntax-string': '#a5d6ff',
+  '--syntax-keyword': '#ff7b72',
+  '--syntax-comment': '#8b949e',
+  '--syntax-number': '#79c0ff',
+  '--syntax-boolean': '#79c0ff',
+  '--syntax-property': '#c9d1d9', // JSON keys, etc.
+  '--syntax-operator': '#ff7b72',
+  '--syntax-punctuation': '#c9d1d9',
+  '--syntax-function': '#d2a8ff',
+  '--syntax-base-text': '#c9d1d9',
+
+  // Notification Colors (Reusing VSCode Dark+ notifications for consistency in dark themes)
+  '--notification-success-background': 'rgb(21,54,36)',
+  '--notification-success-foreground': 'rgb(134,239,172)',
+  '--notification-success-border': 'rgb(34,90,56)',
+  '--notification-success-icon': 'rgb(74,222,128)',
+  '--notification-error-background': 'rgb(70,26,29)',
+  '--notification-error-foreground': 'rgb(252,165,165)',
+  '--notification-error-border': 'rgb(120,36,42)',
+  '--notification-error-icon': 'rgb(248,113,113)',
+  '--notification-info-background': 'rgb(29,54,82)',
+  '--notification-info-foreground': 'rgb(147,197,253)',
+  '--notification-info-border': 'rgb(39,74,122)',
+  '--notification-info-icon': 'rgb(96,165,250)',
+  '--notification-warning-background': 'rgb(70,51,20)',
+  '--notification-warning-foreground': 'rgb(252,211,77)',
+  '--notification-warning-border': 'rgb(110,71,30)',
+  '--notification-warning-icon': 'rgb(251,191,36)',
+
+  // Terminal Font specific variables
+  '--terminal-font-size': '14px',
+  '--terminal-line-height': '1.5',
+};
+
+
 export const PREDEFINED_THEMES: Theme[] = [
   { name: 'VSCode Dark+', properties: vscodeDarkPlusProperties },
   { name: 'VSCode Light+', properties: vscodeLightPlusProperties },
+  { name: 'GitHub Dark Default', properties: githubDarkDefaultProperties },
 ];
 
 export const FONT_FAMILY_OPTIONS: FontFamilyOption[] = [
@@ -360,7 +523,7 @@ export const TERMINAL_FONT_SIZE_OPTIONS: FontSizeOption[] = [
     { id: 'term-large', label: 'Large (16px)', value: '16px', lineHeight: '1.5' },
 ];
 
-export const DEFAULT_THEME_NAME = PREDEFINED_THEMES[0].name;
+export const DEFAULT_THEME_NAME = PREDEFINED_THEMES[2].name;
 export const DEFAULT_FONT_FAMILY_ID = FONT_FAMILY_OPTIONS[0].id;
 export const DEFAULT_FONT_SIZE_ID = FONT_SIZE_OPTIONS[1].id; // Medium (14px) for editor
 export const DEFAULT_TERMINAL_FONT_SIZE_ID = TERMINAL_FONT_SIZE_OPTIONS[2].id; // Medium (14px) for terminal

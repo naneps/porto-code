@@ -1,6 +1,7 @@
 
+
 import { Command, SidebarItemConfig, Theme, FontFamilyOption, FontSizeOption, Tab, EditorPaneId, LogLevel } from '../types';
-import { LucideIcon, EyeOff, Eye, Command as CommandIcon, Bot as BotIcon, Search as SearchIconLucide, Newspaper as ArticlesIconLucide, BarChart3 as StatisticsIconLucide, FileTerminal, Cat, Volume2, VolumeX, Play, Settings, Palette, Type as FontTypeIcon, Columns, Rows, ArrowLeftRight, ListChecks } from 'lucide-react';
+import { LucideIcon, EyeOff, Eye, Command as CommandIcon, Bot as BotIcon, Search as SearchIconLucide, Newspaper as ArticlesIconLucide, BarChart3 as StatisticsIconLucide, FileTerminal, Cat, Volume2, VolumeX, Play, Settings, Palette, Type as FontTypeIcon, Columns, Rows, ArrowLeftRight, ListChecks, Github } from 'lucide-react';
 import { playSound } from './audioUtils';
 
 
@@ -26,9 +27,10 @@ interface GenerateCommandsArgs {
   handleToggleSearchPanel: () => void;
   handleToggleArticlesPanel: () => void;
   handleToggleStatisticsPanel: () => void;
+  handleToggleGitHubPanel: () => void; // This will now open the GitHub Profile Tab
   toggleTerminalVisibility: () => void;
   togglePetsPanelVisibility: () => void;
-  toggleLogsPanelVisibility: () => void; // Added
+  toggleLogsPanelVisibility: () => void; 
   handleToggleSoundMute: () => void;
   isSoundMuted: boolean;
   handleRunCVGenerator: () => void;
@@ -39,7 +41,7 @@ interface GenerateCommandsArgs {
   handleToggleRightEditorPane: () => void;
   handleFocusEditorPane: (paneId: EditorPaneId) => void;
   handleMoveEditorToOtherPane: () => void;
-  addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void; // Added
+  addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void; 
 }
 
 const createCommandAction = (action: () => void, closePalette: () => void, soundName: string = 'command-execute', commandLabel: string, addAppLog: GenerateCommandsArgs['addAppLog']) => {
@@ -65,9 +67,10 @@ export const generateCommands = ({
   handleToggleSearchPanel,
   handleToggleArticlesPanel,
   handleToggleStatisticsPanel,
+  handleToggleGitHubPanel, // This is now handleOpenGitHubProfileTab passed from App.tsx
   toggleTerminalVisibility,
   togglePetsPanelVisibility,
-  toggleLogsPanelVisibility, // Added
+  toggleLogsPanelVisibility, 
   handleToggleSoundMute,
   isSoundMuted,
   handleRunCVGenerator,
@@ -75,7 +78,7 @@ export const generateCommands = ({
   handleToggleRightEditorPane,
   handleFocusEditorPane,
   handleMoveEditorToOtherPane,
-  addAppLog, // Added
+  addAppLog, 
 }: GenerateCommandsArgs): Command[] => {
   const allCommands: Command[] = [];
 
@@ -136,6 +139,16 @@ export const generateCommands = ({
     action: createCommandAction(handleToggleStatisticsPanel, closeCommandPalette, 'panel-toggle', toggleStatsLabel, addAppLog),
     icon: icons.statistics_icon || StatisticsIconLucide,
     group: "View",
+  });
+
+  const toggleGitHubLabel = 'View: Open GitHub Profile Tab'; // Updated label
+  allCommands.push({
+    id: 'toggle_github_panel', // ID can remain the same or change, action matters
+    label: toggleGitHubLabel,
+    action: createCommandAction(handleToggleGitHubPanel, closeCommandPalette, 'panel-toggle', toggleGitHubLabel, addAppLog), // handleToggleGitHubPanel is now handleOpenGitHubProfileTab
+    icon: icons.github_icon || Github,
+    group: "View",
+    description: "Open the GitHub Profile tab." // Updated description
   });
 
   const toggleTerminalLabel = 'Toggle Terminal';

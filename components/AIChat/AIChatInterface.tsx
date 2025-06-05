@@ -1,60 +1,131 @@
 
 import React, { useEffect, useRef } from 'react';
-import { PortfolioData, LogLevel } from '../../types'; // Adjusted path, added LogLevel
-import ChatBubble from './ChatBubble'; // Updated path
-import { Send, AlertTriangle, Loader2 } from 'lucide-react';
-import { useGeminiChat } from '../../hooks/useGeminiChat'; // Adjusted path
+import { PortfolioData, LogLevel, Tab, ChatMessage, EditorPaneId } from '../../types'; // Added EditorPaneId
+import ChatBubble from './ChatBubble';
+import { Send, AlertTriangle, Loader2, MessageSquarePlus, Bot } from 'lucide-react'; 
+import { AI_CHAT_SHORTCUTS } from '../../constants';
 
 interface AIChatInterfaceProps {
   portfolioData: PortfolioData;
   addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void;
+  messages: ChatMessage[];
+  input: string;
+  setInput: (input: string) => void;
+  isLoading: boolean;
+  error: string | null;
+  apiKeyAvailable: boolean;
+  onSendMessage: () => Promise<void>;
+  handleOpenTab: (itemOrConfig: { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string, githubUsername?: string }, isRunAction?: boolean, targetPaneId?: EditorPaneId) => void;
+  currentPaneIdForChat: EditorPaneId; // Added prop for current pane ID
 }
 
-const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ portfolioData, addAppLog }) => {
-  const {
-    messages,
-    input,
-    setInput,
-    isLoading,
-    error,
-    apiKeyAvailable,
-    handleSendMessage,
-  } = useGeminiChat(portfolioData, addAppLog); // Pass addAppLog here
+const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ 
+  portfolioData, 
+  addAppLog,
+  messages,
+  input,
+  setInput,
+  isLoading,
+  error,
+  apiKeyAvailable,
+  onSendMessage,
+  handleOpenTab,
+  currentPaneIdForChat // Destructure new prop
+}) => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  useEffect(() => {
+    if (apiKeyAvailable && !isLoading) {
+        inputRef.current?.focus();
+    }
+  }, [apiKeyAvailable, isLoading]);
+
+  const handleShortcutClick = (prompt: string) => {
+    setInput(prompt);
+    inputRef.current?.focus();
+  };
+  
+  const onOpenFileRequest = (fileName: string) => {
+    let tabTitle = fileName;
+    // Basic title mapping
+    if (fileName === 'about.json') tabTitle = 'about.json';
+    else if (fileName === 'experience.json') tabTitle = 'experience.json';
+    else if (fileName === 'skills.json') tabTitle = 'skills.json';
+    else if (fileName === 'projects.json') tabTitle = 'projects.json';
+    else if (fileName === 'contact.json') tabTitle = 'contact.json';
+    
+    // Use currentPaneIdForChat as the targetPaneId
+    handleOpenTab({ fileName: fileName, type: 'file', title: tabTitle }, false, currentPaneIdForChat);
+  };
+
+
   return (
     <div className="flex flex-col h-full bg-[var(--editor-background)] text-[var(--editor-foreground)]">
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2">
         {messages.map(msg => (
-          <ChatBubble key={msg.id} message={msg} />
+          <ChatBubble key={msg.id} message={msg} onOpenFileRequest={onOpenFileRequest} />
         ))}
+        {isLoading && (
+           <div className="flex items-center justify-start mb-3">
+             <div className="flex-shrink-0 h-8 w-8 rounded-full bg-[var(--editor-background)] border border-[var(--border-color)] flex items-center justify-center mr-2 mt-1">
+                <Bot size={18} className="text-[var(--text-accent)]" />
+            </div>
+            <div className="px-3 py-2 bg-[var(--sidebar-background)] text-[var(--sidebar-foreground)] self-start rounded-lg rounded-bl-none border border-[var(--border-color)] shadow-sm">
+                <div className="ai-thinking-indicator text-sm">
+                    AI Assistant is thinking
+                    <span className="dot">.</span>
+                    <span className="dot">.</span>
+                    <span className="dot">.</span>
+                </div>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
+      
       {error && (
-        <div className="p-3 bg-red-500/20 text-red-300 text-sm flex items-center">
-          <AlertTriangle size={18} className="mr-2" /> {error}
+        <div className="p-2 sm:p-3 bg-red-500/20 text-red-300 text-xs sm:text-sm flex items-center">
+          <AlertTriangle size={16} className="mr-2" /> {error}
         </div>
       )}
       {!apiKeyAvailable && messages.length > 0 && messages[0].error && messages[0].text.includes("API key has not been configured") && (
-         <div className="p-3 bg-yellow-500/20 text-yellow-300 text-sm flex items-center justify-center">
-            <AlertTriangle size={18} className="mr-2" />
+         <div className="p-2 sm:p-3 bg-yellow-500/20 text-yellow-300 text-xs sm:text-sm flex items-center justify-center">
+            <AlertTriangle size={16} className="mr-2" />
             AI Assistant features are disabled. API key not configured.
         </div>
       )}
-      <div className="p-3 border-t border-[var(--border-color)] bg-[var(--sidebar-background)]">
+
+      <div className="p-2 sm:p-3 border-t border-[var(--border-color)] bg-[var(--sidebar-background)]">
+        {apiKeyAvailable && !isLoading && AI_CHAT_SHORTCUTS.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {AI_CHAT_SHORTCUTS.map(shortcut => (
+              <button
+                key={shortcut.label}
+                onClick={() => handleShortcutClick(shortcut.prompt)}
+                className="ai-chat-shortcut-button flex items-center"
+                title={shortcut.prompt}
+              >
+                <MessageSquarePlus size={12} className="mr-1 opacity-75" />
+                {shortcut.label}
+              </button>
+            ))}
+          </div>
+        )}
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            handleSendMessage();
+            onSendMessage(); 
           }}
           className="flex items-center space-x-2"
         >
           <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}

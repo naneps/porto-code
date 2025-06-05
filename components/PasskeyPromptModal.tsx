@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ICONS } from '../constants'; // Assuming ICONS for CloseIcon
+import { ICONS } from '../constants'; 
 
 interface PasskeyPromptModalProps {
   isOpen: boolean;
@@ -20,14 +20,29 @@ const PasskeyPromptModal: React.FC<PasskeyPromptModalProps> = ({
   const [passkey, setPasskey] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const CloseIcon = ICONS.x_icon;
-  const KeyIcon = ICONS.settings_icon; // Using settings icon as a generic key/auth icon
+  const KeyIcon = ICONS.settings_icon; 
+
+  const [isActuallyOpen, setIsActuallyOpen] = useState(false);
+  const [animationClass, setAnimationClass] = useState('');
 
   useEffect(() => {
     if (isOpen) {
-      setPasskey(''); // Reset passkey on open
-      setTimeout(() => inputRef.current?.focus(), 0); // Autofocus after modal is visible
+      setIsActuallyOpen(true);
+      const timer = setTimeout(() => {
+        setAnimationClass('modal-open');
+        setPasskey(''); 
+        inputRef.current?.focus();
+      }, 10);
+      return () => clearTimeout(timer);
+    } else {
+      setAnimationClass('');
+      const timer = setTimeout(() => {
+        setIsActuallyOpen(false);
+      }, 300); // Match CSS transition duration
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
+
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape') {
@@ -46,12 +61,19 @@ const PasskeyPromptModal: React.FC<PasskeyPromptModalProps> = ({
     onSubmit(passkey);
   };
 
-  if (!isOpen) return null;
+  if (!isActuallyOpen) return null;
 
   return (
-    <div className="modal-backdrop" onClick={onClose} onKeyDown={handleKeyDown} role="dialog" aria-modal="true" aria-labelledby="passkey-prompt-title">
+    <div 
+      className={`modal-backdrop ${animationClass}`} 
+      onClick={onClose} 
+      onKeyDown={handleKeyDown} 
+      role="dialog" 
+      aria-modal="true" 
+      aria-labelledby="passkey-prompt-title"
+    >
       <div
-        className="passkey-prompt-content bg-[var(--modal-background)] border border-[var(--modal-border)] rounded-lg shadow-2xl flex flex-col overflow-hidden text-[var(--modal-foreground)]"
+        className={`passkey-prompt-content modal-content-base ${animationClass}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-3 border-b border-[var(--modal-border)]">
@@ -74,7 +96,7 @@ const PasskeyPromptModal: React.FC<PasskeyPromptModalProps> = ({
           <p className="text-sm text-[var(--text-muted)]" id="passkey-prompt-message">{message}</p>
           <input
             ref={inputRef}
-            type="password" // Changed to password for basic obfuscation
+            type="password" 
             value={passkey}
             onChange={(e) => setPasskey(e.target.value)}
             onKeyDown={handleInputKeyDown}

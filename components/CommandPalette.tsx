@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Command } from '../types';
 import { ICONS } from '../constants';
@@ -19,6 +20,28 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, comman
   const CloseIcon = ICONS.x_icon;
   const CheckIcon = ICONS.check_icon;
 
+  const [isActuallyOpen, setIsActuallyOpen] = useState(false);
+  const [animationClass, setAnimationClass] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsActuallyOpen(true);
+      const timer = setTimeout(() => {
+        setAnimationClass('modal-open');
+        inputRef.current?.focus();
+        setSearchTerm(''); 
+        setSelectedIndex(0); 
+      }, 10); 
+      return () => clearTimeout(timer);
+    } else {
+      setAnimationClass(''); 
+      const timer = setTimeout(() => {
+        setIsActuallyOpen(false);
+      }, 300); // Matches CSS transition duration
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   const filteredCommands = useMemo(() => {
     if (!searchTerm) return commands;
     return commands.filter(command =>
@@ -29,25 +52,17 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, comman
   }, [commands, searchTerm]);
 
   useEffect(() => {
-    if (isOpen) {
-      inputRef.current?.focus();
-      setSearchTerm(''); 
-      setSelectedIndex(0); 
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
     setSelectedIndex(0); 
   }, [filteredCommands]);
   
   useEffect(() => {
-    if (listRef.current && listRef.current.children[selectedIndex]) {
+    if (isActuallyOpen && listRef.current && listRef.current.children[selectedIndex]) {
       listRef.current.children[selectedIndex].scrollIntoView({
-        behavior: 'smooth', // Can be 'auto' if 'smooth' is jumpy
+        behavior: 'smooth', 
         block: 'nearest',
       });
     }
-  }, [selectedIndex]);
+  }, [selectedIndex, isActuallyOpen]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
@@ -66,12 +81,12 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, comman
     }
   };
 
-  if (!isOpen) return null;
+  if (!isActuallyOpen) return null;
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className={`modal-backdrop ${animationClass}`} onClick={onClose}>
       <div 
-        className="command-palette-content bg-[var(--modal-background)] border border-[var(--modal-border)] rounded-lg shadow-2xl flex flex-col overflow-hidden text-[var(--modal-foreground)]"
+        className={`command-palette-content modal-content-base ${animationClass}`}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
@@ -98,7 +113,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, comman
                 <button
                   onClick={() => command.action()}
                   className={`w-full text-left px-3 py-2.5 text-sm flex items-center group transition-colors duration-100 ease-in-out ${
-                    index === selectedIndex ? 'bg-[var(--modal-selected-item-background)] text-[var(--modal-selected-item-foreground)]' : 'hover:bg-[var(--sidebar-item-hover-background)]' // Use a generic hover from sidebar for unselected
+                    index === selectedIndex ? 'bg-[var(--modal-selected-item-background)] text-[var(--modal-selected-item-foreground)]' : 'hover:bg-[var(--sidebar-item-hover-background)]'
                   }`}
                 >
                   {command.icon && (

@@ -1,6 +1,6 @@
 
 import { AppMenuItem, Theme, FontFamilyOption, FontSizeOption, SidebarItemConfig, Tab, ProjectDetail, EditorPaneId } from '../../types';
-import { LucideIcon, Command, Eye, EyeOff, Play, FileTerminal, Cat, BarChart3 as StatisticsIconLucide, Settings, Columns, Rows, ArrowLeftRight, ListChecks } from 'lucide-react';
+import { LucideIcon, Command, Eye, EyeOff, Play, FileTerminal, Cat, BarChart3 as StatisticsIconLucide, Settings, Columns, Rows, ArrowLeftRight, ListChecks, Github } from 'lucide-react';
 
 interface MenuConfigArgs {
   onOpenCommandPalette: () => void;
@@ -16,6 +16,7 @@ interface MenuConfigArgs {
   onTogglePetsPanel: () => void;
   onToggleLogsPanel: () => void;
   onToggleStatisticsPanel: () => void;
+  onToggleGitHubPanel: () => void; // This will now be handleOpenGitHubProfileTab
   onOpenSettingsEditor: () => void;
   onToggleRightEditorPane: () => void;
   onFocusEditorPane: (paneId: EditorPaneId) => void;
@@ -82,6 +83,11 @@ export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subIte
         label: 'Toggle Statistics Panel',
         action: args.onToggleStatisticsPanel,
         icon: args.icons.statistics_icon || StatisticsIconLucide,
+      },
+      {
+        label: 'Open GitHub Profile Tab', // Updated Label
+        action: args.onToggleGitHubPanel, // This is now handleOpenGitHubProfileTab
+        icon: args.icons.github_icon || Github,
       },
       {
         label: 'Toggle Terminal',

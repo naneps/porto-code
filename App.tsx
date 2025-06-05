@@ -1,36 +1,32 @@
 
 
-
-
-
-
-
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import AboutModal from './components/AboutModal';
-import ActivityBar from './components/ActivityBar';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { Tab, PortfolioData, SidebarItemConfig, Command, ContextMenuItem, ActivityBarSelection, SearchResultItem, Theme, FontFamilyOption, FontSizeOption, ArticleItem, ProjectDetail, MockStatistics, ActivityBarItemDefinition, ActivityBarItemConfig, NotificationItem, EditorPaneId, EditorPaneState, LogEntry, LogLevel, NotificationType, BottomPanelTabId, ChatMessage } from './types';
+import { PORTFOLIO_DATA, SIDEBAR_ITEMS as DEFAULT_SIDEBAR_ITEMS, generateFileContent, generateProjectDetailContent, ICONS, REPO_URL, APP_VERSION, DEFAULT_ACTIVITY_BAR_ITEMS, MAX_LOG_ENTRIES, MOCK_GITHUB_STATS } from './constants';
 import { SAMPLE_ARTICLES } from './components/Articles/articlesData';
-import ArticlesPanel from './components/Articles/ArticlesPanel';
-import BottomPanelTabs from './components/BottomPanelTabs';
+import { PREDEFINED_THEMES, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS, TERMINAL_FONT_SIZE_OPTIONS, DEFAULT_TERMINAL_FONT_SIZE_ID, DEFAULT_THEME_NAME, DEFAULT_FONT_FAMILY_ID, DEFAULT_FONT_SIZE_ID } from './themes';
+import TitleBar from './components/TitleBar/TitleBar';
+import ActivityBar from './components/ActivityBar';
+import { Sidebar } from './components/Sidebar';
+import EditorTabs from './components/EditorTabs';
+import TabContent from './components/TabContent';
 import Breadcrumbs from './components/Breadcrumbs';
 import CommandPalette from './components/CommandPalette';
+import AboutModal from './components/AboutModal';
 import ContextMenu from './components/ContextMenu';
-import EditorTabs from './components/EditorTabs';
+import WelcomeView from './components/WelcomeView';
+import SearchPanel from './components/Search/SearchPanel';
+import ArticlesPanel from './components/Articles/ArticlesPanel';
+import StatisticsPanel from './components/StatisticsPanel';
+import GitHubProfileView from './components/GitHubProfileView'; // Import GitHubProfileView
+import TerminalPanel from './components/TerminalPanel';
+import PetsPanel from './components/PetsPanel';
 import LogsPanel from './components/LogsPanel'; // Import LogsPanel
+import BottomPanelTabs from './components/BottomPanelTabs';
 import NotificationContainer from './components/notifications/NotificationContainer';
 import PasskeyPromptModal from './components/PasskeyPromptModal'; // Import new modal
-import PetsPanel from './components/PetsPanel';
-import ProfilePopup from './components/ProfilePopup'; // Import ProfilePopup
-import SearchPanel from './components/Search/SearchPanel';
-import { Sidebar } from './components/Sidebar';
-import StatisticsPanel from './components/StatisticsPanel';
 import StatusBar from './components/StatusBar'; // Import StatusBar
-import TabContent from './components/TabContent';
-import TerminalPanel from './components/TerminalPanel';
-import TitleBar from './components/TitleBar/TitleBar';
-import WelcomeView from './components/WelcomeView';
-import { APP_VERSION, DEFAULT_ACTIVITY_BAR_ITEMS, SIDEBAR_ITEMS as DEFAULT_SIDEBAR_ITEMS, generateFileContent, generateProjectDetailContent, ICONS, MAX_LOG_ENTRIES, PORTFOLIO_DATA } from './constants';
-import { DEFAULT_TERMINAL_FONT_SIZE_ID, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS, PREDEFINED_THEMES, TERMINAL_FONT_SIZE_OPTIONS } from './themes';
-import { ActivityBarItemConfig, ActivityBarItemDefinition, ActivityBarSelection, ArticleItem, BottomPanelTabId, ContextMenuItem, EditorPaneId, EditorPaneState, LogEntry, LogLevel, MockStatistics, NotificationType, ProjectDetail, SearchResultItem, SidebarItemConfig, Tab } from './types';
+import ProfilePopup from './components/ProfilePopup'; // Import ProfilePopup
 
 
 import { useThemeManager } from './hooks/useThemeManager';
@@ -38,11 +34,12 @@ import { useThemeManager } from './hooks/useThemeManager';
 import { useFullscreen } from './hooks/useFullscreen';
 import { useGlobalEventHandlers } from './hooks/useGlobalEventHandlers';
 import { useNotifications } from './hooks/useNotifications';
-import { fetchAIProjectSuggestion } from './utils/aiUtils';
-import { getMuteStatus, playSound, toggleMute } from './utils/audioUtils';
+import { useGeminiChat } from './hooks/useGeminiChat'; // Added for persistent chat
 import { generateCommands } from './utils/commandUtils';
-import { createCV_PDF } from './utils/cvGenerator'; // Added import
+import { playSound, toggleMute, getMuteStatus } from './utils/audioUtils';
+import { fetchAIProjectSuggestion } from './utils/aiUtils';
 import './utils/firebase';
+import { createCV_PDF } from './utils/cvGenerator'; // Added import
 
 
 const DEFAULT_LEFT_PANEL_WIDTH = 256;
@@ -87,6 +84,18 @@ const App: React.FC = () => {
     });
   }, []);
 
+  // AI Chat State - Lifted to App.tsx for persistence
+  const {
+    messages: chatMessages,
+    setMessages: setChatMessages, // Keep setMessages if useGeminiChat still needs to update it internally after loading from localStorage
+    input: chatInput,
+    setInput: setChatInput,
+    isLoading: chatIsLoading,
+    error: chatError,
+    apiKeyAvailable: chatApiKeyAvailable,
+    handleSendMessage: handleChatSendMessage,
+  } = useGeminiChat(PORTFOLIO_DATA, addAppLog);
+
 
   const {
     currentThemeName,
@@ -95,7 +104,13 @@ const App: React.FC = () => {
     handleThemeChange: rawHandleThemeChange,
     handleFontFamilyChange: rawHandleFontFamilyChange,
     handleFontSizeChange: rawHandleEditorFontSizeChange,
-  } = useThemeManager(currentTerminalFontSizeId, TERMINAL_FONT_SIZE_OPTIONS);
+  } = useThemeManager(
+    DEFAULT_THEME_NAME,
+    DEFAULT_FONT_FAMILY_ID,
+    DEFAULT_FONT_SIZE_ID,
+    currentTerminalFontSizeId,
+    TERMINAL_FONT_SIZE_OPTIONS
+  );
 
   const [editorPanes, setEditorPanes] = useState<Record<EditorPaneId, EditorPaneState>>(() => {
     const saved = localStorage.getItem('portfolio-editorPanes');
@@ -144,9 +159,9 @@ const App: React.FC = () => {
 
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-  const [isPasskeyPromptOpen, setIsPasskeyPromptOpen] = useState(false); // State for new modal
-  const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false); // State for ProfilePopup
-  const [profilePopupAnchorEl, setProfilePopupAnchorEl] = useState<HTMLElement | null>(null); // Anchor for ProfilePopup
+  const [isPasskeyPromptOpen, setIsPasskeyPromptOpen] = useState(false); 
+  const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false); 
+  const [profilePopupAnchorEl, setProfilePopupAnchorEl] = useState<HTMLElement | null>(null); 
 
   const [editorContextMenuState, setEditorContextMenuState] = useState<{ x: number; y: number; items: ContextMenuItem[]; visible: boolean; tabId?: string, paneId?: EditorPaneId }>({ x: 0, y: 0, items: [], visible: false });
   const [sidebarContextMenuState, setSidebarContextMenuState] = useState<{ x: number; y: number; items: ContextMenuItem[]; visible: boolean; itemId?: string }>({ x: 0, y: 0, items: [], visible: false });
@@ -166,7 +181,10 @@ const App: React.FC = () => {
   const isLeftPanelResizing = useRef(false);
   const isBottomPanelResizing = useRef(false);
   const isEditorResizing = useRef(false);
-  const leftResizerRef = useRef<HTMLDivElement>(null);
+  
+  const leftPanelContainerRef = useRef<HTMLDivElement>(null); 
+  const leftResizerRef = useRef<HTMLDivElement>(null); 
+
   const bottomResizerRef = useRef<HTMLDivElement>(null);
   const editorResizerRef = useRef<HTMLDivElement>(null);
   const [isDevModeEnabled, setIsDevModeEnabled] = useState<boolean>(() => localStorage.getItem('portfolio-isDevModeEnabled') === 'true' || false);
@@ -271,9 +289,16 @@ const App: React.FC = () => {
     }
   }, [updateTabHistoryOnActivation, addAppLog]);
 
-  const handleLeftPanelResizeStart = useCallback((e: React.MouseEvent | React.TouchEvent) => { isLeftPanelResizing.current = true; document.body.style.cursor = 'col-resize'; document.addEventListener('mousemove', handleLeftPanelDragging); document.addEventListener('mouseup', handleLeftPanelResizeEnd); document.addEventListener('touchmove', handleLeftPanelDragging as any); document.addEventListener('touchend', handleLeftPanelResizeEnd as any);}, []);
-  const handleLeftPanelDragging = useCallback((e: MouseEvent | TouchEvent) => { if (!isLeftPanelResizing.current) return; const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX; const newWidth = clientX - (leftResizerRef.current?.parentElement?.getBoundingClientRect().left || 0) ; setLeftPanelWidth(Math.max(MIN_LEFT_PANEL_WIDTH, Math.min(newWidth, MAX_LEFT_PANEL_WIDTH))); }, []);
-  const handleLeftPanelResizeEnd = useCallback(() => { isLeftPanelResizing.current = false; document.body.style.cursor = 'default'; document.removeEventListener('mousemove', handleLeftPanelDragging); document.removeEventListener('mouseup', handleLeftPanelResizeEnd); document.removeEventListener('touchmove', handleLeftPanelDragging as any); document.removeEventListener('touchend', handleLeftPanelResizeEnd as any); addAppLog('debug', `Resized left panel to ${leftPanelWidth}px.`, 'User') }, [addAppLog, leftPanelWidth]);
+  const handleLeftPanelDragging = useCallback((e: MouseEvent | TouchEvent) => {
+    if (!isLeftPanelResizing.current || !leftPanelContainerRef.current) return;
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const mainLeft = leftPanelContainerRef.current.getBoundingClientRect().left;
+    const newWidth = clientX - mainLeft;
+    setLeftPanelWidth(Math.max(MIN_LEFT_PANEL_WIDTH, Math.min(newWidth, MAX_LEFT_PANEL_WIDTH)));
+  }, []);
+
+  const handleLeftPanelResizeStart = useCallback((e: React.MouseEvent | React.TouchEvent) => { isLeftPanelResizing.current = true; document.body.style.cursor = 'col-resize'; document.addEventListener('mousemove', handleLeftPanelDragging); document.addEventListener('mouseup', handleLeftPanelResizeEnd); document.addEventListener('touchmove', handleLeftPanelDragging as any); document.addEventListener('touchend', handleLeftPanelResizeEnd as any);}, [handleLeftPanelDragging]);
+  const handleLeftPanelResizeEnd = useCallback(() => { isLeftPanelResizing.current = false; document.body.style.cursor = 'default'; document.removeEventListener('mousemove', handleLeftPanelDragging); document.removeEventListener('mouseup', handleLeftPanelResizeEnd); document.removeEventListener('touchmove', handleLeftPanelDragging as any); document.removeEventListener('touchend', handleLeftPanelResizeEnd as any); addAppLog('debug', `Resized left panel to ${leftPanelWidth}px.`, 'User') }, [addAppLog, leftPanelWidth, handleLeftPanelDragging]);
   
   const handleBottomPanelResizeStart = useCallback((e: React.MouseEvent | React.TouchEvent) => { isBottomPanelResizing.current = true; document.body.style.cursor = 'row-resize'; document.addEventListener('mousemove', handleBottomPanelDragging); document.addEventListener('mouseup', handleBottomPanelResizeEnd); document.addEventListener('touchmove', handleBottomPanelDragging as any); document.addEventListener('touchend', handleBottomPanelResizeEnd as any); }, []);
   const handleBottomPanelDragging = useCallback((e: MouseEvent | TouchEvent) => { if (!isBottomPanelResizing.current) return; const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY; const newHeight = window.innerHeight - clientY - (bottomResizerRef.current?.parentElement?.querySelector('footer')?.offsetHeight || 0); setBottomPanelHeight(Math.max(MIN_BOTTOM_PANEL_HEIGHT, Math.min(newHeight, MAX_BOTTOM_PANEL_HEIGHT))); }, []);
@@ -319,6 +344,7 @@ const App: React.FC = () => {
     const currentTab = currentActiveTabForFocusedPane;
     if (currentTab?.type === 'article_detail') setActivityBarSelection('articles');
     else if (currentTab?.type === 'ai_chat') setActivityBarSelection('ai_chat_tab');
+    else if (currentTab?.type === 'github_profile_view') setActivityBarSelection('github_profile_view');
     else if (isStatisticsPanelVisible) setActivityBarSelection('statistics');
     else if (isArticlesPanelVisible) setActivityBarSelection('articles');
     else if (isSearchPanelVisible) setActivityBarSelection('search');
@@ -342,18 +368,24 @@ const App: React.FC = () => {
 
   const simulateTerminalRun = useCallback((commandName: string, durationMs: number = 2000, customSteps?: string[]) => { if (terminalAnimationIntervalRef.current) clearInterval(terminalAnimationIntervalRef.current); playSound('terminal-run'); setIsBottomPanelVisible(true); setActiveBottomPanelId('terminal'); clearTerminalOutput(); setIsTerminalRunningCommand(true); appendToTerminalOutput(`> Running ${commandName}...`); addAppLog('action', `Terminal command started: ${commandName}.`, 'System'); if (customSteps && customSteps.length > 0) { let stepIndex = 0; const stepDuration = durationMs / customSteps.length; terminalAnimationIntervalRef.current = window.setInterval(() => { if (stepIndex < customSteps.length) { appendToTerminalOutput(customSteps[stepIndex]); stepIndex++; } if (stepIndex >= customSteps.length) { if (terminalAnimationIntervalRef.current) clearInterval(terminalAnimationIntervalRef.current); terminalAnimationIntervalRef.current = null; appendToTerminalOutput(`${commandName} finished successfully.`); setIsTerminalRunningCommand(false); playSound('terminal-complete'); addAppLog('info', `Terminal command finished: ${commandName}.`, 'System'); } }, stepDuration); } else { let dots = 0; const maxDots = 3; const animationSteps = durationMs / 500; let currentStep = 0; terminalAnimationIntervalRef.current = window.setInterval(() => { dots = (dots + 1) % (maxDots + 1); appendToTerminalOutput(`Processing${'.'.repeat(dots)}`); currentStep++; if (currentStep >= animationSteps) { if (terminalAnimationIntervalRef.current) clearInterval(terminalAnimationIntervalRef.current); terminalAnimationIntervalRef.current = null; appendToTerminalOutput(`${commandName} finished successfully.`); setIsTerminalRunningCommand(false); playSound('terminal-complete'); addAppLog('info', `Terminal command finished: ${commandName}.`, 'System'); } }, 500); } }, [appendToTerminalOutput, clearTerminalOutput, addAppLog]);
 
-  const handleOpenTab = useCallback((itemOrConfig: SidebarItemConfig | { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string }, isRunAction: boolean = false, targetPaneId: EditorPaneId = focusedEditorPaneId) => {
+  const handleOpenTab = useCallback((itemOrConfig: SidebarItemConfig | { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string, githubUsername?: string }, isRunAction: boolean = false, targetPaneId: EditorPaneId = focusedEditorPaneId) => {
     if ('isFolder' in itemOrConfig && itemOrConfig.isFolder) return;
 
-    let idToOpen: string, tabTitle: string, tabType: Tab['type'], tabFileName: string | undefined, tabArticleSlug: string | undefined;
-    if ('icon' in itemOrConfig && 'label' in itemOrConfig) {
+    let idToOpen: string, tabTitle: string, tabType: Tab['type'], tabFileName: string | undefined, tabArticleSlug: string | undefined, tabGitHubUsername: string | undefined;
+    
+    if ('icon' in itemOrConfig && 'label' in itemOrConfig) { // SidebarItemConfig
       const config = itemOrConfig as SidebarItemConfig;
       idToOpen = config.id; tabTitle = config.title || config.fileName || config.label; tabType = config.type || 'file'; tabFileName = config.fileName;
-    } else {
-      const config = itemOrConfig as { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string };
-      idToOpen = config.id || config.fileName || `unknown-tab-${Date.now()}`; tabTitle = config.title || config.fileName || "Untitled"; tabType = config.type || 'file'; tabFileName = config.fileName; tabArticleSlug = config.articleSlug;
+    } else { // Direct config object
+      const config = itemOrConfig as { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string, githubUsername?: string };
+      idToOpen = config.id || config.fileName || (config.type === 'github_profile_view' && config.githubUsername ? `github_profile_${config.githubUsername}` : (config.type === 'ai_chat' ? 'ai_chat_tab' : `unknown-tab-${Date.now()}` ) );
+      tabTitle = config.title || config.fileName || (config.type === 'github_profile_view' && config.githubUsername ? `${config.githubUsername} - GitHub` : (config.type === 'ai_chat' ? 'AI Assistant' : "Untitled") );
+      tabType = config.type || 'file';
+      tabFileName = config.fileName;
+      tabArticleSlug = config.articleSlug;
+      tabGitHubUsername = config.githubUsername;
     }
-    addAppLog('action', `Opening tab: "${tabTitle}" (Type: ${tabType}, ID: ${idToOpen}) in ${targetPaneId} pane. Run action: ${isRunAction}.`, 'User', { fileName: tabFileName, articleSlug: tabArticleSlug });
+    addAppLog('action', `Opening tab: "${tabTitle}" (Type: ${tabType}, ID: ${idToOpen}) in ${targetPaneId} pane. Run action: ${isRunAction}.`, 'User', { fileName: tabFileName, articleSlug: tabArticleSlug, githubUsername: tabGitHubUsername });
 
 
     if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
@@ -361,7 +393,7 @@ const App: React.FC = () => {
       simulateTerminalRun(tabTitle);
       setIsPreviewTabLoading(true);
       loadingTimeoutRef.current = window.setTimeout(() => setIsPreviewTabLoading(false), 1200);
-    } else if (tabType !== 'cv_preview' && tabType !== 'settings_editor') {
+    } else if (tabType !== 'cv_preview' && tabType !== 'settings_editor' && tabType !== 'github_profile_view') {
       playSound('tab-open');
     }
 
@@ -372,9 +404,9 @@ const App: React.FC = () => {
 
       if (existingTab) {
         newPaneState.activeTabId = existingTab.id;
-        if(tabType !== 'cv_preview' && tabType !== 'settings_editor') playSound('tab-select');
+        if(tabType !== 'cv_preview' && tabType !== 'settings_editor' && tabType !== 'github_profile_view') playSound('tab-select');
       } else {
-        const newTab: Tab = { id: idToOpen, title: tabTitle, type: tabType, fileName: tabFileName, articleSlug: tabArticleSlug };
+        const newTab: Tab = { id: idToOpen, title: tabTitle, type: tabType, fileName: tabFileName, articleSlug: tabArticleSlug, githubUsername: tabGitHubUsername };
         newPaneState.openTabs = [...pane.openTabs, newTab];
         newPaneState.activeTabId = newTab.id;
       }
@@ -390,13 +422,13 @@ const App: React.FC = () => {
       return { ...prevPanes, [targetPaneId]: newPaneState };
     });
     if (!isRightEditorPaneVisible && targetPaneId === 'right') {
-      setIsRightEditorPaneVisible(true); // Auto-show right pane if tab opened there and it's hidden
+      setIsRightEditorPaneVisible(true); 
     }
     setFocusedEditorPaneId(targetPaneId);
 
-    if (tabType === 'article_detail' || tabType === 'ai_chat' || tabType === 'settings_editor') {
-      setIsSearchPanelVisible(false); setIsSidebarVisible(false); setIsStatisticsPanelVisible(false);
-      if (tabType === 'ai_chat' || tabType === 'settings_editor') setIsArticlesPanelVisible(false);
+    if (tabType === 'article_detail' || tabType === 'ai_chat' || tabType === 'settings_editor' || tabType === 'github_profile_view') {
+      setIsSearchPanelVisible(false); setIsSidebarVisible(false); setIsStatisticsPanelVisible(false); 
+      if (tabType === 'ai_chat' || tabType === 'settings_editor' || tabType === 'github_profile_view') setIsArticlesPanelVisible(false);
     } else if (!isRunAction && tabType !== 'cv_preview') {
       setIsSearchPanelVisible(false); setIsArticlesPanelVisible(false); setIsStatisticsPanelVisible(false);
     }
@@ -417,12 +449,26 @@ const App: React.FC = () => {
 
   const handleOpenArticleTab = useCallback((article: ArticleItem) => { handleOpenTab({ id: `article_${article.slug}`, type: 'article_detail', title: article.title, articleSlug: article.slug, }, false, focusedEditorPaneId); }, [handleOpenTab, focusedEditorPaneId]);
   const handleOpenSettingsEditor = useCallback(() => { const settingsTabId = 'settings_editor_tab'; const settingsTabTitle = 'Settings'; handleOpenTab({ id: settingsTabId, title: settingsTabTitle, type: 'settings_editor', }, false, focusedEditorPaneId); addAppLog('action', 'Opened Settings editor.', 'User'); }, [handleOpenTab, focusedEditorPaneId, addAppLog]);
+  
+  const handleOpenGitHubProfileTab = useCallback(() => {
+    const githubUrl = PORTFOLIO_DATA.otherSocial?.url;
+    let username = 'github_user'; 
+    if (PORTFOLIO_DATA.otherSocial?.name === 'GitHub' && githubUrl) {
+        const parts = githubUrl.split('/');
+        const potentialUsername = parts.pop() || parts.pop(); 
+        if (potentialUsername) username = potentialUsername;
+    }
+    const tabId = `github_profile_${username}`;
+    const tabTitle = `${username} - GitHub`;
+    handleOpenTab({ id: tabId, title: tabTitle, type: 'github_profile_view', githubUsername: username }, false, focusedEditorPaneId);
+    addAppLog('action', `Opened GitHub Profile tab for ${username}.`, 'User');
+  }, [handleOpenTab, focusedEditorPaneId, addAppLog]);
+
 
   const handleSelectTab = useCallback((paneId: EditorPaneId, tabId: string) => {
     playSound('tab-select');
     setActiveTabIdForPane(paneId, tabId);
     setFocusedEditorPaneId(paneId);
-    // Logging is done within setActiveTabIdForPane
   }, [setActiveTabIdForPane]);
 
   const handleCloseTab = useCallback((paneId: EditorPaneId, tabIdToClose: string) => {
@@ -435,11 +481,10 @@ const App: React.FC = () => {
     if (tabIdToClose === pane.activeTabId) {
       const historyWithoutClosed = pane.tabHistory.filter(id => id !== tabIdToClose);
       let newIndex = pane.currentHistoryIndex;
-      // Adjust newIndex if the closed tab was at or before currentHistoryIndex
       if (pane.tabHistory.indexOf(tabIdToClose) <= newIndex) {
         newIndex--;
       }
-      newIndex = Math.max(-1, newIndex); // Ensure newIndex is not less than -1
+      newIndex = Math.max(-1, newIndex); 
 
       if (newIndex >= 0 && newIndex < historyWithoutClosed.length && pane.openTabs.some(t => t.id === historyWithoutClosed[newIndex] && t.id !== tabIdToClose)) {
         newActiveTabIdForPane = historyWithoutClosed[newIndex];
@@ -447,7 +492,7 @@ const App: React.FC = () => {
         newActiveTabIdForPane = pane.openTabs[closedTabIndex - 1].id;
       } else if (pane.openTabs.length > 1 && closedTabIndex < pane.openTabs.length - 1 ) {
         newActiveTabIdForPane = pane.openTabs[closedTabIndex + 1].id;
-      } else if (pane.openTabs.length > 1) { // Only one tab left after closing
+      } else if (pane.openTabs.length > 1) { 
         newActiveTabIdForPane = pane.openTabs.find(t => t.id !== tabIdToClose)?.id || null;
       }
     } else {
@@ -499,7 +544,7 @@ const App: React.FC = () => {
     if (!targetTab) return;
     let items: ContextMenuItem[] = [];
     if (isCVGeneratorContext && targetTab.fileName === 'generate_cv.ts') { items.push({ label: 'Run CV Generator Script', action: () => { handleRunCVGenerator(); playSound('command-execute'); }, icon: ICONS.PlayIcon, }); }
-    else if (targetTab.type !== 'settings_editor') {
+    else if (targetTab.type !== 'settings_editor' && targetTab.type !== 'github_profile_view') { 
       items.push({ label: `Close ${targetTab.title}`, action: () => handleCloseTab(paneId, tabId) });
       items.push({ label: 'Close Others', action: () => { setEditorPanes(prev => ({ ...prev, [paneId]: { ...prev[paneId], openTabs: [targetTab], activeTabId: targetTab.id, tabHistory: [targetTab.id], currentHistoryIndex: 0 }})); addAppLog('action', `Closed other tabs, kept ${targetTab.title} in ${paneId} pane.`, 'User'); playSound('ui-click'); }});
       items.push({ label: 'Close All', action: () => { setEditorPanes(prev => ({ ...prev, [paneId]: { ...initialPaneState }})); addAppLog('action', `Closed all tabs in ${paneId} pane.`, 'User'); playSound('ui-click'); }});
@@ -519,17 +564,40 @@ const App: React.FC = () => {
 
   const handleSelectBottomPanelTab = useCallback((panelId: BottomPanelTabId) => { playSound('ui-click'); setActiveBottomPanelId(panelId); if (!isBottomPanelVisible) { setIsBottomPanelVisible(true); } addAppLog('action', `Selected bottom panel tab: ${panelId}.`, 'User'); }, [isBottomPanelVisible, addAppLog]);
   const handleCloseBottomPanel = useCallback(() => { setIsBottomPanelVisible(false); playSound('panel-toggle'); addAppLog('action', 'Bottom panel closed.', 'User'); }, [addAppLog]);
-  const handleSuggestNewAIProject = useCallback(async () => { if (isAISuggestingProject) return; setIsAISuggestingProject(true); appendToTerminalOutput("> Fetching AI project suggestion..."); addAppLog('action', `AI project suggestion started.`, 'System'); playSound('terminal-run'); const suggestion = await fetchAIProjectSuggestion(PORTFOLIO_DATA.skills, addAppLog); setIsAISuggestingProject(false); if (suggestion) { const newAIProjectId = `ai_project_${Date.now()}_${suggestion.title.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]+/g, '')}`; const newAIProject: ProjectDetail = { ...suggestion, id: newAIProjectId }; setAiGeneratedProjects(prev => [...prev, newAIProject]); appendToTerminalOutput(`AI Suggested Project: "${newAIProject.title}"`); appendToTerminalOutput(`Opening details for ${newAIProject.title}...`); playSound('terminal-complete'); handleOpenTab({ id: newAIProject.id, fileName: newAIProject.id, type: 'project_detail', title: `✨ ${newAIProject.title} (AI)`, }, false, focusedEditorPaneId); addAppLog('info', `AI suggested project: "${newAIProject.title}".`, 'System', { project: newAIProject }); } else { appendToTerminalOutput("Failed to get AI project suggestion. Please check logs or try again."); playSound('error'); addAppLog('error', `Failed to get AI project suggestion.`, 'System'); } }, [isAISuggestingProject, appendToTerminalOutput, PORTFOLIO_DATA.skills, handleOpenTab, focusedEditorPaneId, addAppLog]);
+  
+  const handleSuggestNewAIProject = useCallback(async (userKeywords?: string) => {
+    if (isAISuggestingProject) return;
+    setIsAISuggestingProject(true);
+    appendToTerminalOutput(`> Fetching AI project suggestion ${userKeywords ? `with keywords: "${userKeywords}"` : ''}...`);
+    addAppLog('action', `AI project suggestion started ${userKeywords ? `with keywords: "${userKeywords}"` : ''}.`, 'System');
+    playSound('terminal-run');
+    const suggestion = await fetchAIProjectSuggestion(PORTFOLIO_DATA.skills, addAppLog, userKeywords);
+    setIsAISuggestingProject(false);
+    if (suggestion) {
+      const newAIProjectId = `ai_project_${Date.now()}_${suggestion.title.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]+/g, '')}`;
+      const newAIProject: ProjectDetail = { ...suggestion, id: newAIProjectId };
+      setAiGeneratedProjects(prev => [...prev, newAIProject]);
+      appendToTerminalOutput(`AI Suggested Project: "${newAIProject.title}"`);
+      appendToTerminalOutput(`Opening details for ${newAIProject.title}...`);
+      playSound('terminal-complete');
+      handleOpenTab({ id: newAIProject.id, fileName: newAIProject.id, type: 'project_detail', title: `✨ ${newAIProject.title} (AI)`, }, false, focusedEditorPaneId);
+      addAppLog('info', `AI suggested project: "${newAIProject.title}".`, 'System', { project: newAIProject, userKeywords });
+    } else {
+      appendToTerminalOutput("Failed to get AI project suggestion. Please check logs or try again.");
+      playSound('error');
+      addAppLog('error', `Failed to get AI project suggestion.`, 'System', {userKeywords});
+    }
+  }, [isAISuggestingProject, appendToTerminalOutput, PORTFOLIO_DATA.skills, handleOpenTab, focusedEditorPaneId, addAppLog]);
 
 
   const handlePasskeySubmit = useCallback((passkey: string | null) => {
-    setIsPasskeyPromptOpen(false); // Close the modal first
+    setIsPasskeyPromptOpen(false); 
     if (passkey === "10102002") {
       setIsDevModeEnabled(true);
       addNotificationAndLog("Developer Mode Enabled.", 'success', 3000);
       addAppLog('action', 'Developer Mode enabled.', 'User');
       playSound('setting-change');
-    } else if (passkey === null) { // User cancelled or closed the modal
+    } else if (passkey === null) { 
       addNotificationAndLog("Developer Mode enabling was cancelled.", 'info', 4000);
       addAppLog('info', 'Developer Mode enabling cancelled.', 'User');
       playSound('ui-click');
@@ -537,7 +605,7 @@ const App: React.FC = () => {
       addNotificationAndLog("Passkey cannot be empty. Developer Mode remains disabled.", 'warning', 5000);
       addAppLog('warning', 'Developer Mode enabling failed: Empty passkey.', 'User');
       playSound('error');
-    } else { // Incorrect passkey
+    } else { 
       addNotificationAndLog("Incorrect passkey. Developer Mode remains disabled.", 'error', 5000);
       addAppLog('warning', 'Developer Mode enabling failed: Incorrect passkey.', 'User');
       playSound('error');
@@ -551,7 +619,7 @@ const App: React.FC = () => {
       addAppLog('action', 'Developer Mode disabled.', 'User');
       playSound('setting-change');
     } else {
-      setIsPasskeyPromptOpen(true); // Open the custom modal instead of window.prompt
+      setIsPasskeyPromptOpen(true); 
       playSound('modal-toggle');
     }
   }, [isDevModeEnabled, addNotificationAndLog, addAppLog]);
@@ -580,7 +648,7 @@ const App: React.FC = () => {
   const handleReorderSidebarItems = useCallback((draggedItemId: string, targetItemId: string, parentId?: string) => { setOrderedSidebarItems(prevItems => { const reorder = (items: SidebarItemConfig[], currentParentId?: string): SidebarItemConfig[] => { if (currentParentId === parentId) { const newItems = [...items]; const draggedIndex = newItems.findIndex(item => item.id === draggedItemId); const targetIndex = newItems.findIndex(item => item.id === targetItemId); if (draggedIndex !== -1 && targetIndex !== -1 && draggedIndex !== targetIndex) { const [dragged] = newItems.splice(draggedIndex, 1); newItems.splice(targetIndex, 0, dragged); playSound('ui-click'); addAppLog('debug', `Reordered sidebar item ${draggedItemId} to be near ${targetItemId}.`, 'User'); return newItems; } return items; } return items.map(item => { if (item.isFolder && item.children) { return { ...item, children: reorder(item.children, item.id) }; } return item; }); }; return reorder(prevItems, undefined); }); }, [addAppLog]);
   const handleReorderActivityBarItems = useCallback((draggedItemId: string, targetItemId: string) => { setOrderedActivityBarItemDefinitions(prevItems => { const draggedItemIndex = prevItems.findIndex(item => item.id === draggedItemId); const targetItemIndex = prevItems.findIndex(item => item.id === targetItemId); if (draggedItemIndex === -1 || targetItemIndex === -1 || draggedItemIndex === targetItemIndex) { return prevItems; } const newItems = [...prevItems]; const [draggedItem] = newItems.splice(draggedItemIndex, 1); newItems.splice(targetItemIndex, 0, draggedItem); playSound('ui-click'); addAppLog('debug', `Reordered activity bar item ${draggedItemId} to be near ${targetItemId}.`, 'User'); return newItems; }); }, [addAppLog]);
 
-  const activityBarItems: ActivityBarItemConfig[] = useMemo(() => { return orderedActivityBarItemDefinitions.map(def => { let actionToCall: () => void; switch (def.viewId) { case 'explorer': actionToCall = toggleSidebarVisibility; break; case 'search': actionToCall = handleToggleSearchPanel; break; case 'articles': actionToCall = handleToggleArticlesPanel; break; case 'statistics': actionToCall = handleToggleStatisticsPanel; break; case 'ai_chat_tab':actionToCall = handleOpenAIChatTab; break; default: actionToCall = () => {console.warn("Unknown activity bar item:", def.viewId); addAppLog('warning', `Unknown activity bar item action: ${def.viewId}`, 'System');} } return { ...def, icon: ICONS[def.iconName] || ICONS.default, action: actionToCall, }; }); }, [ orderedActivityBarItemDefinitions, toggleSidebarVisibility, handleToggleSearchPanel, handleToggleArticlesPanel, handleToggleStatisticsPanel, handleOpenAIChatTab, addAppLog ]);
+  const activityBarItems: ActivityBarItemConfig[] = useMemo(() => { return orderedActivityBarItemDefinitions.map(def => { let actionToCall: () => void; switch (def.viewId) { case 'explorer': actionToCall = toggleSidebarVisibility; break; case 'search': actionToCall = handleToggleSearchPanel; break; case 'articles': actionToCall = handleToggleArticlesPanel; break; case 'statistics': actionToCall = handleToggleStatisticsPanel; break; case 'github_profile_view': actionToCall = handleOpenGitHubProfileTab; break; case 'ai_chat_tab':actionToCall = handleOpenAIChatTab; break; default: actionToCall = () => {console.warn("Unknown activity bar item:", def.viewId); addAppLog('warning', `Unknown activity bar item action: ${def.viewId}`, 'System');} } return { ...def, icon: ICONS[def.iconName] || ICONS.default, action: actionToCall, }; }); }, [ orderedActivityBarItemDefinitions, toggleSidebarVisibility, handleToggleSearchPanel, handleToggleArticlesPanel, handleToggleStatisticsPanel, handleOpenGitHubProfileTab, handleOpenAIChatTab, addAppLog ]);
   const handleThemeChange = useCallback((themeName: string) => { rawHandleThemeChange(themeName); playSound('setting-change'); addAppLog('action', `Theme changed to: ${themeName}.`, 'User'); }, [rawHandleThemeChange, addAppLog]);
   const handleEditorFontFamilyChange = useCallback((fontId: string) => { rawHandleFontFamilyChange(fontId); playSound('setting-change'); const fontLabel = FONT_FAMILY_OPTIONS.find(f=>f.id === fontId)?.label || fontId; addAppLog('action', `Editor font family changed to: ${fontLabel}.`, 'User'); }, [rawHandleFontFamilyChange, addAppLog]);
   const handleEditorFontSizeChange = useCallback((sizeId: string) => { rawHandleEditorFontSizeChange(sizeId); playSound('setting-change'); const sizeLabel = FONT_SIZE_OPTIONS.find(s=>s.id === sizeId)?.label || sizeId; addAppLog('action', `Editor font size changed to: ${sizeLabel}.`, 'User'); }, [rawHandleEditorFontSizeChange, addAppLog]);
@@ -594,7 +662,6 @@ const App: React.FC = () => {
       if (!newVisibility && focusedEditorPaneId === 'right') {
         setFocusedEditorPaneId('left');
       } else if (newVisibility && editorPanes.right.openTabs.length === 0 && editorPanes.left.activeTabId && editorPanes.left.openTabs.length > 1) {
-        // If opening right pane and it's empty, and left has multiple tabs, move one.
         const tabToMove = editorPanes.left.openTabs.find(t => t.id !== editorPanes.left.activeTabId) || editorPanes.left.openTabs[0];
         if (tabToMove) {
             setEditorPanes(prevPanes => ({
@@ -613,7 +680,7 @@ const App: React.FC = () => {
 
   const handleFocusEditorPane = useCallback((paneId: EditorPaneId) => {
     if (paneId === 'right' && !isRightEditorPaneVisible) {
-        setIsRightEditorPaneVisible(true); // Auto-show right pane if focusing it and it's hidden
+        setIsRightEditorPaneVisible(true); 
         addAppLog('info', `Right editor pane shown due to focus.`, 'System');
     }
     setFocusedEditorPaneId(paneId);
@@ -690,7 +757,8 @@ const App: React.FC = () => {
     predefinedThemes: PREDEFINED_THEMES, handleThemeChange, currentThemeName,
     fontFamilyOptions: FONT_FAMILY_OPTIONS, handleFontFamilyChange: handleEditorFontFamilyChange, currentFontFamilyId: currentFontFamilyId,
     fontSizeOptions: FONT_SIZE_OPTIONS, handleFontSizeChange: handleEditorFontSizeChange, currentFontSizeId: currentEditorFontSizeId,
-    openAboutModal, icons: ICONS, handleToggleSearchPanel, handleToggleArticlesPanel, handleToggleStatisticsPanel,
+    openAboutModal, icons: ICONS, handleToggleSearchPanel, handleToggleArticlesPanel, handleToggleStatisticsPanel, 
+    handleToggleGitHubPanel: handleOpenGitHubProfileTab, 
     toggleTerminalVisibility: toggleTerminalPanel, togglePetsPanelVisibility: togglePetsPanel, toggleLogsPanelVisibility: toggleLogsPanel,
     handleToggleSoundMute, isSoundMuted, handleRunCVGenerator, handleOpenSettingsEditor,
     terminalFontSizes: TERMINAL_FONT_SIZE_OPTIONS, currentTerminalFontSizeId, handleTerminalFontSizeChange,
@@ -699,37 +767,73 @@ const App: React.FC = () => {
     orderedSidebarItems, handleOpenTab, closeCommandPalette, isSidebarVisible, toggleSidebarVisibility, handleOpenAIChatTab,
     openCommandPalette, PREDEFINED_THEMES, handleThemeChange, currentThemeName, FONT_FAMILY_OPTIONS, handleEditorFontFamilyChange,
     currentFontFamilyId, FONT_SIZE_OPTIONS, handleEditorFontSizeChange, currentEditorFontSizeId, openAboutModal, ICONS,
-    handleToggleSearchPanel, handleToggleArticlesPanel, handleToggleStatisticsPanel, toggleTerminalPanel, togglePetsPanel, toggleLogsPanel,
+    handleToggleSearchPanel, handleToggleArticlesPanel, handleToggleStatisticsPanel, handleOpenGitHubProfileTab, 
+    toggleTerminalPanel, togglePetsPanel, toggleLogsPanel,
     handleToggleSoundMute, isSoundMuted, handleRunCVGenerator, handleOpenSettingsEditor,
     currentTerminalFontSizeId, handleTerminalFontSizeChange,
     handleToggleRightEditorPane, handleFocusEditorPane, handleMoveEditorToOtherPane, addAppLog,
   ]);
 
+  const getGitHubUsername = (): string | undefined => {
+    if (PORTFOLIO_DATA.otherSocial?.name === 'GitHub' && PORTFOLIO_DATA.otherSocial.url) {
+        const parts = PORTFOLIO_DATA.otherSocial.url.split('/');
+        return parts.pop() || parts.pop(); 
+    }
+    return undefined;
+  };
+
+
   const activeContentDetailsForLeftPane = useMemo(() => {
     const activeTab = editorPanes.left.openTabs.find(tab => tab.id === editorPanes.left.activeTabId);
     if (!activeTab) return null;
-    if (activeTab.type === 'ai_chat') return {}; // Placeholder for AIChatInterface
+    if (activeTab.type === 'ai_chat') {
+        return { 
+            messages: chatMessages, 
+            input: chatInput, 
+            setInput: setChatInput, 
+            isLoading: chatIsLoading, 
+            error: chatError, 
+            apiKeyAvailable: chatApiKeyAvailable,
+            onSendMessage: handleChatSendMessage,
+            handleOpenTab: handleOpenTab, 
+            currentPaneIdForChat: 'left' as EditorPaneId 
+        };
+    }
     if (activeTab.type === 'project_detail') return aiGeneratedProjects.find(p => p.id === activeTab.id) || JSON.parse(generateProjectDetailContent(activeTab.id, PORTFOLIO_DATA));
     if (activeTab.type === 'json_preview' && activeTab.fileName) { const originalFile = editorPanes.left.openTabs.find(t => t.id === activeTab.fileName) || orderedSidebarItems.flatMap(item => item.children || [item]).find(item => item.id === activeTab.fileName); if (originalFile?.id?.startsWith('project_')) return JSON.parse(generateProjectDetailContent(originalFile.id, PORTFOLIO_DATA)); return generateFileContent(activeTab.fileName, PORTFOLIO_DATA); }
     if (activeTab.type === 'article_detail' && activeTab.articleSlug) { const article = SAMPLE_ARTICLES.find(a => a.slug === activeTab.articleSlug); return article ? { markdown: article.contentMarkdown, imageUrl: article.imageUrl } : { markdown: "# Article Not Found", imageUrl: undefined }; }
     if (activeTab.type === 'cv_preview') return PORTFOLIO_DATA;
     if (activeTab.type === 'settings_editor') return { isSoundMuted, handleToggleSoundMute, themes: PREDEFINED_THEMES, currentThemeName, onThemeChange: handleThemeChange, fontFamilies: FONT_FAMILY_OPTIONS, currentFontFamilyId, onFontFamilyChange: handleEditorFontFamilyChange, editorFontSizes: FONT_SIZE_OPTIONS, currentEditorFontSizeId, onEditorFontSizeChange: handleEditorFontSizeChange, terminalFontSizes: TERMINAL_FONT_SIZE_OPTIONS, currentTerminalFontSizeId, onTerminalFontSizeChange: handleTerminalFontSizeChange, isDevModeEnabled, onToggleDevMode: handleToggleDevMode, };
+    if (activeTab.type === 'github_profile_view') return { username: activeTab.githubUsername || getGitHubUsername(), mockStats: MOCK_GITHUB_STATS };
     if (activeTab.fileName) return generateFileContent(activeTab.fileName, PORTFOLIO_DATA);
     return null;
-  }, [editorPanes.left.activeTabId, editorPanes.left.openTabs, PORTFOLIO_DATA, orderedSidebarItems, aiGeneratedProjects, isSoundMuted, handleToggleSoundMute, currentThemeName, handleThemeChange, currentFontFamilyId, handleEditorFontFamilyChange, currentEditorFontSizeId, handleEditorFontSizeChange, currentTerminalFontSizeId, handleTerminalFontSizeChange, isDevModeEnabled, handleToggleDevMode]);
+  }, [editorPanes.left.activeTabId, editorPanes.left.openTabs, PORTFOLIO_DATA, orderedSidebarItems, aiGeneratedProjects, isSoundMuted, handleToggleSoundMute, currentThemeName, handleThemeChange, currentFontFamilyId, handleEditorFontFamilyChange, currentEditorFontSizeId, handleEditorFontSizeChange, currentTerminalFontSizeId, handleTerminalFontSizeChange, isDevModeEnabled, handleToggleDevMode, chatMessages, chatInput, setChatInput, chatIsLoading, chatError, chatApiKeyAvailable, handleChatSendMessage, handleOpenTab]);
   
   const activeContentDetailsForRightPane = useMemo(() => {
     const activeTab = editorPanes.right.openTabs.find(tab => tab.id === editorPanes.right.activeTabId);
     if (!activeTab) return null;
-    if (activeTab.type === 'ai_chat') return {}; // Placeholder for AIChatInterface
+    if (activeTab.type === 'ai_chat') {
+        return { 
+            messages: chatMessages, 
+            input: chatInput, 
+            setInput: setChatInput, 
+            isLoading: chatIsLoading, 
+            error: chatError, 
+            apiKeyAvailable: chatApiKeyAvailable,
+            onSendMessage: handleChatSendMessage,
+            handleOpenTab: handleOpenTab,
+            currentPaneIdForChat: 'right' as EditorPaneId
+        };
+    }
     if (activeTab.type === 'project_detail') return aiGeneratedProjects.find(p => p.id === activeTab.id) || JSON.parse(generateProjectDetailContent(activeTab.id, PORTFOLIO_DATA));
     if (activeTab.type === 'json_preview' && activeTab.fileName) { const originalFile = editorPanes.right.openTabs.find(t => t.id === activeTab.fileName) || orderedSidebarItems.flatMap(item => item.children || [item]).find(item => item.id === activeTab.fileName); if (originalFile?.id?.startsWith('project_')) return JSON.parse(generateProjectDetailContent(originalFile.id, PORTFOLIO_DATA)); return generateFileContent(activeTab.fileName, PORTFOLIO_DATA); }
     if (activeTab.type === 'article_detail' && activeTab.articleSlug) { const article = SAMPLE_ARTICLES.find(a => a.slug === activeTab.articleSlug); return article ? { markdown: article.contentMarkdown, imageUrl: article.imageUrl } : { markdown: "# Article Not Found", imageUrl: undefined }; }
     if (activeTab.type === 'cv_preview') return PORTFOLIO_DATA;
     if (activeTab.type === 'settings_editor') return { isSoundMuted, handleToggleSoundMute, themes: PREDEFINED_THEMES, currentThemeName, onThemeChange: handleThemeChange, fontFamilies: FONT_FAMILY_OPTIONS, currentFontFamilyId, onFontFamilyChange: handleEditorFontFamilyChange, editorFontSizes: FONT_SIZE_OPTIONS, currentEditorFontSizeId, onEditorFontSizeChange: handleEditorFontSizeChange, terminalFontSizes: TERMINAL_FONT_SIZE_OPTIONS, currentTerminalFontSizeId, onTerminalFontSizeChange: handleTerminalFontSizeChange, isDevModeEnabled, onToggleDevMode: handleToggleDevMode, };
+    if (activeTab.type === 'github_profile_view') return { username: activeTab.githubUsername || getGitHubUsername(), mockStats: MOCK_GITHUB_STATS };
     if (activeTab.fileName) return generateFileContent(activeTab.fileName, PORTFOLIO_DATA);
     return null;
-  }, [editorPanes.right.activeTabId, editorPanes.right.openTabs, PORTFOLIO_DATA, orderedSidebarItems, aiGeneratedProjects, isSoundMuted, handleToggleSoundMute, currentThemeName, handleThemeChange, currentFontFamilyId, handleEditorFontFamilyChange, currentEditorFontSizeId, handleEditorFontSizeChange, currentTerminalFontSizeId, handleTerminalFontSizeChange, isDevModeEnabled, handleToggleDevMode]);
+  }, [editorPanes.right.activeTabId, editorPanes.right.openTabs, PORTFOLIO_DATA, orderedSidebarItems, aiGeneratedProjects, isSoundMuted, handleToggleSoundMute, currentThemeName, handleThemeChange, currentFontFamilyId, handleEditorFontFamilyChange, currentEditorFontSizeId, handleEditorFontSizeChange, currentTerminalFontSizeId, handleTerminalFontSizeChange, isDevModeEnabled, handleToggleDevMode, chatMessages, chatInput, setChatInput, chatIsLoading, chatError, chatApiKeyAvailable, handleChatSendMessage, handleOpenTab]);
 
   const renderEditorPane = (paneId: EditorPaneId) => {
     const paneState = editorPanes[paneId];
@@ -752,11 +856,11 @@ const App: React.FC = () => {
         />
         <Breadcrumbs activeTab={currentActiveTab} portfolioData={PORTFOLIO_DATA} onOpenTab={(config) => handleOpenTab(config, false, paneId)} paneId={paneId}/>
         <div className="flex-1 overflow-auto relative animate-fadeIn bg-[var(--editor-background)]">
-          {currentActiveTab && activeContent ? ( // This condition now works for 'ai_chat' too
+          {currentActiveTab && activeContent ? ( 
             <TabContent
               key={currentActiveTab.id}
               tab={currentActiveTab}
-              content={activeContent}
+              content={activeContent} 
               portfolioData={PORTFOLIO_DATA}
               onOpenProjectTab={(projectId, projectTitle) => handleOpenProjectTab(projectId, projectTitle)}
               currentThemeName={currentThemeName}
@@ -764,7 +868,7 @@ const App: React.FC = () => {
               aiGeneratedProjects={aiGeneratedProjects}
               onSuggestNewAIProject={handleSuggestNewAIProject}
               isAISuggestingProject={isAISuggestingProject}
-              paneId={paneId}
+              paneId={paneId} 
               addAppLog={addAppLog}
             />
           ) : (
@@ -796,13 +900,14 @@ const App: React.FC = () => {
         onTogglePetsPanel={togglePetsPanel}
         onToggleLogsPanel={toggleLogsPanel}
         onToggleStatisticsPanel={handleToggleStatisticsPanel}
+        onToggleGitHubPanel={handleOpenGitHubProfileTab} 
         isSoundMuted={isSoundMuted}
         onToggleSoundMute={handleToggleSoundMute}
         onOpenSettingsEditor={handleOpenSettingsEditor}
         onToggleRightEditorPane={handleToggleRightEditorPane}
         onFocusEditorPane={handleFocusEditorPane}
         onMoveEditorToOtherPane={handleMoveEditorToOtherPane}
-        onToggleProfilePopup={handleToggleProfilePopup} // Pass new handler
+        onToggleProfilePopup={handleToggleProfilePopup} 
       />
       <main className="flex-1 flex overflow-hidden">
         <ActivityBar
@@ -811,21 +916,21 @@ const App: React.FC = () => {
           activeViewId={activityBarSelection}
           onOpenSettingsEditor={handleOpenSettingsEditor}
         />
-        {(isSidebarVisible || isSearchPanelVisible || isArticlesPanelVisible || isStatisticsPanelVisible) && (
-          <>
-            <div
-              ref={leftResizerRef}
-              className="resizer resizer-x"
-              onMouseDown={handleLeftPanelResizeStart}
-              onTouchStart={handleLeftPanelResizeStart}
-            />
-             <div className="flex-shrink-0 overflow-y-auto" style={{ width: leftPanelWidth }}>
+        {(isSidebarVisible || isSearchPanelVisible || isArticlesPanelVisible || isStatisticsPanelVisible) && ( 
+          <div ref={leftPanelContainerRef} className="flex"> 
+            <div className="flex-shrink-0 overflow-y-auto" style={{ width: leftPanelWidth }}> 
               {isSidebarVisible && <Sidebar items={orderedSidebarItems} onOpenTab={(item) => handleOpenTab(item, false, focusedEditorPaneId)} onRunAction={handleSidebarAction} isVisible={isSidebarVisible} activeTabId={editorPanes[focusedEditorPaneId].activeTabId} onReorderItems={handleReorderSidebarItems} onContextMenuRequest={handleSidebarItemContextMenuRequest} />}
               {isSearchPanelVisible && <SearchPanel isVisible={isSearchPanelVisible} searchTerm={globalSearchTerm} onSearchTermChange={setGlobalSearchTerm} results={searchResults} onResultClick={(result) => handleOpenTab({ id: result.fileId, fileName: result.fileId, type: result.tabType, title: result.fileDisplayPath.split('/').pop() || result.fileId }, false, focusedEditorPaneId)} onClose={() => {setIsSearchPanelVisible(false); setActivityBarSelection(null);}}/>}
               {isArticlesPanelVisible && <ArticlesPanel isVisible={isArticlesPanelVisible} articles={SAMPLE_ARTICLES} onClose={() => {setIsArticlesPanelVisible(false); setActivityBarSelection(null);}} onSelectArticle={handleOpenArticleTab} activeArticleSlug={currentActiveTabForFocusedPane?.type === 'article_detail' ? currentActiveTabForFocusedPane.articleSlug || null : null} />}
               {isStatisticsPanelVisible && <StatisticsPanel isVisible={isStatisticsPanelVisible} stats={mockStats} onClose={() => {setIsStatisticsPanelVisible(false); setActivityBarSelection(null);}}/>}
             </div>
-          </>
+            <div
+              ref={leftResizerRef} 
+              className="resizer resizer-x"
+              onMouseDown={handleLeftPanelResizeStart}
+              onTouchStart={handleLeftPanelResizeStart}
+            />
+          </div>
         )}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 flex overflow-hidden">
@@ -865,7 +970,7 @@ const App: React.FC = () => {
                     activeTabId={activeBottomPanelId}
                     onSelectTab={handleSelectBottomPanelTab}
                   />
-                  <div className="h-[calc(100%-38px)]"> {/* Adjust height based on tab bar height */}
+                  <div className="h-[calc(100%-38px)]"> 
                     {activeBottomPanelId === 'terminal' && <TerminalPanel output={terminalOutput} isRunning={isTerminalRunningCommand} onClose={handleCloseBottomPanel} />}
                     {activeBottomPanelId === 'pets' && <PetsPanel onClose={handleCloseBottomPanel} />}
                     {activeBottomPanelId === 'logs' && <LogsPanel logs={logs} onClose={handleCloseBottomPanel} />}

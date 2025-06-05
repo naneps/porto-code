@@ -1,5 +1,6 @@
 
 
+
 import React, { useEffect, useRef, useState } from 'react';
 import { ICONS, PORTFOLIO_DATA } from '../../constants';
 import { AppMenuItem, SidebarItemConfig, Tab, ProjectDetail, EditorPaneId } from '../../types';
@@ -27,6 +28,7 @@ interface TitleBarProps {
   onTogglePetsPanel: () => void;
   onToggleLogsPanel: () => void;
   onToggleStatisticsPanel: () => void;
+  onToggleGitHubPanel: () => void; // Added for GitHub panel
   isSoundMuted: boolean;
   onToggleSoundMute: () => void;
   onOpenSettingsEditor: () => void;
@@ -34,7 +36,7 @@ interface TitleBarProps {
   onToggleRightEditorPane: () => void;
   onFocusEditorPane: (paneId: EditorPaneId) => void;
   onMoveEditorToOtherPane: () => void;
-  onToggleProfilePopup: (event: React.MouseEvent<HTMLButtonElement>) => void; // Added
+  onToggleProfilePopup: (event: React.MouseEvent<HTMLButtonElement>) => void; 
 }
 
 const TitleBar: React.FC<TitleBarProps> = (props) => {
@@ -43,14 +45,14 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
     canNavigateBack, canNavigateForward, onNavigateBack, onNavigateForward,
     isFullscreen, onToggleFullscreen,
     sidebarItems, projectsData, onRunItem, onRunCVGenerator,
-    onToggleTerminal, onTogglePetsPanel, onToggleLogsPanel, onToggleStatisticsPanel,
+    onToggleTerminal, onTogglePetsPanel, onToggleLogsPanel, onToggleStatisticsPanel, onToggleGitHubPanel,
     isSoundMuted, onToggleSoundMute,
     onOpenSettingsEditor,
     className,
     onToggleRightEditorPane,
     onFocusEditorPane,
     onMoveEditorToOtherPane,
-    onToggleProfilePopup // Destructure new prop
+    onToggleProfilePopup 
   } = props;
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -87,8 +89,9 @@ const TitleBar: React.FC<TitleBarProps> = (props) => {
     onRunCVGenerator,
     onToggleTerminal,
     onTogglePetsPanel,
-    onToggleLogsPanel, // Passed here
+    onToggleLogsPanel, 
     onToggleStatisticsPanel,
+    onToggleGitHubPanel, // Pass to menu config
     onOpenSettingsEditor,
     isSoundMuted, 
     onToggleSoundMute, 

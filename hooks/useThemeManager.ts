@@ -1,22 +1,25 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { PREDEFINED_THEMES, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS, DEFAULT_THEME_NAME, DEFAULT_FONT_FAMILY_ID, DEFAULT_FONT_SIZE_ID, generateCSSVariables, TERMINAL_FONT_SIZE_OPTIONS, DEFAULT_TERMINAL_FONT_SIZE_ID } from '../themes';
+import { PREDEFINED_THEMES, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS, generateCSSVariables, TERMINAL_FONT_SIZE_OPTIONS } from '../themes';
 import { FontSizeOption } from '../types';
 
 export const useThemeManager = (
-  currentTerminalFontSizeIdExt: string = DEFAULT_TERMINAL_FONT_SIZE_ID,
-  terminalFontSizesExt: FontSizeOption[] = TERMINAL_FONT_SIZE_OPTIONS
+  passedInDefaultThemeName: string,
+  passedInDefaultFontFamilyId: string,
+  passedInDefaultEditorFontSizeId: string,
+  currentTerminalFontSizeIdExt: string, // Keep existing params for terminal font
+  terminalFontSizesExt: FontSizeOption[]
 ) => {
-  const [currentThemeName, setCurrentThemeName] = useState<string>(() => localStorage.getItem('portfolio-theme') || DEFAULT_THEME_NAME);
-  const [currentFontFamilyId, setCurrentFontFamilyId] = useState<string>(() => localStorage.getItem('portfolio-font-family') || DEFAULT_FONT_FAMILY_ID);
-  const [currentEditorFontSizeId, setCurrentEditorFontSizeId] = useState<string>(() => localStorage.getItem('portfolio-font-size') || DEFAULT_FONT_SIZE_ID);
-  // Terminal font size is now managed by App.tsx and passed in, this hook only applies it.
+  const [currentThemeName, setCurrentThemeName] = useState<string>(() => localStorage.getItem('portfolio-theme') || passedInDefaultThemeName);
+  const [currentFontFamilyId, setCurrentFontFamilyId] = useState<string>(() => localStorage.getItem('portfolio-font-family') || passedInDefaultFontFamilyId);
+  const [currentEditorFontSizeId, setCurrentEditorFontSizeId] = useState<string>(() => localStorage.getItem('portfolio-font-size') || passedInDefaultEditorFontSizeId);
+  // Terminal font size is managed by App.tsx and passed in, this hook only applies it.
 
   useEffect(() => {
-    const selectedTheme = PREDEFINED_THEMES.find(theme => theme.name === currentThemeName) || PREDEFINED_THEMES[0];
-    const selectedFontFamily = FONT_FAMILY_OPTIONS.find(font => font.id === currentFontFamilyId) || FONT_FAMILY_OPTIONS[0];
-    const selectedEditorFontSize = FONT_SIZE_OPTIONS.find(size => size.id === currentEditorFontSizeId) || FONT_SIZE_OPTIONS[1];
-    const selectedTerminalFontSize = terminalFontSizesExt.find(size => size.id === currentTerminalFontSizeIdExt) || terminalFontSizesExt.find(s => s.id === DEFAULT_TERMINAL_FONT_SIZE_ID) || terminalFontSizesExt[0];
+    const selectedTheme = PREDEFINED_THEMES.find(theme => theme.name === currentThemeName) || PREDEFINED_THEMES.find(theme => theme.name === passedInDefaultThemeName) || PREDEFINED_THEMES[0];
+    const selectedFontFamily = FONT_FAMILY_OPTIONS.find(font => font.id === currentFontFamilyId) || FONT_FAMILY_OPTIONS.find(font => font.id === passedInDefaultFontFamilyId) || FONT_FAMILY_OPTIONS[0];
+    const selectedEditorFontSize = FONT_SIZE_OPTIONS.find(size => size.id === currentEditorFontSizeId) || FONT_SIZE_OPTIONS.find(size => size.id === passedInDefaultEditorFontSizeId) || FONT_SIZE_OPTIONS[1];
+    const selectedTerminalFontSize = terminalFontSizesExt.find(size => size.id === currentTerminalFontSizeIdExt) || terminalFontSizesExt[0];
 
 
     let cssVars = generateCSSVariables(selectedTheme.properties);
@@ -43,7 +46,7 @@ export const useThemeManager = (
     localStorage.setItem('portfolio-font-size', currentEditorFontSizeId);
     // localStorage for terminal font size is handled in App.tsx
 
-  }, [currentThemeName, currentFontFamilyId, currentEditorFontSizeId, currentTerminalFontSizeIdExt, terminalFontSizesExt]);
+  }, [currentThemeName, currentFontFamilyId, currentEditorFontSizeId, currentTerminalFontSizeIdExt, terminalFontSizesExt, passedInDefaultThemeName, passedInDefaultFontFamilyId, passedInDefaultEditorFontSizeId]);
 
   const handleThemeChange = useCallback((themeName: string) => setCurrentThemeName(themeName), []);
   const handleFontFamilyChange = useCallback((fontId: string) => setCurrentFontFamilyId(fontId), []);

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ICONS, APP_VERSION, REPO_URL, PORTFOLIO_DATA } from '../constants';
 
 
@@ -9,19 +9,37 @@ interface AboutModalProps {
 }
 
 const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
-
-  const InfoIcon = ICONS.about_portfolio; // Usually HelpCircle
+  const InfoIcon = ICONS.about_portfolio; 
   const CloseIcon = ICONS.x_icon;
-  const CodeIcon = ICONS.file_code_icon; // Using FileCode for VSCode Portfolio icon
-  const UserIcon = ICONS['about.json']; // User icon
-  const LinkIcon = ICONS.arrow_right_icon; // Placeholder for ExternalLink
+  const CodeIcon = ICONS.file_code_icon; 
+  const UserIcon = ICONS['about.json']; 
+  const LinkIcon = ICONS.arrow_right_icon; 
 
+  const [isActuallyOpen, setIsActuallyOpen] = useState(false);
+  const [animationClass, setAnimationClass] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsActuallyOpen(true);
+      const timer = setTimeout(() => {
+        setAnimationClass('modal-open');
+      }, 10);
+      return () => clearTimeout(timer);
+    } else {
+      setAnimationClass('');
+      const timer = setTimeout(() => {
+        setIsActuallyOpen(false);
+      }, 300); // Match CSS transition duration
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  if (!isActuallyOpen) return null;
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className={`modal-backdrop ${animationClass}`} onClick={onClose}>
       <div 
-        className="about-modal-content bg-[var(--modal-background)] border border-[var(--modal-border)] rounded-lg shadow-2xl flex flex-col overflow-hidden text-[var(--modal-foreground)]"
+        className={`about-modal-content modal-content-base ${animationClass}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-[var(--modal-border)]">
@@ -36,7 +54,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           )}
         </div>
 
-        <div className="p-6 space-y-4 text-sm">
+        <div className="p-6 space-y-4 text-sm flex-grow overflow-y-auto">
           <div className="flex items-center">
             {CodeIcon && <CodeIcon size={24} className="text-[var(--titlebar-icon-blue)] mr-3" />}
             <div>
@@ -64,12 +82,12 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             rel="noopener noreferrer" 
             className="inline-flex items-center text-[var(--link-foreground)] hover:text-[var(--link-hover-foreground)] hover:underline transition-colors"
           >
-            {LinkIcon && <LinkIcon size={16} className="mr-2" />} {/* Using ArrowRight as placeholder for ExternalLink */}
+            {LinkIcon && <LinkIcon size={16} className="mr-2" />} 
             View Source Code on GitHub
           </a>
         </div>
 
-        <div className="p-4 border-t border-[var(--modal-border)] text-right bg-[var(--sidebar-background)]"> {/* Slightly different bg for footer */}
+        <div className="p-4 border-t border-[var(--modal-border)] text-right bg-[var(--sidebar-background)] flex-shrink-0">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-[var(--modal-button-background)] hover:bg-[var(--modal-button-hover-background)] text-[var(--modal-button-foreground)] text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--focus-border)] focus:ring-opacity-50 transition-colors"

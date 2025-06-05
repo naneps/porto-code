@@ -1,10 +1,9 @@
 
-
-import React from 'react';
+import React, { useState } from 'react'; // Added useState
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import json from 'react-syntax-highlighter/dist/esm/languages/prism/json';
 import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript'; // Import TypeScript language
-import { Tab, PortfolioData, ProjectDetail, ProjectListingItem, EditorPaneId, LogLevel } from '../types';
+import { Tab, PortfolioData, ProjectDetail, ProjectListingItem, EditorPaneId, LogLevel, MockGitHubStats, ChatMessage } from '../types';
 import ProjectCard from './ProjectCard';
 import AIChatInterface from './AIChat/AIChatInterface';
 import JsonPreviewView from './JsonPreviewView';
@@ -15,6 +14,7 @@ import { ICONS } from '../constants';
 import { Loader2 } from 'lucide-react';
 import CVPreview from './CVPreview'; // Import CVPreview
 import SettingsEditor from './Settings/SettingsEditor';
+import GitHubProfileView from './GitHubProfileView'; // Import GitHubProfileView
 
 
 SyntaxHighlighter.registerLanguage('json', json);
@@ -22,21 +22,35 @@ SyntaxHighlighter.registerLanguage('typescript', typescript); // Register TypeSc
 
 interface TabContentProps {
   tab: Tab;
-  content: any; // This will be the object from getActiveContentDetailsForPane, or string/object for other types
+  content: any; 
   portfolioData: PortfolioData;
   onOpenProjectTab: (projectId: string, projectTitle: string) => void;
   currentThemeName: string; 
   onContextMenuRequest: (x: number, y: number, tabId: string, isCVGeneratorContext?: boolean) => void;
   aiGeneratedProjects: ProjectDetail[];
-  onSuggestNewAIProject: () => void;
+  onSuggestNewAIProject: (userKeywords?: string) => void; 
   isAISuggestingProject: boolean;
-  paneId: EditorPaneId;
+  paneId: EditorPaneId; // This is the paneId where this TabContent is rendered
   addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void;
 }
 
+// Define the shape of the content prop when tab.type is 'ai_chat'
+interface AIChatContentProps {
+    messages: ChatMessage[];
+    input: string;
+    setInput: (input: string) => void;
+    isLoading: boolean;
+    error: string | null;
+    apiKeyAvailable: boolean;
+    onSendMessage: () => Promise<void>;
+    handleOpenTab: (itemOrConfig: { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string, githubUsername?: string }, isRunAction?: boolean, targetPaneId?: EditorPaneId) => void;
+    currentPaneIdForChat: EditorPaneId; // Added this
+}
+
+
 const TabContent: React.FC<TabContentProps> = ({
   tab,
-  content, // This is the object from getActiveContentDetailsForPane
+  content, 
   portfolioData,
   onOpenProjectTab,
   currentThemeName,
@@ -44,11 +58,12 @@ const TabContent: React.FC<TabContentProps> = ({
   aiGeneratedProjects,
   onSuggestNewAIProject,
   isAISuggestingProject,
-  paneId,
+  paneId, // This is the paneId of the current TabContent instance
   addAppLog,
 }) => {
   const [finalSyntaxTheme, setFinalSyntaxTheme] = React.useState<any>({});
   const SparklesIcon = ICONS.SparklesIcon;
+  const [aiProjectKeywords, setAiProjectKeywords] = useState(''); 
 
   React.useLayoutEffect(() => {
     setFinalSyntaxTheme(getSyntaxHighlighterTheme(currentThemeName));
@@ -61,7 +76,7 @@ const TabContent: React.FC<TabContentProps> = ({
         onContextMenuRequest(event.pageX, event.pageY, tab.id, true);
         return;
     }
-    if (tab.type === 'cv_preview' || tab.type === 'settings_editor') return;
+    if (tab.type === 'cv_preview' || tab.type === 'settings_editor' || tab.type === 'github_profile_view') return; 
     const eligibleForPreview = ['about.json', 'experience.json', 'skills.json', 'contact.json', 'projects.json'].includes(tab.fileName || '');
     if (((tab.type === 'file' && eligibleForPreview) || (tab.type === 'project_detail' && !tab.id.startsWith('ai_project_'))) && !tab.id.endsWith('_preview')) {
         event.preventDefault();
@@ -70,17 +85,38 @@ const TabContent: React.FC<TabContentProps> = ({
   };
 
   if (tab.type === 'ai_chat') {
-    return <AIChatInterface portfolioData={portfolioData} addAppLog={addAppLog} />;
+    const aiChatProps = content as AIChatContentProps; 
+    return (
+      <AIChatInterface
+        portfolioData={portfolioData}
+        addAppLog={addAppLog}
+        messages={aiChatProps.messages}
+        input={aiChatProps.input}
+        setInput={aiChatProps.setInput}
+        isLoading={aiChatProps.isLoading}
+        error={aiChatProps.error}
+        apiKeyAvailable={aiChatProps.apiKeyAvailable}
+        onSendMessage={aiChatProps.onSendMessage}
+        handleOpenTab={aiChatProps.handleOpenTab} // This is the original handleOpenTab from App.tsx
+        currentPaneIdForChat={aiChatProps.currentPaneIdForChat} // Pass the specific paneId for this chat instance
+      />
+    );
   }
 
   if (tab.type === 'cv_preview') {
     return <CVPreview portfolioData={content as PortfolioData} />;
   }
 
+  if (tab.type === 'github_profile_view') {
+    const ghContent = content as { username?: string; mockStats: MockGitHubStats };
+    return <GitHubProfileView username={ghContent.username} mockStats={ghContent.mockStats} addAppLog={addAppLog} />;
+  }
+
+
   if (tab.type === 'settings_editor') {
     const settingsProps = content as any; 
     if (
-      typeof settingsProps.isSoundMuted === 'boolean' && settingsProps.handleToggleSoundMute && // Expect handleToggleSoundMute from content
+      typeof settingsProps.isSoundMuted === 'boolean' && settingsProps.handleToggleSoundMute && 
       settingsProps.themes && settingsProps.onThemeChange && settingsProps.currentThemeName &&
       settingsProps.fontFamilies && settingsProps.currentFontFamilyId && settingsProps.onFontFamilyChange &&
       settingsProps.editorFontSizes && settingsProps.currentEditorFontSizeId && settingsProps.onEditorFontSizeChange &&
@@ -90,7 +126,7 @@ const TabContent: React.FC<TabContentProps> = ({
         return ( 
           <SettingsEditor 
             isSoundMuted={settingsProps.isSoundMuted} 
-            handleToggleSoundMute={settingsProps.handleToggleSoundMute} // Pass handleToggleSoundMute
+            handleToggleSoundMute={settingsProps.handleToggleSoundMute} 
             themes={settingsProps.themes} currentThemeName={settingsProps.currentThemeName} onThemeChange={settingsProps.onThemeChange} 
             fontFamilies={settingsProps.fontFamilies} currentFontFamilyId={settingsProps.currentFontFamilyId} onFontFamilyChange={settingsProps.onFontFamilyChange} 
             editorFontSizes={settingsProps.editorFontSizes} currentEditorFontSizeId={settingsProps.currentEditorFontSizeId} onEditorFontSizeChange={settingsProps.onEditorFontSizeChange}
@@ -139,11 +175,9 @@ const TabContent: React.FC<TabContentProps> = ({
     }
   }
 
-  // For 'file', 'json_preview', 'project_detail' (non-AI) - content is expected to be stringifiable JSON or code
   const codeContentString = (typeof content === 'string') ? content : JSON.stringify(content, null, 2);
 
   if (tab.type === 'article_detail') {
-    // content for article_detail is an object { markdown: string; imageUrl?: string }
     const articleContentData = content as { markdown: string; imageUrl?: string };
     const childrenForMarkdown: string = Array.isArray(articleContentData.markdown)
         ? (articleContentData.markdown as string[]).join('\n')
@@ -193,25 +227,35 @@ const TabContent: React.FC<TabContentProps> = ({
           className="p-2 md:p-4 h-full overflow-auto bg-[var(--editor-background)] text-[var(--editor-foreground)]"
           onContextMenu={handleContextMenu}
         >
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
             <h2 className="text-xl md:text-2xl font-semibold text-[var(--text-accent)] mb-2 sm:mb-0">// projects.json</h2>
-            {SparklesIcon && (
-              <button
-                onClick={onSuggestNewAIProject}
-                disabled={isAISuggestingProject}
-                className="flex items-center self-start sm:self-center px-2 sm:px-3 py-1 sm:py-1.5 bg-[var(--modal-button-background)] text-[var(--modal-button-foreground)] hover:bg-[var(--modal-button-hover-background)] rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-[var(--focus-border)] disabled:opacity-60 transition-colors"
-                title="Suggest a new project idea using AI"
-              >
-                {isAISuggestingProject ? (
-                  <Loader2 size={14} className="animate-spin mr-1 sm:mr-2" />
-                ) : (
-                  <SparklesIcon size={14} className="mr-1 sm:mr-2" />
-                )}
-                <span className="hidden sm:inline">{isAISuggestingProject ? 'Suggesting...' : 'Suggest New Project Idea'}</span>
-                <span className="sm:hidden">{isAISuggestingProject ? '...' : 'AI Suggest'}</span>
-              </button>
-            )}
           </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-4 md:mb-6">
+              <input
+                type="text"
+                value={aiProjectKeywords}
+                onChange={(e) => setAiProjectKeywords(e.target.value)}
+                placeholder="Keywords for AI (optional, e.g., game, health)"
+                className="flex-grow p-1.5 bg-[var(--modal-input-background)] text-[var(--modal-foreground)] border border-[var(--modal-input-border)] rounded-md focus:outline-none focus:border-[var(--focus-border)] focus:ring-1 focus:ring-[var(--focus-border)] text-xs placeholder-[var(--text-muted)] min-w-[200px]"
+                aria-label="Keywords for AI project suggestion"
+              />
+              {SparklesIcon && (
+                <button
+                  onClick={() => onSuggestNewAIProject(aiProjectKeywords)}
+                  disabled={isAISuggestingProject}
+                  className="flex items-center self-start sm:self-center px-2 sm:px-3 py-1.5 bg-[var(--modal-button-background)] text-[var(--modal-button-foreground)] hover:bg-[var(--modal-button-hover-background)] rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-[var(--focus-border)] disabled:opacity-60 transition-colors whitespace-nowrap"
+                  title="Suggest a new project idea using AI"
+                >
+                  {isAISuggestingProject ? (
+                    <Loader2 size={14} className="animate-spin mr-1 sm:mr-2" />
+                  ) : (
+                    <SparklesIcon size={14} className="mr-1 sm:mr-2" />
+                  )}
+                  <span className="hidden sm:inline">{isAISuggestingProject ? 'Suggesting...' : 'Suggest New Project Idea'}</span>
+                  <span className="sm:hidden">{isAISuggestingProject ? '...' : 'AI Suggest'}</span>
+                </button>
+              )}
+            </div>
           <p className="mb-4 md:mb-6 text-sm text-[var(--text-muted)]">
             {`Explore my projects. Click on any project card to view its details in a new "file". Or, try the AI suggestion feature!`}
           </p>

@@ -1,8 +1,7 @@
 
-
-import { ArrowLeft, ArrowRight, BarChart3, Bell, Bot, Briefcase, Cat, Check, ChevronDown, ChevronRight, Code2, Command, ExternalLink as ExternalLinkIcon, Eye, FileBadge, FileCode2 as FileCodeIcon, FileJson2, Files, FileTerminal, FileText, Folder as FolderClosed, FolderKanban, FolderOpen, Type as FontIcon, GitFork, HelpCircle, Image as ImageIcon, LayoutGrid, Link, ListChecks, LucideIcon, Mail, Minus, MousePointerClick, Newspaper, Palette, Phone, Play, Search, Settings, Sparkles, SplitSquareHorizontal, Square, TerminalSquare, User, UserCircle2 as UserProfileIcon, Volume2, VolumeX, X } from 'lucide-react'; // Added ExternalLinkIcon, ImageIcon, ListChecks
+import { ArrowLeft, ArrowRight, BarChart3, Bell, Bot, Briefcase, Cat, Check, ChevronDown, ChevronRight, Code2, Command, ExternalLink as ExternalLinkIcon, Eye, FileBadge, FileCode2 as FileCodeIcon, FileJson2, Files, FileTerminal, FileText, Folder as FolderClosed, FolderKanban, FolderOpen, Type as FontIcon, GitFork, Github, HelpCircle, Image as ImageIcon, LayoutGrid, Link, ListChecks, LucideIcon, Mail, Minus, MousePointerClick, Newspaper, Palette, Phone, Play, Search, Settings, Sparkles, SplitSquareHorizontal, Square, TerminalSquare, User, UserCircle2 as UserProfileIcon, Volume2, VolumeX, X } from 'lucide-react'; // Added Github
 import { MOCK_CV_GENERATOR_CODE } from './assets/generate_cv_code';
-import { ActivityBarItemDefinition, Command as AppCommandType, PortfolioData, ProjectListingItem, SidebarItemConfig } from './types';
+import { ActivityBarItemDefinition, Command as AppCommandType, MockGitHubStats, PortfolioData, ProjectListingItem, SidebarItemConfig } from './types';
 
 
 export const PORTFOLIO_DATA: PortfolioData = {
@@ -135,13 +134,55 @@ export const PORTFOLIO_DATA: PortfolioData = {
     }
   ],
   linkedIn: "https://www.linkedin.com/in/nandang-eka-prasetya",
-  instagram: "https://instagram.com/nandang.prasetya",
-  tiktok: "https://tiktok.com/@nandangprasetyaa",
+  instagram: "https://instagram.com/_nannnde",
+  tiktok: "https://www.tiktok.com/@_nannnde",
   otherSocial: {
     name: "GitHub",
     url: "https://github.com/naneps"
   }
 };
+
+// Helper to generate random contribution data for the mock graph
+const generateMockContributionGraph = (weeks = 52, days = 7): number[][] => {
+  const graph: number[][] = [];
+  for (let i = 0; i < weeks; i++) {
+    const weekData: number[] = [];
+    for (let j = 0; j < days; j++) {
+      // Ensure Sunday (j=0) and Saturday (j=6) have slightly lower chances of high activity
+      const isWeekend = j === 0 || j === 6;
+      let activityLevel = 0;
+      const randomFactor = Math.random();
+      if (randomFactor > 0.3) { // 70% chance of some activity
+        activityLevel = Math.floor(Math.random() * 3) + 1; // 1-3
+        if (randomFactor > 0.7 && !isWeekend) { // 30% chance of higher activity on weekdays
+            activityLevel = Math.floor(Math.random() * 2) + 3; // 3-4
+        } else if (randomFactor > 0.6 && isWeekend) { // lower high activity chance on weekends
+             activityLevel = Math.floor(Math.random() * 2) + 2; // 2-3
+        }
+      }
+      // Ensure some sparse days
+      if (Math.random() < 0.15) activityLevel = 0; // 15% chance of no activity override
+      weekData.push(Math.min(activityLevel, 4)); // Cap at 4
+    }
+    graph.push(weekData);
+  }
+  return graph;
+};
+
+
+export const MOCK_GITHUB_STATS: MockGitHubStats = {
+    totalContributionsLastYear: 3115, // Placeholder from user screenshot
+    commitStreak: 128, // Placeholder
+    topLanguages: [
+        { name: 'Dart', percentage: 45, color: '#00B4AB' },
+        { name: 'Flutter (UI)', percentage: 30, color: '#02569B' }, // Representing Flutter's UI aspect
+        { name: 'JavaScript', percentage: 10, color: '#F7DF1E' },
+        { name: 'Python', percentage: 8, color: '#3572A5' },
+        { name: 'Other', percentage: 7, color: '#8B949E' }
+    ],
+    contributionGraphData: generateMockContributionGraph()
+};
+
 
 export const ICONS: { [key: string]: LucideIcon } = {
   default: FileJson2,
@@ -151,7 +192,8 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'projects.json': FolderKanban,
   'contact.json': Mail,
   'article_detail': Newspaper,
-  'project_detail': FileJson2,
+  'project_detail': FileJson2, // Used for project detail tabs
+  'github_profile_view': Github, // Icon for GitHub Profile Tab
   'command_palette_icon': Command,
   'toggle_sidebar': Eye,
   'about_portfolio': HelpCircle,
@@ -163,6 +205,7 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'ai_chat_icon': Bot,
   'articles_icon': Newspaper,
   'statistics_icon': BarChart3,
+  'github_icon': Github, 
   'bell_icon': Bell,
   'terminal_square_icon': TerminalSquare,
   'arrow_left_icon': ArrowLeft,
@@ -204,9 +247,9 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'folder_closed_icon': FolderClosed,
   'generate_cv_icon': FileCodeIcon,
   'cv_preview_icon': FileBadge,
-  'ExternalLinkIcon': ExternalLinkIcon, // Added
-  'ImageIcon': ImageIcon, // Added
-  'LogsIcon': ListChecks, // Added for Logs panel
+  'ExternalLinkIcon': ExternalLinkIcon, 
+  'ImageIcon': ImageIcon, 
+  'LogsIcon': ListChecks, 
 };
 
 export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
@@ -340,5 +383,13 @@ export const DEFAULT_ACTIVITY_BAR_ITEMS: ActivityBarItemDefinition[] = [
   { id: 'ai_chat-activity', label: 'AI Assistant', iconName: 'ai_chat_icon', viewId: 'ai_chat_tab' },
   { id: 'articles-activity', label: 'Articles', iconName: 'articles_icon', viewId: 'articles' },
   { id: 'statistics-activity', label: 'Statistics', iconName: 'statistics_icon', viewId: 'statistics' },
+  { id: 'github-activity', label: 'GitHub Profile', iconName: 'github_icon', viewId: 'github_profile_view' }, // Updated viewId
 ];
 export const MAX_LOG_ENTRIES = 250;
+
+export const AI_CHAT_SHORTCUTS: { label: string; prompt: string }[] = [
+  { label: "Tell me about Nandang's skills", prompt: "What are Nandang's key skills?" },
+  { label: "What projects has he worked on?", prompt: "Can you list some of Nandang's projects?" },
+  { label: "Summarize his experience", prompt: "Briefly summarize Nandang's work experience." },
+  { label: "How do I navigate this site?", prompt: "How can I navigate this portfolio website?" },
+];

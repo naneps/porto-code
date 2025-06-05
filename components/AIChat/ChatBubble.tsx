@@ -1,46 +1,22 @@
 
-import React, { useState, useEffect } from 'react';
-import { ChatMessage } from '../../types'; // Adjusted path
-import { Bot, User } from 'lucide-react';
+import React from 'react';
+import { ChatMessage } from '../../types';
+import { Bot, User, ExternalLink, FileCode2 as FileCodeIconLucide } from 'lucide-react'; // Using Lucide directly
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-// Removed: import CodeBlock from './CodeBlock';
+import { ICONS } from '../../constants';
+
 
 interface ChatBubbleProps {
   message: ChatMessage;
-  // Removed: currentThemeName?: string;
+  onOpenFileRequest?: (fileName: string) => void;
 }
 
-const TYPING_SPEED_MS = 35;
-// TYPING_ANIMATION_ID_PREFIX is part of message IDs generated in useGeminiChat.ts
-// This component checks for it to enable the typing animation.
-
-const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => { // Removed currentThemeName from props
-  const [displayedText, setDisplayedText] = useState('');
+const ChatBubble: React.FC<ChatBubbleProps> = ({ message, onOpenFileRequest }) => {
   const isUser = message.sender === 'user';
-  // Check if the message ID starts with the prefix defined in useGeminiChat.ts
-  const isTypingMessage = message.sender === 'ai' && !message.error && message.id.startsWith("ai-typing-");
-
-
-  useEffect(() => {
-    if (isTypingMessage) {
-      setDisplayedText('');
-      let charIndex = 0;
-      const typingInterval = setInterval(() => {
-        const charToAdd = message.text[charIndex];
-        if (charToAdd) {
-          setDisplayedText(prev => prev + charToAdd);
-        }
-        charIndex++;
-        if (charIndex >= message.text.length) {
-          clearInterval(typingInterval);
-        }
-      }, TYPING_SPEED_MS);
-      return () => clearInterval(typingInterval);
-    } else {
-      setDisplayedText(message.text);
-    }
-  }, [message.text, message.id, isTypingMessage]);
+  
+  // AI messages are displayed fully once received (no typing animation)
+  const displayedText = message.text;
 
   const bubbleClasses = isUser
     ? 'bg-[var(--modal-selected-item-background)] text-[var(--modal-selected-item-foreground)] self-end rounded-lg rounded-br-none'
@@ -48,6 +24,10 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => { // Removed curr
 
   const IconComponent = isUser ? User : Bot;
   const iconColor = isUser ? 'text-[var(--modal-selected-item-foreground)]' : 'text-[var(--text-accent)]';
+
+  // Use a specific icon for "Open File" widgets, fallback if needed
+  const OpenFileWidgetIcon = ICONS.file_code_icon || FileCodeIconLucide;
+
 
   return (
     <div className={`flex items-end mb-3 w-full ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -62,13 +42,38 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => { // Removed curr
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                  a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />
-                  // Removed custom code renderer
+                  a: ({node, ...props}) => ( // Standard external link rendering
+                    <a {...props} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-[var(--link-foreground)] hover:underline">
+                      {props.children}
+                      <ExternalLink size={12} className="ml-1 opacity-70" />
+                    </a>
+                  )
                 }}
               >
                 {displayedText}
               </ReactMarkdown>
             </div>
+
+            {/* Render File Recommendation Widgets if present */}
+            {message.sender === 'ai' && message.recommendedFiles && message.recommendedFiles.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-[var(--border-color)] border-opacity-50">
+                <p className="text-xs text-[var(--text-muted)] mb-1.5">Suggested files to open:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {message.recommendedFiles.map(fileName => (
+                    <button
+                      key={fileName}
+                      onClick={() => onOpenFileRequest && onOpenFileRequest(fileName)}
+                      className="ai-chat-file-widget-button" // Use new class for styling
+                      title={`Open ${fileName} in the editor`}
+                    >
+                      <OpenFileWidgetIcon size={13} className="mr-1.5 flex-shrink-0" />
+                      {fileName}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {message.error && <p className="text-xs text-red-400 mt-1">Error: Could not get response.</p>}
             <p className={`text-xs mt-1.5 ${isUser ? 'text-gray-400' : 'text-[var(--text-muted)]'} text-right`}>
             {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
