@@ -1,46 +1,44 @@
 
 
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Tab, PortfolioData, SidebarItemConfig, Command, ContextMenuItem, ActivityBarSelection, SearchResultItem, Theme, FontFamilyOption, FontSizeOption, ArticleItem, ProjectDetail, MockStatistics, ActivityBarItemDefinition, ActivityBarItemConfig, NotificationItem, EditorPaneId, EditorPaneState, LogEntry, LogLevel, NotificationType, BottomPanelTabId, ChatMessage, SettingsEditorProps, TerminalCommandContext } from './types';
-import { PORTFOLIO_DATA, SIDEBAR_ITEMS as DEFAULT_SIDEBAR_ITEMS, generateFileContent, generateProjectDetailContent, ICONS, REPO_URL, APP_VERSION, DEFAULT_ACTIVITY_BAR_ITEMS, MAX_LOG_ENTRIES, MOCK_GITHUB_STATS } from './constants';
+import LogsPanel from '@/Features/Logs/LogsPanel';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SAMPLE_ARTICLES } from '../Features/Articles/articlesData';
-import { PREDEFINED_THEMES, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS, TERMINAL_FONT_SIZE_OPTIONS, DEFAULT_TERMINAL_FONT_SIZE_ID, DEFAULT_THEME_NAME, DEFAULT_FONT_FAMILY_ID, DEFAULT_FONT_SIZE_ID } from './themes';
-import { TitleBar } from '../Layout/TitleBar/TitleBar';
-import ActivityBar from '../Layout/ActivityBar/ActivityBar';
-import { Sidebar } from '../Layout/Sidebar/Sidebar';
-import EditorTabs from '../Layout/EditorTabs/EditorTabs';
-import TabContent from '../Features/Editor/TabContent';
-import Breadcrumbs from '../Layout/Breadcrumbs/Breadcrumbs';
-import CommandPalette from '../Features/Commands/CommandPalette';
-import AboutModal from '../Features/Modals/AboutModal';
-import ContextMenu from '../UI/ContextMenu/ContextMenu';
-import WelcomeView from '../Features/Editor/WelcomeView';
-import SearchPanel from '../Features/Search/SearchPanel';
 import ArticlesPanel from '../Features/Articles/ArticlesPanel';
-import StatisticsPanel from '../Features/Statistics/StatisticsPanel';
-import { GitHubProfileView } from '../Features/GitHub/GitHubProfileView'; 
-import GuestBookView from '../Features/GuestBook/GuestBookView'; 
-import TerminalPanel from '../Features/Terminal/TerminalPanel';
-import PetsPanel from '../Features/Pets/PetsPanel';
-import LogsPanel from '../Features/Logs/LogsPanel'; 
-import BottomPanelTabs from '../Layout/BottomPanelTabs/BottomPanelTabs';
+import CommandPalette from '../Features/Commands/CommandPalette';
+import TabContent from '../Features/Editor/TabContent';
+import WelcomeView from '../Features/Editor/WelcomeView';
+import AboutModal from '../Features/Modals/AboutModal';
+import PasskeyPromptModal from '../Features/Modals/PasskeyPromptModal';
+import ProfilePopup from '../Features/Modals/ProfilePopup';
 import NotificationContainer from '../Features/Notifications/NotificationContainer';
-import PasskeyPromptModal from '../Features/Modals/PasskeyPromptModal'; 
-import StatusBar from '../Layout/StatusBar/StatusBar'; 
-import ProfilePopup from '../Features/Modals/ProfilePopup'; 
+import PetsPanel from '../Features/Pets/PetsPanel';
+import SearchPanel from '../Features/Search/SearchPanel';
+import StatisticsPanel from '../Features/Statistics/StatisticsPanel';
+import TerminalPanel from '../Features/Terminal/TerminalPanel';
+import ActivityBar from '../Layout/ActivityBar/ActivityBar';
+import BottomPanelTabs from '../Layout/BottomPanelTabs/BottomPanelTabs';
+import Breadcrumbs from '../Layout/Breadcrumbs/Breadcrumbs';
+import EditorTabs from '../Layout/EditorTabs/EditorTabs';
+import { Sidebar } from '../Layout/Sidebar/Sidebar';
+import StatusBar from '../Layout/StatusBar/StatusBar';
+import { TitleBar } from '../Layout/TitleBar/TitleBar';
+import ContextMenu from '../UI/ContextMenu/ContextMenu';
+import { APP_VERSION, DEFAULT_ACTIVITY_BAR_ITEMS, SIDEBAR_ITEMS as DEFAULT_SIDEBAR_ITEMS, generateFileContent, generateProjectDetailContent, ICONS, MAX_LOG_ENTRIES, MOCK_GITHUB_STATS, PORTFOLIO_DATA } from './constants';
+import { DEFAULT_FONT_FAMILY_ID, DEFAULT_FONT_SIZE_ID, DEFAULT_TERMINAL_FONT_SIZE_ID, DEFAULT_THEME_NAME, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS, PREDEFINED_THEMES, TERMINAL_FONT_SIZE_OPTIONS } from './themes';
+import { ActivityBarItemConfig, ActivityBarItemDefinition, ActivityBarSelection, ArticleItem, BottomPanelTabId, ContextMenuItem, EditorPaneId, EditorPaneState, LogEntry, LogLevel, MockStatistics, NotificationType, ProjectDetail, SearchResultItem, SettingsEditorProps, SidebarItemConfig, Tab, TerminalCommandContext } from './types';
 
 
-import { useThemeManager } from '../Hooks/useThemeManager';
 import { useFullscreen } from '../Hooks/useFullscreen';
+import { useGeminiChat } from '../Hooks/useGeminiChat';
 import { useGlobalEventHandlers } from '../Hooks/useGlobalEventHandlers';
 import { useNotifications } from '../Hooks/useNotifications';
-import { useGeminiChat } from '../Hooks/useGeminiChat'; 
-import { generateCommands } from '../Utils/commandUtils';
-import { playSound, toggleMute, getMuteStatus } from '../Utils/audioUtils';
+import { useThemeManager } from '../Hooks/useThemeManager';
 import { fetchAIProjectSuggestion } from '../Utils/aiUtils';
+import { getMuteStatus, playSound, toggleMute } from '../Utils/audioUtils';
+import { generateCommands } from '../Utils/commandUtils';
+import { createCV_PDF } from '../Utils/cvGenerator';
 import '../Utils/firebase';
-import { auth, onAuthStateChanged, FirebaseUser } from '../Utils/firebase'; 
-import { createCV_PDF } from '../Utils/cvGenerator'; 
+import { auth, FirebaseUser, onAuthStateChanged } from '../Utils/firebase';
 import { processCommand } from '../Utils/terminalCommands';
 
 
