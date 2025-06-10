@@ -1,12 +1,12 @@
 
 
-import LogsPanel from '@/Features/Logs/LogsPanel';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SAMPLE_ARTICLES } from '../Features/Articles/articlesData';
 import ArticlesPanel from '../Features/Articles/ArticlesPanel';
 import CommandPalette from '../Features/Commands/CommandPalette';
 import TabContent from '../Features/Editor/TabContent';
 import WelcomeView from '../Features/Editor/WelcomeView';
+import LogsPanel from '../Features/Logs/LogsPanel';
 import AboutModal from '../Features/Modals/AboutModal';
 import PasskeyPromptModal from '../Features/Modals/PasskeyPromptModal';
 import ProfilePopup from '../Features/Modals/ProfilePopup';
