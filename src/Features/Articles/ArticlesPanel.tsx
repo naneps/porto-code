@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
-import { ArticleItem } from '../../App/types'; // Adjusted path
+import React, { useEffect, useState } from 'react';
 import { ICONS } from '../../App/constants'; // Adjusted path
+import { ArticleItem } from '../../App/types'; // Adjusted path
 
 interface ArticlesPanelProps {
   isVisible: boolean;

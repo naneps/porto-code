@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SAMPLE_ARTICLES } from '../features/articles/articlesData';
-import ArticlesPanel from '../features/articles/ArticlesPanel';
+import ArticlesPanel from '../features/articles/articlesPanel';
 import CommandPalette from '../features/Commands/CommandPalette';
 import TabContent from '../features/Editor/TabContent';
 import WelcomeView from '../features/Editor/WelcomeView';
