@@ -6,7 +6,7 @@ import ArticlesPanel from '../Features/Articles/ArticlesPanel';
 import CommandPalette from '../Features/Commands/CommandPalette';
 import TabContent from '../Features/Editor/TabContent';
 import WelcomeView from '../Features/Editor/WelcomeView';
-import LogsPanel from '../Features/Logs/LogsPanel';
+import LogsPanel from '../Features/logs/logsPanel';
 import AboutModal from '../Features/Modals/AboutModal';
 import PasskeyPromptModal from '../Features/Modals/PasskeyPromptModal';
 import ProfilePopup from '../Features/Modals/ProfilePopup';
