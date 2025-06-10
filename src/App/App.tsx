@@ -1,20 +1,20 @@
 
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SAMPLE_ARTICLES } from '../Features/Articles/articlesData';
-import ArticlesPanel from '../Features/Articles/ArticlesPanel';
-import CommandPalette from '../Features/Commands/CommandPalette';
-import TabContent from '../Features/Editor/TabContent';
-import WelcomeView from '../Features/Editor/WelcomeView';
-import LogsPanel from '../Features/logs/logsPanel';
-import AboutModal from '../Features/Modals/AboutModal';
-import PasskeyPromptModal from '../Features/Modals/PasskeyPromptModal';
-import ProfilePopup from '../Features/Modals/ProfilePopup';
-import NotificationContainer from '../Features/Notifications/NotificationContainer';
-import PetsPanel from '../Features/Pets/PetsPanel';
-import SearchPanel from '../Features/Search/SearchPanel';
-import StatisticsPanel from '../Features/Statistics/StatisticsPanel';
-import TerminalPanel from '../Features/Terminal/TerminalPanel';
+import { SAMPLE_ARTICLES } from '../features/Articles/articlesData';
+import ArticlesPanel from '../features/Articles/ArticlesPanel';
+import CommandPalette from '../features/Commands/CommandPalette';
+import TabContent from '../features/Editor/TabContent';
+import WelcomeView from '../features/Editor/WelcomeView';
+import LogsPanel from '../features/logs/logsPanel';
+import AboutModal from '../features/Modals/AboutModal';
+import PasskeyPromptModal from '../features/Modals/PasskeyPromptModal';
+import ProfilePopup from '../features/Modals/ProfilePopup';
+import NotificationContainer from '../features/Notifications/NotificationContainer';
+import PetsPanel from '../features/Pets/PetsPanel';
+import SearchPanel from '../features/Search/SearchPanel';
+import StatisticsPanel from '../features/Statistics/StatisticsPanel';
+import TerminalPanel from '../features/Terminal/TerminalPanel';
 import ActivityBar from '../Layout/ActivityBar/ActivityBar';
 import BottomPanelTabs from '../Layout/BottomPanelTabs/BottomPanelTabs';
 import Breadcrumbs from '../Layout/Breadcrumbs/Breadcrumbs';
