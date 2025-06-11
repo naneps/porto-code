@@ -1,14 +1,16 @@
 
 import React, { useEffect, useRef } from 'react';
-import { ICONS } from '../../App/constants';
+import { ICONS, ALL_FEATURE_IDS } from '../../App/constants';
+import { FeatureStatus } from '../../App/types'; // Added FeatureStatus
+import MaintenanceView from '../../UI/MaintenanceView'; // Added MaintenanceView
 
 interface TerminalPanelProps {
   output: string[];
-  // isRunning prop removed, interactivity handled by input field
   onClose: () => void;
   inputValue: string;
   onInputChange: (value: string) => void;
   onCommandSubmit: () => void;
+  featureStatus: FeatureStatus; // Added featureStatus
 }
 
 // Define keyword styles using CSS variables for theme compatibility
@@ -82,22 +84,16 @@ const colorizeLine = (line: string, lineKey: string | number): JSX.Element[] => 
   if (promptMatch) {
     elements.push(<span key={`${lineKey}-prompt-${partKey++}`} style={{ color: 'var(--text-muted)' }}>{promptMatch[0]}</span>);
     remainingLine = remainingLine.substring(promptMatch[0].length);
-    // For the rest of the user command, use a slightly different color than default output.
-    // This specific styling can be adjusted. Here, we'll use the default foreground color.
-    // If you want user commands to be a specific color, wrap `remainingLine` in a span with that color.
-    // For now, user commands (after ">") will inherit default foreground.
   }
 
-
-  // Split by spaces, keeping spaces to preserve them
   const segments = remainingLine.split(/(\s+)/);
 
   segments.forEach((segment) => {
-    if (segment.match(/^\s+$/)) { // If it's just spaces
+    if (segment.match(/^\s+$/)) { 
       elements.push(<React.Fragment key={`${lineKey}-space-${partKey++}`}>{segment}</React.Fragment>);
       return;
     }
-    if (!segment) return; // Skip empty segments
+    if (!segment) return; 
 
     if (KEYWORD_STYLES[segment]) {
       elements.push(<span key={`${lineKey}-kw-${partKey++}`} style={{ color: KEYWORD_STYLES[segment] }}>{segment}</span>);
@@ -140,19 +136,23 @@ const colorizeLine = (line: string, lineKey: string | number): JSX.Element[] => 
 };
 
 
-const TerminalPanel: React.FC<TerminalPanelProps> = ({ output, onClose, inputValue, onInputChange, onCommandSubmit }) => {
+const TerminalPanel: React.FC<TerminalPanelProps> = ({ output, onClose, inputValue, onInputChange, onCommandSubmit, featureStatus }) => {
   const outputEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const CloseIcon = ICONS.x_icon;
   const TerminalIcon = ICONS.TerminalIcon;
 
   useEffect(() => {
-    outputEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [output]);
+    if (featureStatus === 'active') {
+      outputEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [output, featureStatus]);
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (featureStatus === 'active') {
+      inputRef.current?.focus();
+    }
+  }, [featureStatus]);
 
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -162,12 +162,16 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ output, onClose, inputVal
     }
   };
 
+  if (featureStatus !== 'active') {
+    return <MaintenanceView featureName={ALL_FEATURE_IDS.terminal} featureIcon={TerminalIcon} />;
+  }
+
   return (
     <div
       className="h-full flex flex-col bg-[var(--terminal-background)] text-[var(--terminal-foreground)] border-t border-[var(--terminal-border)] shadow-md"
       role="log"
       aria-live="polite"
-      onClick={() => inputRef.current?.focus()} // Focus input when clicking anywhere in terminal
+      onClick={() => inputRef.current?.focus()} 
     >
       <div className="flex items-center justify-between px-2 py-1 bg-[var(--terminal-toolbar-background)] border-b border-[var(--terminal-border)] text-xs flex-shrink-0">
         <div className="flex items-center">

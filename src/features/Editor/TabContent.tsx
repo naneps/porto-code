@@ -3,52 +3,32 @@ import React, { useState } from 'react';
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import json from 'react-syntax-highlighter/dist/esm/languages/prism/json';
 import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript'; 
-import { Tab, PortfolioData, ProjectDetail, ProjectListingItem, EditorPaneId, LogLevel, MockGitHubStats, ChatMessage, GuestBookViewProps, SettingsEditorProps as EditorProps } from '../../App/types'; 
+import { Tab, PortfolioData, ProjectDetail, ProjectListingItem, EditorPaneId, LogLevel, MockGitHubStats, ChatMessage, GuestBookViewProps, SettingsEditorProps as EditorProps, ArticleItem, AIChatInterfaceProps as AIChatInterfacePropsType, FeatureStatus, TabContentProps as TabContentPropsType } from '../../App/types'; 
 import { ProjectCard } from '../../UI/ProjectCard/ProjectCard';
 import AIChatInterface from '../AIChat/AIChatInterface';
 import JsonPreviewView from './JsonPreviewView';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { getSyntaxHighlighterTheme } from '../../Utils/syntaxHighlighterUtils';
-import { ICONS } from '../../App/constants';
-import { Loader2, ExternalLink } from 'lucide-react'; // Added ExternalLink
+import { ICONS, ALL_FEATURE_IDS } from '../../App/constants';
+import { Loader2, ExternalLink } from 'lucide-react'; 
 import CVPreview from './CVPreview'; 
 import SettingsEditor from '../Settings/SettingsEditor';
 import { GitHubProfileView } from '../GitHub/GitHubProfileView'; 
 import GuestBookView from '../GuestBook/GuestBookView'; 
+import ArticleDetailView from '../Articles/ArticleDetailView'; // Import the new component
+import MaintenanceView from '../../UI/MaintenanceView';
 
 
 SyntaxHighlighter.registerLanguage('json', json);
 SyntaxHighlighter.registerLanguage('typescript', typescript); 
 
-interface TabContentProps {
-  tab: Tab;
-  content: any; 
-  portfolioData: PortfolioData;
-  onOpenProjectTab: (projectId: string, projectTitle: string) => void;
-  currentThemeName: string; 
-  onContextMenuRequest: (x: number, y: number, tabId: string, isCVGeneratorContext?: boolean) => void;
-  aiGeneratedProjects: ProjectDetail[];
-  onSuggestNewAIProject: (userKeywords?: string) => void; 
-  isAISuggestingProject: boolean;
-  paneId: EditorPaneId; 
-  addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void;
-}
+// This type is now defined in types.ts as AIChatInterfaceProps
+// We can use that directly or keep this local one if it's slightly different,
+// but for consistency, it's better to use the one from types.ts if they are identical.
+// For this fix, assuming `AIChatInterfacePropsType` from `types.ts` is the correct one.
 
-interface AIChatContentProps {
-    messages: ChatMessage[];
-    input: string;
-    setInput: (input: string) => void;
-    isLoading: boolean;
-    error: string | null;
-    apiKeyAvailable: boolean;
-    onSendMessage: () => Promise<void>;
-    handleOpenTab: (itemOrConfig: { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string, githubUsername?: string }, isRunAction?: boolean, targetPaneId?: EditorPaneId) => void;
-    currentPaneIdForChat: EditorPaneId; 
-}
-
-
-const TabContent: React.FC<TabContentProps> = ({
+const TabContent: React.FC<TabContentPropsType> = ({
   tab,
   content, 
   portfolioData,
@@ -60,6 +40,7 @@ const TabContent: React.FC<TabContentProps> = ({
   isAISuggestingProject,
   paneId, 
   addAppLog,
+  featureStatusForProjectsView, // Added prop
 }) => {
   const [finalSyntaxTheme, setFinalSyntaxTheme] = React.useState<any>({});
   const SparklesIcon = ICONS.SparklesIcon;
@@ -85,7 +66,7 @@ const TabContent: React.FC<TabContentProps> = ({
   };
 
   if (tab.type === 'ai_chat') {
-    const aiChatProps = content as AIChatContentProps; 
+    const aiChatProps = content as AIChatInterfacePropsType; 
     return (
       <AIChatInterface
         portfolioData={portfolioData}
@@ -99,6 +80,7 @@ const TabContent: React.FC<TabContentProps> = ({
         onSendMessage={aiChatProps.onSendMessage}
         handleOpenTab={aiChatProps.handleOpenTab} 
         currentPaneIdForChat={aiChatProps.currentPaneIdForChat} 
+        featureStatus={aiChatProps.featureStatus} // Pass featureStatus
       />
     );
   }
@@ -108,12 +90,12 @@ const TabContent: React.FC<TabContentProps> = ({
   }
 
   if (tab.type === 'github_profile_view') {
-    const ghContent = content as { username?: string; mockStats: MockGitHubStats };
-    return <GitHubProfileView username={ghContent.username} mockStats={ghContent.mockStats} addAppLog={addAppLog} />;
+    const ghContent = content as { username?: string; mockStats: MockGitHubStats; featureStatus: FeatureStatus };
+    return <GitHubProfileView username={ghContent.username} mockStats={ghContent.mockStats} addAppLog={addAppLog} featureStatus={ghContent.featureStatus} />;
   }
   
   if (tab.type === 'guest_book') {
-    const guestBookProps = content as GuestBookViewProps;
+    const guestBookProps = content as GuestBookViewProps; // Assumes GuestBookViewProps in types.ts includes featureStatus
     return <GuestBookView {...guestBookProps} />;
   }
 
@@ -162,32 +144,9 @@ const TabContent: React.FC<TabContentProps> = ({
   const codeContentString = (typeof content === 'string') ? content : JSON.stringify(content, null, 2);
 
   if (tab.type === 'article_detail') {
-    const articleContentData = content as { markdown: string; imageUrl?: string };
-    const childrenForMarkdown: string = Array.isArray(articleContentData.markdown)
-        ? (articleContentData.markdown as string[]).join('\n')
-        : (articleContentData.markdown as string || '');
-
-    return (
-      <div className="p-0 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
-        {articleContentData.imageUrl && (
-          <img
-            src={articleContentData.imageUrl}
-            alt={`Cover image for ${tab.title}`}
-            className="w-full h-48 md:h-64 object-cover mb-4 md:mb-6"
-          />
-        )}
-        <article className="prose prose-sm md:prose-base dark:prose-invert max-w-none markdown-content p-4 md:p-8 pt-0 md:pt-0">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-[var(--link-foreground)] hover:underline">{props.children} <ExternalLink size={12} className="ml-1 opacity-70" /></a>
-            }}
-          >
-            {childrenForMarkdown}
-          </ReactMarkdown>
-        </article>
-      </div>
-    );
+    const articleData = content as ArticleItem;
+    // Pass the article data to the new ArticleDetailView component
+    return <ArticleDetailView article={articleData} />;
   }
   
   if (tab.type === 'json_preview' && tab.fileName) {
@@ -203,9 +162,25 @@ const TabContent: React.FC<TabContentProps> = ({
 
 
   if (tab.id === 'projects.json' && tab.type === 'file') {
+    if (featureStatusForProjectsView && featureStatusForProjectsView !== 'active') {
+      return <MaintenanceView featureName={ALL_FEATURE_IDS.projectsView} featureIcon={ICONS['projects.json']} />;
+    }
     try {
       const projectsData = JSON.parse(codeContentString);
       const projectsList = projectsData.projects as ProjectListingItem[];
+      
+      const allDisplayProjects: ProjectDetail[] = [
+        ...projectsList.map(p => ({ // Map existing projects to ProjectDetail like structure for consistency if needed by card
+            id: p.id, 
+            title: p.title, 
+            imageUrls: p.imageUrls, 
+            technologies: p.technologies || [],
+            description: portfolioData.projects.find(fp => fp.id === p.id)?.description || "No description available." 
+        })),
+        ...aiGeneratedProjects.map(aiP => ({...aiP, id: aiP.id || `ai_temp_${Date.now()}`})) // Ensure ID for AI projects
+      ];
+
+
       return (
         <div
           className="p-2 md:p-4 h-full overflow-auto bg-[var(--editor-background)] text-[var(--editor-foreground)]"
@@ -244,14 +219,14 @@ const TabContent: React.FC<TabContentProps> = ({
             {`Explore my projects. Click on any project card to view its details in a new "file". Or, try the AI suggestion feature!`}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {projectsList.map((project) => (
+            {allDisplayProjects.map((project) => (
               <ProjectCard
                 key={project.id}
                 projectId={project.id}
-                projectTitle={project.title}
+                projectTitle={project.id.startsWith('ai_project_') ? `✨ ${project.title} (AI)` : project.title}
                 imageUrls={project.imageUrls}
                 technologies={project.technologies} 
-                onClick={() => onOpenProjectTab(project.id, project.title)}
+                onClick={() => onOpenProjectTab(project.id, project.id.startsWith('ai_project_') ? `✨ ${project.title} (AI)` : project.title)}
               />
             ))}
           </div>

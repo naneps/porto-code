@@ -1,15 +1,30 @@
+
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 export const getSyntaxHighlighterTheme = (currentThemeName: string): any => {
   const isAppLightTheme = currentThemeName === 'VSCode Light+';
-  const baseTheme = isAppLightTheme ? vs : vscDarkPlus;
+  const baseThemeSource = isAppLightTheme ? vs : vscDarkPlus;
+
+  if (!baseThemeSource || typeof baseThemeSource !== 'object' || baseThemeSource === null) {
+    console.warn('Syntax highlighter base theme is not available or not a valid object. Falling back to empty style.');
+    return {}; // Fallback to an empty style object
+  }
   
   // Deep clone the base theme to avoid mutating the original
-  const newTheme = JSON.parse(JSON.stringify(baseTheme));
+  let newTheme: any = {}; // Initialize as any to match return type flexibility
+  try {
+    // Ensure that functions are not part of the theme object being cloned, or handle them appropriately if they are.
+    // For typical style objects, JSON stringify/parse is a common way to deep clone.
+    newTheme = JSON.parse(JSON.stringify(baseThemeSource));
+  } catch (e) {
+    console.error('Failed to clone syntax highlighter theme. This might be due to non-serializable content in the theme object (e.g., functions). Falling back to empty style.', e);
+    return {}; // Fallback on cloning error
+  }
+
 
   // Apply overrides from CSS variables
   // Let index.html's .markdown-content pre handle background, padding, border, border-radius, and font-size.
-  const preStyleUpdates = {
+  const preStyleUpdates: React.CSSProperties = {
     // background: 'var(--editor-background)', // REMOVED - Handled by .markdown-content pre in index.html
     color: 'var(--editor-foreground)',      // Base text color inside the code block
     margin: '0',                            // Reset margin to align with global styles
@@ -28,7 +43,7 @@ export const getSyntaxHighlighterTheme = (currentThemeName: string): any => {
     ...preStyleUpdates 
   };
 
-  const codeStyleUpdates = {
+  const codeStyleUpdates: React.CSSProperties = {
     background: 'transparent', // Code tag itself inside pre should be transparent
     color: 'var(--editor-foreground)', // Inherit foreground
     fontFamily: 'var(--editor-font-family)',

@@ -1,9 +1,9 @@
-
 import React, { useEffect, useRef } from 'react';
-import { PortfolioData, LogLevel, Tab, ChatMessage, EditorPaneId } from '../../App/types'; // Added EditorPaneId
+import { PortfolioData, LogLevel, Tab, ChatMessage, EditorPaneId, FeatureStatus } from '../../App/types'; // Added EditorPaneId, FeatureStatus
 import ChatBubble from './ChatBubble';
 import { Send, AlertTriangle, Loader2, MessageSquarePlus, Bot } from 'lucide-react'; 
-import { AI_CHAT_SHORTCUTS } from '../../App/constants';
+import { AI_CHAT_SHORTCUTS, ALL_FEATURE_IDS, ICONS } from '../../App/constants';
+import MaintenanceView from '../../UI/MaintenanceView'; // Import MaintenanceView
 
 interface AIChatInterfaceProps {
   portfolioData: PortfolioData;
@@ -16,7 +16,8 @@ interface AIChatInterfaceProps {
   apiKeyAvailable: boolean;
   onSendMessage: () => Promise<void>;
   handleOpenTab: (itemOrConfig: { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string, githubUsername?: string }, isRunAction?: boolean, targetPaneId?: EditorPaneId) => void;
-  currentPaneIdForChat: EditorPaneId; // Added prop for current pane ID
+  currentPaneIdForChat: EditorPaneId; 
+  featureStatus: FeatureStatus; // Added prop for feature status
 }
 
 const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ 
@@ -30,7 +31,8 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
   apiKeyAvailable,
   onSendMessage,
   handleOpenTab,
-  currentPaneIdForChat // Destructure new prop
+  currentPaneIdForChat,
+  featureStatus // Destructure new prop
 }) => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -41,10 +43,10 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
   }, [messages]);
 
   useEffect(() => {
-    if (apiKeyAvailable && !isLoading) {
+    if (apiKeyAvailable && !isLoading && featureStatus === 'active') { // Only focus if active
         inputRef.current?.focus();
     }
-  }, [apiKeyAvailable, isLoading]);
+  }, [apiKeyAvailable, isLoading, featureStatus]);
 
   const handleShortcutClick = (prompt: string) => {
     setInput(prompt);
@@ -63,6 +65,10 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
     // Use currentPaneIdForChat as the targetPaneId
     handleOpenTab({ fileName: fileName, type: 'file', title: tabTitle }, false, currentPaneIdForChat);
   };
+
+  if (featureStatus !== 'active') {
+    return <MaintenanceView featureName={ALL_FEATURE_IDS.aiChat} featureIcon={ICONS.ai_chat_icon} />;
+  }
 
 
   return (

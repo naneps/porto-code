@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
 import { ICONS } from '../../App/constants';
-import { ActivityBarSelection, ActivityBarItemConfig } from '../../App/types'; 
+import { ActivityBarSelection, ActivityBarItemConfig, FeatureStatus } from '../../App/types'; 
 import { playSound } from '../../Utils/audioUtils';
+import { HardHat, AlertTriangle } from 'lucide-react'; // Added AlertTriangle
+
 
 interface ActivityBarProps {
   items: ActivityBarItemConfig[];
@@ -20,6 +22,8 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
   className
 }) => {
   const SettingsIcon = ICONS.settings_icon;
+  // Changed to AlertTriangle for a more direct warning indication
+  const MaintenanceIcon = ICONS.AlertTriangle || AlertTriangle; 
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
   const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
 
@@ -64,9 +68,11 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
     setDragOverItemId(null);
   };
   
-  const handleActionClick = (action: () => void) => {
-    playSound('ui-click');
-    action();
+  const handleActionClick = (action: () => void, status?: FeatureStatus) => {
+    if (status === 'active') { // Only play sound if active
+      playSound('ui-click');
+    }
+    action(); // Action now handles notification for maintenance
   };
 
   const handleSettingsIconClick = () => {
@@ -78,43 +84,54 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
     <div className={`w-12 bg-[var(--activitybar-background)] h-full flex flex-col justify-between items-center py-3 shadow-md flex-shrink-0 ${className || ''}`}>
       <div className="flex flex-col space-y-1 w-full items-center">
         {items.map((item) => {
-          const isActive = activeViewId === item.viewId;
+          const isFeatureActive = item.status === 'active';
+          const isActiveTab = activeViewId === item.viewId && isFeatureActive; // Tab is active only if feature is active
           const isBeingDragged = draggedItemId === item.id;
           const isDragOverTarget = dragOverItemId === item.id && !isBeingDragged;
+          const isDisabledByMaintenance = !isFeatureActive;
 
-          let buttonClasses = `p-2.5 rounded text-[var(--activitybar-inactive-foreground)] focus:outline-none transition-colors duration-150 ease-in-out relative w-10 h-10 flex items-center justify-center ${
-            isActive
-              ? 'text-[var(--activitybar-foreground)] bg-[var(--activitybar-active-background)]'
-              : 'hover:text-[var(--activitybar-foreground)] hover:bg-[var(--activitybar-hover-background)] focus:bg-[var(--activitybar-hover-background)]'
-          }`;
+          let buttonClasses = `p-2.5 rounded focus:outline-none transition-colors duration-150 ease-in-out relative w-10 h-10 flex items-center justify-center`;
+          
+          if (isDisabledByMaintenance) {
+            buttonClasses += ` text-[var(--activitybar-inactive-foreground)] opacity-50 cursor-not-allowed`;
+          } else if (isActiveTab) {
+            buttonClasses += ` text-[var(--activitybar-foreground)] bg-[var(--activitybar-active-background)]`;
+          } else {
+            buttonClasses += ` text-[var(--activitybar-inactive-foreground)] hover:text-[var(--activitybar-foreground)] hover:bg-[var(--activitybar-hover-background)] focus:bg-[var(--activitybar-hover-background)]`;
+          }
+
           if (isBeingDragged) buttonClasses += ' opacity-50 border-2 border-dashed border-[var(--focus-border)]';
-          if (isDragOverTarget) buttonClasses += ' border-t-2 border-[var(--focus-border)]';
+          if (isDragOverTarget && isFeatureActive) buttonClasses += ' border-t-2 border-[var(--focus-border)]';
 
 
           return (
             <button
               key={item.id}
-              draggable="true"
-              onDragStart={(e) => handleDragStart(e, item.id)}
-              onDragOver={(e) => handleDragOver(e, item.id)}
-              onDragEnter={(e) => handleDragEnter(e, item.id)}
-              onDragLeave={(e) => handleDragLeave(e)}
-              onDrop={(e) => handleDrop(e, item.id)}
-              onDragEnd={handleDragEnd}
-              onClick={() => handleActionClick(item.action)}
+              draggable={isFeatureActive} // Only draggable if active
+              onDragStart={(e) => isFeatureActive && handleDragStart(e, item.id)}
+              onDragOver={(e) => isFeatureActive && handleDragOver(e, item.id)}
+              onDragEnter={(e) => isFeatureActive && handleDragEnter(e, item.id)}
+              onDragLeave={(e) => isFeatureActive && handleDragLeave(e)}
+              onDrop={(e) => isFeatureActive && handleDrop(e, item.id)}
+              onDragEnd={() => isFeatureActive && handleDragEnd()}
+              onClick={() => handleActionClick(item.action, item.status)}
               className={buttonClasses}
-              title={item.label}
-              aria-label={item.label}
-              aria-pressed={isActive}
-              aria-current={isActive ? "page" : undefined}
+              title={isDisabledByMaintenance ? `${item.label} (Under Maintenance)` : item.label}
+              aria-label={isDisabledByMaintenance ? `${item.label} (Under Maintenance)` : item.label}
+              aria-pressed={isActiveTab}
+              aria-current={isActiveTab ? "page" : undefined}
+              disabled={isDisabledByMaintenance && !isBeingDragged} // Disable if in maintenance (unless being dragged for reorder)
             >
-              {isActive && !isDragOverTarget && ( 
+              {isActiveTab && !isDragOverTarget && ( 
                 <span 
                   className="absolute left-0 top-1/2 transform -translate-y-1/2 w-0.5 h-6 bg-[var(--activitybar-active-border)] rounded-r-sm"
                   aria-hidden="true"
                 ></span>
               )}
               <item.icon size={22} />
+              {isDisabledByMaintenance && (
+                <MaintenanceIcon size={10} className="maintenance-icon-badge" />
+              )}
             </button>
           );
         })}

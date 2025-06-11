@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 import { ChatMessage, PortfolioData, LogLevel } from '../App/types';
@@ -43,7 +44,7 @@ export const useGeminiChat = (
 
     if (messages.length === 0) { 
         if (keyExists) {
-            const initialMessageText = "Hello! I'm Nandang's AI Portfolio Assistant, running on his VSCode-themed website. How can I help you today? Ask me about his skills, projects, or experience!";
+            const initialMessageText = "Hello there! 👋 I'm Nandang's friendly AI Portfolio Assistant. I can help you learn about his skills, projects, and experience. Feel free to ask me anything, or try one of the quick prompts below!";
             setMessages([
                 {
                 id: `${TYPING_ANIMATION_ID_PREFIX}${crypto.randomUUID()}`,
@@ -108,10 +109,10 @@ export const useGeminiChat = (
       if (match && match[1]) {
         const fileListText = match[1].trim();
         
-        recommendedFiles = fileListText.split('\\n')
-          .map(line => line.trim().match(/^\[(.*?)\]$/))
-          .filter(Boolean)
-          .map(fileMatch => (fileMatch as RegExpMatchArray)[1]);
+        recommendedFiles = fileListText.split('\n') // Split by newline
+          .map(line => line.trim().match(/^\[(.*?)\]$/)) // Match [filename.ext]
+          .filter(Boolean) // Filter out null matches (lines not matching format)
+          .map(fileMatch => (fileMatch as RegExpMatchArray)[1]); // Extract filename
         
         
         aiResponseText = aiResponseText.replace(recommendationBlockRegex, '').trim();

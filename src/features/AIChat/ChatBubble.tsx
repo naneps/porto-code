@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { ChatMessage } from '../../App/types';
 import { Bot, User, ExternalLink, FileCode2 as FileCodeIconLucide } from 'lucide-react'; 
@@ -87,4 +88,3 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, onOpenFileRequest }) =
 };
 
 export default ChatBubble;
-    

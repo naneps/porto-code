@@ -1,13 +1,14 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { ICONS, PORTFOLIO_DATA } from '../../App/constants';
-import { AppMenuItem, SidebarItemConfig, Tab, ProjectDetail, EditorPaneId } from '../../App/types';
+import { AppMenuItem, SidebarItemConfig, Tab, ProjectDetail, EditorPaneId, FeaturesStatusState, NotificationType, LogLevel } from '../../App/types';
 import { playSound } from '../../Utils/audioUtils';
 import MenuBar from '../../UI/MenuBar/MenuBar';
 import { generateMenuConfig } from './titleBarMenu';
+import { LucideIcon } from 'lucide-react';
 
 
-interface TitleBarProps {
+export interface TitleBarProps { // Made exportable for potential use elsewhere, though not strictly necessary for this fix
   onToggleSidebar: () => void;
   isSidebarVisible: boolean;
   onOpenCommandPalette: () => void;
@@ -36,6 +37,8 @@ interface TitleBarProps {
   onFocusEditorPane: (paneId: EditorPaneId) => void;
   onMoveEditorToOtherPane: () => void;
   onToggleProfilePopup: (event: React.MouseEvent<HTMLButtonElement>) => void; 
+  featuresStatus: FeaturesStatusState; // Added
+  addNotificationAndLog: (message: string, type: NotificationType, duration?: number, actions?: any[], icon?: LucideIcon) => void; // Added
 }
 
 export const TitleBar: React.FC<TitleBarProps> = (props) => { 
@@ -51,7 +54,9 @@ export const TitleBar: React.FC<TitleBarProps> = (props) => {
     onToggleRightEditorPane,
     onFocusEditorPane,
     onMoveEditorToOtherPane,
-    onToggleProfilePopup 
+    onToggleProfilePopup,
+    featuresStatus, // Destructure
+    addNotificationAndLog // Destructure
   } = props;
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -98,6 +103,8 @@ export const TitleBar: React.FC<TitleBarProps> = (props) => {
     onToggleRightEditorPane,
     onFocusEditorPane,
     onMoveEditorToOtherPane,
+    featuresStatus, // Pass down
+    addNotificationAndLog, // Pass down
   });
 
   const MenuDropdownIcon = ICONS.chevron_down_icon;

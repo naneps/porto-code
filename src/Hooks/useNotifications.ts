@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { NotificationItem, NotificationType, NotificationAction } from '../App/types';
 import { LucideIcon } from 'lucide-react';
@@ -11,30 +12,49 @@ export const useNotifications = () => {
       type: NotificationType,
       duration: number = 5000, // Default duration 5 seconds
       actions?: NotificationAction[],
-      icon?: LucideIcon
+      icon?: LucideIcon,
+      isLoadingProgressBar?: boolean, // New parameter
+      progressId?: string // New parameter for identifying progress notifications
     ) => {
-      // Check if an identical notification (same message and type) already exists
-      const isDuplicate = notifications.some(
-        n => n.message === message && n.type === type
-      );
+      const id = progressId || crypto.randomUUID(); // Use progressId if provided
+      const newNotification: NotificationItem = { 
+        id, 
+        message, 
+        type, 
+        duration, 
+        actions, 
+        icon,
+        isLoadingProgressBar, // Store this
+        progressId // Store this
+      };
 
-      if (isDuplicate) {
-        // Do not add the notification if an identical one is already visible
-        // This prevents stacking, as seen in the user's screenshot.
-        return;
-      }
+      setNotifications(prevNotifications => {
+        // Check for duplicates using prevNotifications
+        const isPotentiallyDuplicate = prevNotifications.some(
+          n => n.message === message && n.type === type && n.progressId === progressId
+        );
 
-      const id = crypto.randomUUID();
-      const newNotification: NotificationItem = { id, message, type, duration, actions, icon };
-      setNotifications(prev => [newNotification, ...prev]); // Add to the top
+        if (isPotentiallyDuplicate && !progressId) { // Only prevent non-progress duplicates strictly
+          return prevNotifications; // Do not add if it's a non-progress duplicate
+        }
 
-      if (duration > 0) {
+        // If it's an update to an existing progress notification, replace it
+        if (progressId && prevNotifications.some(n => n.id === progressId)) {
+          return prevNotifications.map(n => n.id === progressId ? newNotification : n);
+        }
+        // Add new notification to the top, ensuring no actual duplicates by ID (for safety, though UUIDs should be unique)
+        return [newNotification, ...prevNotifications.filter(n => n.id !== id)];
+      });
+
+
+      if (duration > 0 && !isLoadingProgressBar) { // Auto-dismiss only if not a progress bar or duration is set
         setTimeout(() => {
+          // Use functional update for removing notification to ensure it works with the latest state
           setNotifications(prev => prev.filter(n => n.id !== id));
         }, duration);
       }
     },
-    [notifications] // Added notifications to the dependency array for the duplicate check
+    [] // Empty dependency array makes addNotification stable
   );
 
   const removeNotification = useCallback((id: string) => {

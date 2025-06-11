@@ -1,7 +1,8 @@
 
-import { Command, SidebarItemConfig, Theme, FontFamilyOption, FontSizeOption, Tab, EditorPaneId, LogLevel } from '../App/types';
-import { LucideIcon, EyeOff, Eye, Command as CommandIcon, Bot as BotIcon, Search as SearchIconLucide, Newspaper as ArticlesIconLucide, BarChart3 as StatisticsIconLucide, FileTerminal, Cat, Volume2, VolumeX, Play, Settings, Palette, Type as FontTypeIcon, Columns, Rows, ArrowLeftRight, ListChecks, Github, MessageSquare } from 'lucide-react';
+import { Command, SidebarItemConfig, Theme, FontFamilyOption, FontSizeOption, Tab, EditorPaneId, LogLevel, FeaturesStatusState, FeatureId, NotificationType } from '../App/types';
+import { LucideIcon, EyeOff, Eye, Command as CommandIcon, Bot as BotIcon, Search as SearchIconLucide, Newspaper as ArticlesIconLucide, BarChart3 as StatisticsIconLucide, FileTerminal, Cat, Volume2, VolumeX, Play, Settings, Palette, Type as FontTypeIcon, Columns, Rows, ArrowLeftRight, ListChecks, Github, MessageSquare, ListFilter } from 'lucide-react';
 import { playSound } from './audioUtils';
+import { ALL_FEATURE_IDS, ICONS as AppIcons } from '../App/constants';
 
 
 interface GenerateCommandsArgs {
@@ -26,8 +27,8 @@ interface GenerateCommandsArgs {
   handleToggleSearchPanel: () => void;
   handleToggleArticlesPanel: () => void;
   handleToggleStatisticsPanel: () => void;
-  handleToggleGitHubPanel: () => void; // This will now open the GitHub Profile Tab
-  handleOpenGuestBook: () => void; // Added for Guest Book
+  handleToggleGitHubPanel: () => void; 
+  handleOpenGuestBook: () => void; 
   toggleTerminalVisibility: () => void;
   togglePetsPanelVisibility: () => void;
   toggleLogsPanelVisibility: () => void; 
@@ -42,13 +43,35 @@ interface GenerateCommandsArgs {
   handleFocusEditorPane: (paneId: EditorPaneId) => void;
   handleMoveEditorToOtherPane: () => void;
   addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void; 
+  featuresStatus: FeaturesStatusState;
+  addNotification: (message: string, type: NotificationType, duration?: number, actions?: any[], icon?: LucideIcon) => void;
+  isDevModeEnabled: boolean; // Added for dev mode check
+  toggleFeatureStatusAdminPanel: () => void; // Added for admin panel
 }
 
-const createCommandAction = (action: () => void, closePalette: () => void, soundName: string = 'command-execute', commandLabel: string, addAppLog: GenerateCommandsArgs['addAppLog']) => {
+const createCommandAction = (
+    originalAction: () => void, 
+    closePalette: () => void, 
+    soundName: string = 'command-execute', 
+    commandLabel: string, 
+    addAppLog: GenerateCommandsArgs['addAppLog'],
+    featureId?: FeatureId,
+    featuresStatus?: FeaturesStatusState,
+    addNotification?: GenerateCommandsArgs['addNotification']
+) => {
   return () => {
+    if (featureId && featuresStatus && featuresStatus[featureId] !== 'active' && addNotification) {
+        addNotification(`The ${ALL_FEATURE_IDS[featureId]} feature is currently under maintenance.`, 'warning', 5000, undefined, AppIcons.HardHatIcon);
+        addAppLog('warning', `Command '${commandLabel}' blocked due to maintenance of feature '${featureId}'.`, 'CommandPalette');
+        closePalette();
+        return;
+    }
     addAppLog('action', `Command executed: ${commandLabel}`, 'CommandPalette');
-    action();
-    playSound(soundName);
+    originalAction();
+    // Play sound only if the feature (if specified) is active, or if no featureId is specified (general command)
+    if ((featureId && featuresStatus && featuresStatus[featureId] === 'active') || !featureId) {
+        playSound(soundName);
+    }
     closePalette();
   };
 };
@@ -67,8 +90,8 @@ export const generateCommands = ({
   handleToggleSearchPanel,
   handleToggleArticlesPanel,
   handleToggleStatisticsPanel,
-  handleToggleGitHubPanel, // This is now handleOpenGitHubProfileTab passed from App.tsx
-  handleOpenGuestBook, // Added
+  handleToggleGitHubPanel, 
+  handleOpenGuestBook, 
   toggleTerminalVisibility,
   togglePetsPanelVisibility,
   toggleLogsPanelVisibility,
@@ -80,8 +103,36 @@ export const generateCommands = ({
   handleFocusEditorPane,
   handleMoveEditorToOtherPane,
   addAppLog, 
+  featuresStatus,
+  addNotification,
+  isDevModeEnabled, 
+  toggleFeatureStatusAdminPanel,
 }: GenerateCommandsArgs): Command[] => {
   const allCommands: Command[] = [];
+
+  const createFeatureAwareCommand = (
+    baseId: string,
+    baseLabel: string,
+    originalAction: () => void,
+    featureId: FeatureId,
+    icon?: LucideIcon,
+    group?: string,
+    description?: string,
+    sound: string = 'ui-click'
+  ): Command => {
+    const status = featuresStatus[featureId];
+    const actualLabel = status !== 'active' ? `${baseLabel} [Maintenance]` : baseLabel;
+    return {
+      id: baseId,
+      label: actualLabel,
+      action: createCommandAction(originalAction, closeCommandPalette, sound, actualLabel, addAppLog, featureId, featuresStatus, addNotification),
+      icon: status !== 'active' ? AppIcons.HardHatIcon : icon,
+      group,
+      description,
+      featureId,
+    };
+  };
+
 
   sidebarItems.forEach(item => {
     if (item.fileName) {
@@ -89,128 +140,143 @@ export const generateCommands = ({
         allCommands.push({
             id: `open_${item.fileName}`,
             label: commandLabel,
-            action: createCommandAction(() => handleOpenTab(item), closeCommandPalette, 'tab-open', commandLabel, addAppLog),
+            action: createCommandAction(() => handleOpenTab(item), closeCommandPalette, 'tab-open', commandLabel, addAppLog, item.featureId, featuresStatus, addNotification),
             icon: item.icon,
             group: "Go to File",
+            featureId: item.featureId,
         });
-    } else if (item.type === 'guest_book') { // Handle Guest Book from sidebar items
-        const commandLabel = `Go to: ${item.label}`;
-         allCommands.push({
-            id: `open_${item.id}`,
-            label: commandLabel,
-            action: createCommandAction(() => handleOpenTab(item), closeCommandPalette, 'ui-click', commandLabel, addAppLog),
-            icon: item.icon,
-            group: "Go to View",
-        });
+    } else if (item.type === 'guest_book') { 
+        allCommands.push(createFeatureAwareCommand(
+            `open_${item.id}`,
+            `Go to: ${item.label}`,
+            () => handleOpenTab(item),
+            'guestBook', 
+            item.icon,
+            "Go to View"
+        ));
     }
   });
   
-  const runCVGeneratorLabel = 'Run CV Generator Script';
-  allCommands.push({
-    id: 'run_cv_generator',
-    label: runCVGeneratorLabel,
-    action: createCommandAction(handleRunCVGenerator, closeCommandPalette, 'terminal-run', runCVGeneratorLabel, addAppLog),
-    icon: icons.generate_cv_icon || Play,
-    group: "Run",
-    description: "Simulates generating Nandang's CV and opens a preview."
-  });
+  allCommands.push(createFeatureAwareCommand(
+    'run_cv_generator',
+    'Run CV Generator Script',
+    handleRunCVGenerator,
+    'cvGenerator',
+    icons.generate_cv_icon || Play,
+    "Run",
+    "Simulates generating Nandang's CV and opens a preview.",
+    'terminal-run'
+  ));
 
-  const toggleSidebarLabel = isSidebarVisible ? 'Hide Explorer Sidebar' : 'Show Explorer Sidebar';
-  allCommands.push({
-    id: 'toggle_sidebar',
-    label: toggleSidebarLabel,
-    action: createCommandAction(toggleSidebarVisibility, closeCommandPalette, 'panel-toggle', toggleSidebarLabel, addAppLog),
-    icon: isSidebarVisible ? EyeOff : Eye,
-    group: "View",
-  });
+  allCommands.push(createFeatureAwareCommand(
+    'toggle_sidebar',
+    isSidebarVisible ? 'Hide Explorer Sidebar' : 'Show Explorer Sidebar',
+    toggleSidebarVisibility,
+    'explorer',
+    isSidebarVisible ? EyeOff : Eye,
+    "View",
+    undefined,
+    'panel-toggle'
+  ));
 
-  const toggleSearchLabel = 'Toggle Search Panel';
-  allCommands.push({
-    id: 'toggle_search_panel',
-    label: toggleSearchLabel,
-    action: createCommandAction(handleToggleSearchPanel, closeCommandPalette, 'panel-toggle', toggleSearchLabel, addAppLog),
-    icon: SearchIconLucide,
-    group: "View",
-  });
+  allCommands.push(createFeatureAwareCommand(
+    'toggle_search_panel',
+    'Toggle Search Panel',
+    handleToggleSearchPanel,
+    'searchPanel',
+    SearchIconLucide,
+    "View",
+    undefined,
+    'panel-toggle'
+  ));
 
-  const toggleArticlesLabel = 'Toggle Articles Panel';
-   allCommands.push({
-    id: 'toggle_articles_panel',
-    label: toggleArticlesLabel,
-    action: createCommandAction(handleToggleArticlesPanel, closeCommandPalette, 'panel-toggle', toggleArticlesLabel, addAppLog),
-    icon: ArticlesIconLucide,
-    group: "View",
-  });
+   allCommands.push(createFeatureAwareCommand(
+    'toggle_articles_panel',
+    'Toggle Articles Panel',
+    handleToggleArticlesPanel,
+    'articlesPanel',
+    ArticlesIconLucide,
+    "View",
+    undefined,
+    'panel-toggle'
+  ));
 
-  const toggleStatsLabel = 'Toggle Statistics Panel';
-  allCommands.push({
-    id: 'toggle_statistics_panel',
-    label: toggleStatsLabel,
-    action: createCommandAction(handleToggleStatisticsPanel, closeCommandPalette, 'panel-toggle', toggleStatsLabel, addAppLog),
-    icon: icons.statistics_icon || StatisticsIconLucide,
-    group: "View",
-  });
+  allCommands.push(createFeatureAwareCommand(
+    'toggle_statistics_panel',
+    'Toggle Statistics Panel',
+    handleToggleStatisticsPanel,
+    'statisticsPanel',
+    icons.statistics_icon || StatisticsIconLucide,
+    "View",
+    undefined,
+    'panel-toggle'
+  ));
 
-  const toggleGitHubLabel = 'View: Open GitHub Profile Tab'; // Updated label
-  allCommands.push({
-    id: 'toggle_github_panel', // ID can remain the same or change, action matters
-    label: toggleGitHubLabel,
-    action: createCommandAction(handleToggleGitHubPanel, closeCommandPalette, 'panel-toggle', toggleGitHubLabel, addAppLog), // handleToggleGitHubPanel is now handleOpenGitHubProfileTab
-    icon: icons.github_icon || Github,
-    group: "View",
-    description: "Open the GitHub Profile tab." // Updated description
-  });
+  allCommands.push(createFeatureAwareCommand(
+    'toggle_github_panel', 
+    'View: Open GitHub Profile Tab',
+    handleToggleGitHubPanel,
+    'githubProfileView',
+    icons.github_icon || Github,
+    "View",
+    "Open the GitHub Profile tab.",
+    'panel-toggle'
+  ));
   
-  const openGuestBookLabel = 'View: Open Guest Book';
-  allCommands.push({
-    id: 'open_guest_book',
-    label: openGuestBookLabel,
-    action: createCommandAction(handleOpenGuestBook, closeCommandPalette, 'ui-click', openGuestBookLabel, addAppLog),
-    icon: icons.guest_book_icon || MessageSquare,
-    group: "View",
-    description: "Open the Guest Book tab."
-  });
+  allCommands.push(createFeatureAwareCommand(
+    'open_guest_book',
+    'View: Open Guest Book',
+    handleOpenGuestBook,
+    'guestBook',
+    icons.guest_book_icon || MessageSquare,
+    "View",
+    "Open the Guest Book tab."
+  ));
 
 
-  const toggleTerminalLabel = 'Toggle Terminal';
-  allCommands.push({
-    id: 'toggle_terminal_panel',
-    label: toggleTerminalLabel,
-    action: createCommandAction(toggleTerminalVisibility, closeCommandPalette, 'panel-toggle', toggleTerminalLabel, addAppLog),
-    icon: icons.TerminalIcon || FileTerminal,
-    group: "View",
-    description: "Show, hide, or focus the Terminal tab in the bottom panel (Ctrl+` or Cmd+`)",
-  });
+  allCommands.push(createFeatureAwareCommand(
+    'toggle_terminal_panel',
+    'Toggle Terminal',
+    toggleTerminalVisibility,
+    'terminal',
+    icons.TerminalIcon || FileTerminal,
+    "View",
+    "Show, hide, or focus the Terminal tab in the bottom panel (Ctrl+` or Cmd+`)",
+    'panel-toggle'
+  ));
 
-  const togglePetsLabel = 'Toggle Pets Panel';
-   allCommands.push({
-    id: 'toggle_pets_panel',
-    label: togglePetsLabel,
-    action: createCommandAction(togglePetsPanelVisibility, closeCommandPalette, 'panel-toggle', togglePetsLabel, addAppLog),
-    icon: icons.CatIcon || Cat,
-    group: "View",
-    description: "Show, hide, or focus the Pets tab in the bottom panel (Ctrl+Alt+Shift+P or Cmd+Alt+Shift+P)",
-  });
+   allCommands.push(createFeatureAwareCommand(
+    'toggle_pets_panel',
+    'Toggle Pets Panel',
+    togglePetsPanelVisibility,
+    'petsPanel',
+    icons.CatIcon || Cat,
+    "View",
+    "Show, hide, or focus the Pets tab in the bottom panel (Ctrl+Alt+Shift+P or Cmd+Alt+Shift+P)",
+    'panel-toggle'
+  ));
 
-  const toggleLogsLabel = 'Toggle Logs Panel';
-   allCommands.push({
-    id: 'toggle_logs_panel',
-    label: toggleLogsLabel,
-    action: createCommandAction(toggleLogsPanelVisibility, closeCommandPalette, 'panel-toggle', toggleLogsLabel, addAppLog),
-    icon: icons.LogsIcon || ListChecks,
-    group: "View",
-    description: "Show, hide, or focus the Logs tab in the bottom panel.",
-  });
+  allCommands.push(createFeatureAwareCommand(
+    'toggle_logs_panel',
+    'Toggle Logs Panel',
+    toggleLogsPanelVisibility,
+    'logsPanel',
+    icons.LogsIcon || ListChecks,
+    "View",
+    "Show, hide, or focus the Logs tab in the bottom panel.",
+    'panel-toggle'
+  ));
 
-  const openAIChatLabel = 'Open AI Assistant';
-  allCommands.push({
-    id: 'open_ai_chat',
-    label: openAIChatLabel,
-    action: createCommandAction(handleOpenAIChatTab, closeCommandPalette, 'ui-click', openAIChatLabel, addAppLog),
-    icon: BotIcon,
-    group: "View",
-  });
+  allCommands.push(createFeatureAwareCommand(
+    'open_ai_chat',
+    'Open AI Assistant',
+    handleOpenAIChatTab,
+    'aiChat',
+    BotIcon,
+    "View"
+  ));
 
+  // Command Palette itself is always active
   const commandPaletteLabel = 'Command Palette';
   allCommands.push({
     id: 'command_palette_command',
@@ -257,15 +323,15 @@ export const generateCommands = ({
     group: "View",
   });
 
-  const openSettingsLabel = 'Preferences: Open Settings (UI)';
-  allCommands.push({
-    id: 'open_settings_ui',
-    label: openSettingsLabel,
-    action: createCommandAction(handleOpenSettingsEditor, closeCommandPalette, 'ui-click', openSettingsLabel, addAppLog),
-    icon: icons.settings_icon || Settings,
-    group: "Preferences",
-    description: "Open the user interface for settings."
-  });
+  allCommands.push(createFeatureAwareCommand(
+    'open_settings_ui',
+    'Preferences: Open Settings (UI)',
+    handleOpenSettingsEditor,
+    'settingsEditor',
+    icons.settings_icon || Settings,
+    "Preferences",
+    "Open the user interface for settings."
+  ));
 
   const toggleSoundLabel = isSoundMuted ? 'Preferences: Unmute Sound Effects' : 'Preferences: Mute Sound Effects';
   allCommands.push({
@@ -276,6 +342,25 @@ export const generateCommands = ({
     group: "Preferences",
     isSelected: !isSoundMuted,
   });
+  
+  if (isDevModeEnabled) {
+    const adminPanelCommandLabel = 'Developer: Open Feature Status Management Panel';
+    allCommands.push({
+      id: 'dev_open_feature_status_admin',
+      label: adminPanelCommandLabel,
+      action: () => { // Direct action: toggleFeatureStatusAdminPanel already checks dev mode.
+        addAppLog('action', `Command executed: ${adminPanelCommandLabel}`, 'CommandPalette');
+        toggleFeatureStatusAdminPanel();
+        // Sound is played by toggleFeatureStatusAdminPanel if it proceeds
+        closeCommandPalette();
+      },
+      icon: AppIcons.feature_status_admin_icon || ListFilter,
+      group: "Developer",
+      description: "Manage the active/maintenance/disabled status of application features."
+      // No featureId, so it's not gated by its own status in featuresStatus
+    });
+  }
+
 
   const aboutPortfolioLabel = 'Help: About Portfolio';
   allCommands.push({

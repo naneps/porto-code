@@ -1,9 +1,9 @@
 
-
-import { PortfolioData, SidebarItemConfig, ProjectDetail, Command as AppCommandType, ArticleItem, ActivityBarItemDefinition, ActivityBarSelection, ProjectListingItem, MockGitHubStats } from './types';
-import { User, Briefcase, Code2, FolderKanban, Mail, FileJson2, LucideIcon, FileTerminal, HelpCircle, Eye, Palette, Type as FontIcon, Settings, GitFork, Bell, TerminalSquare, ArrowLeft, ArrowRight, SplitSquareHorizontal, LayoutGrid, UserCircle2 as UserProfileIcon, Minus, Square, X, ChevronDown, ChevronRight, Search, Check, Files, FileCode, Bot, FileText, Link, Phone, MousePointerClick, Command, Newspaper, Play, Cat, Volume2, VolumeX, Sparkles, BarChart3, Folder as FolderClosed, FolderOpen, FileCode2 as FileCodeIcon, FileBadge, ExternalLink as ExternalLinkIcon, Image as ImageIcon, ListChecks, Github, MessageSquare, Loader2, Send, Heart } from 'lucide-react'; // Added Heart
+import { PortfolioData, SidebarItemConfig, ProjectDetail, Command as AppCommandType, ArticleItem, ActivityBarItemDefinition, ActivityBarSelection, ProjectListingItem, MockGitHubStats, FeatureId, FeaturesStatusState, FeatureStatus } from './types';
+import { User, Briefcase, Code2, FolderKanban, Mail, FileJson2, LucideIcon, FileTerminal, HelpCircle, Eye, Palette, Type as FontIcon, Settings, GitFork, Bell, TerminalSquare, ArrowLeft, ArrowRight, SplitSquareHorizontal, LayoutGrid, UserCircle2 as UserProfileIcon, Minus, Square, X, ChevronDown, ChevronRight, Search, Check, Files, FileCode, Bot, FileText, Link, Phone, MousePointerClick, Command, Newspaper, Play, Cat, Volume2, VolumeX, Sparkles, BarChart3, Folder as FolderClosed, FolderOpen, FileCode2 as FileCodeIcon, FileBadge, ExternalLink as ExternalLinkIcon, Image as ImageIcon, ListChecks, Github, MessageSquare, Loader2, Send, Heart, Info, CheckCircle2, AlertTriangle, RotateCcw, MessageSquarePlus, PawPrint, Waves, Bird, HardHat, ListFilter } from 'lucide-react'; // Added PawPrint, Waves, Bird, HardHat, ListFilter
 import { MOCK_CV_GENERATOR_CODE } from '../Assets/generate_cv_code';
 
+export const STATISTICS_FIREBASE_PATH = 'app_statistics'; // Base path for statistics in Firebase
 
 export const PORTFOLIO_DATA: PortfolioData = {
   name: "Nandang Eka Prasetya",
@@ -255,6 +255,16 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'SpinnerIcon': Loader2, 
   'send_icon': Send,
   'heart_icon': Heart, 
+  'Info': Info,
+  'CheckCircle2': CheckCircle2,
+  'AlertTriangle': AlertTriangle,
+  'reset_settings_icon': RotateCcw,
+  'ai_chat_shortcut_icon': MessageSquarePlus,
+  'PawPrintIcon': PawPrint,
+  'RubberDuckIcon': Bird, // Replaced RubberDuck with Bird
+  'WavesIcon': Waves, 
+  'HardHatIcon': HardHat,
+  'feature_status_admin_icon': ListFilter, // Icon for the new admin panel
 };
 
 export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
@@ -265,12 +275,13 @@ export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
     isFolder: true,
     defaultOpen: true,
     actionType: 'open_tab',
+    featureId: 'explorer',
     children: [
-      { id: 'about.json', label: 'about.json', fileName: 'about.json', icon: ICONS['about.json'], type: 'file', title: 'about.json', actionType: 'open_tab' },
-      { id: 'experience.json', label: 'experience.json', fileName: 'experience.json', icon: ICONS['experience.json'], type: 'file', title: 'experience.json', actionType: 'open_tab' },
-      { id: 'skills.json', label: 'skills.json', fileName: 'skills.json', icon: ICONS['skills.json'], type: 'file', title: 'skills.json', actionType: 'open_tab' },
-      { id: 'projects.json', label: 'projects.json', fileName: 'projects.json', icon: ICONS['projects.json'], type: 'file', title: 'projects.json', actionType: 'open_tab' },
-      { id: 'contact.json', label: 'contact.json', fileName: 'contact.json', icon: ICONS['contact.json'], type: 'file', title: 'contact.json', actionType: 'open_tab' },
+      { id: 'about.json', label: 'about.json', fileName: 'about.json', icon: ICONS['about.json'], type: 'file', title: 'about.json', actionType: 'open_tab', featureId: 'explorer' },
+      { id: 'experience.json', label: 'experience.json', fileName: 'experience.json', icon: ICONS['experience.json'], type: 'file', title: 'experience.json', actionType: 'open_tab', featureId: 'explorer' },
+      { id: 'skills.json', label: 'skills.json', fileName: 'skills.json', icon: ICONS['skills.json'], type: 'file', title: 'skills.json', actionType: 'open_tab', featureId: 'explorer' },
+      { id: 'projects.json', label: 'projects.json', fileName: 'projects.json', icon: ICONS['projects.json'], type: 'file', title: 'projects.json', actionType: 'open_tab', featureId: 'projectsView' }, // Added featureId for projects.json
+      { id: 'contact.json', label: 'contact.json', fileName: 'contact.json', icon: ICONS['contact.json'], type: 'file', title: 'contact.json', actionType: 'open_tab', featureId: 'explorer' },
       {
         id: 'cv-generator-folder',
         label: 'CV_GENERATOR',
@@ -278,6 +289,7 @@ export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
         isFolder: true,
         defaultOpen: false,
         actionType: 'open_tab',
+        featureId: 'cvGenerator',
         children: [
           {
             id: 'generate_cv.ts',
@@ -286,6 +298,7 @@ export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
             fileName: 'generate_cv.ts',
             title: 'generate_cv.ts',
             actionType: 'open_tab', 
+            featureId: 'cvGenerator',
           },
         ],
       },
@@ -298,8 +311,9 @@ export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
     isFolder: true,
     defaultOpen: false,
     actionType: 'open_tab',
+    featureId: 'guestBook', // Assuming this folder primarily leads to guest book
     children: [
-      { id: 'guest_book_tab', label: 'guest_book.md', icon: ICONS.guest_book_icon, type: 'guest_book', title: 'Guest Book', actionType: 'open_tab' },
+      { id: 'guest_book_tab', label: 'guest_book.md', icon: ICONS.guest_book_icon, type: 'guest_book', title: 'Guest Book', actionType: 'open_tab', featureId: 'guestBook' },
     ],
   },
   { 
@@ -309,6 +323,7 @@ export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
     isFolder: true,
     defaultOpen: false,
     actionType: 'open_tab',
+    // No specific featureId, it's a general info file
     children: [
       { id: 'support.md', label: 'support.md', fileName: 'support.md', icon: ICONS.heart_icon, type: 'file', title: 'Support the Creator', actionType: 'open_tab' },
     ],
@@ -316,7 +331,7 @@ export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
 ];
 
 
-export const APP_VERSION = "1.8.6"; 
+export const APP_VERSION = "1.8.8"; 
 export const REPO_URL = "https://github.com/naneps";
 
 export const COMMANDS_CONFIG: Omit<AppCommandType, 'action' | 'isSelected'>[] = [];
@@ -436,13 +451,13 @@ export function generateProjectDetailContent(projectId: string, data: PortfolioD
 }
 
 export const DEFAULT_ACTIVITY_BAR_ITEMS: ActivityBarItemDefinition[] = [
-  { id: 'explorer-activity', label: 'Explorer', iconName: 'files_icon', viewId: 'explorer' },
-  { id: 'search-activity', label: 'Search', iconName: 'search_icon', viewId: 'search' },
-  { id: 'ai_chat-activity', label: 'AI Assistant', iconName: 'ai_chat_icon', viewId: 'ai_chat_tab' },
-  { id: 'articles-activity', label: 'Articles', iconName: 'articles_icon', viewId: 'articles' },
-  { id: 'guest_book-activity', label: 'Guest Book', iconName: 'guest_book_icon', viewId: 'guest_book_activity' },
-  { id: 'statistics-activity', label: 'Statistics', iconName: 'statistics_icon', viewId: 'statistics' },
-  { id: 'github-activity', label: 'GitHub Profile', iconName: 'github_icon', viewId: 'github_profile_view' }, 
+  { id: 'explorer-activity', label: 'Explorer', iconName: 'files_icon', viewId: 'explorer', featureId: 'explorer' },
+  { id: 'search-activity', label: 'Search', iconName: 'search_icon', viewId: 'search', featureId: 'searchPanel' },
+  { id: 'ai_chat-activity', label: 'AI Assistant', iconName: 'ai_chat_icon', viewId: 'ai_chat_tab', featureId: 'aiChat' },
+  { id: 'articles-activity', label: 'Articles', iconName: 'articles_icon', viewId: 'articles', featureId: 'articlesPanel' },
+  { id: 'guest_book-activity', label: 'Guest Book', iconName: 'guest_book_icon', viewId: 'guest_book_activity', featureId: 'guestBook' },
+  { id: 'statistics-activity', label: 'Statistics', iconName: 'statistics_icon', viewId: 'statistics', featureId: 'statisticsPanel' },
+  { id: 'github-activity', label: 'GitHub Profile', iconName: 'github_icon', viewId: 'github_profile_view', featureId: 'githubProfileView' }, 
 ];
 export const MAX_LOG_ENTRIES = 250;
 
@@ -454,3 +469,73 @@ export const AI_CHAT_SHORTCUTS: { label: string; prompt: string }[] = [
 ];
 
 export const PREDEFINED_EMOJIS = ['👍', '❤️', '😂', '😮', '💡', '🤔'];
+
+export type PetType = 'cat' | 'duck' | 'serpent';
+
+export interface PetDefinition {
+  type: PetType;
+  name: string;
+  icon: LucideIcon;
+  defaultMessage: string;
+}
+
+export const PET_DEFINITIONS: PetDefinition[] = [
+  { type: 'cat', name: 'CodeCat', icon: ICONS.CatIcon, defaultMessage: "Meow... Coding is fun!" },
+  { type: 'duck', name: 'DebugDuck', icon: ICONS.RubberDuckIcon, defaultMessage: "Quack! Found any bugs lately?" },
+  { type: 'serpent', name: 'SyntaxSerpent', icon: ICONS.WavesIcon, defaultMessage: "Sss... Pythonic, isn't it?" },
+];
+
+export const PET_THOUGHTS: string[] = [
+  "Time for a stretch... then back to coding!",
+  "I wonder what new features are coming to VS Code...",
+  "Remember to commit your changes often!",
+  "Ctrl+Shift+P is your best friend.",
+  "Is it coffee time yet?",
+  "Debugging... or just staring intently?",
+  "I love a clean codebase.",
+  "That's a clever solution!",
+  "Hmm, what should I build next?",
+  "Keep calm and code on.",
+  "The best error message is the one that never shows up.",
+  "Have you tried the new theme?",
+  "Exploring the file system... virtually!",
+  "I sense a new project brewing.",
+  "Refactoring is like tidying up your digital room."
+];
+
+
+export const ALL_FEATURE_IDS: Record<FeatureId, string> = {
+  explorer: 'File Explorer',
+  searchPanel: 'Search Panel',
+  aiChat: 'AI Assistant',
+  articlesPanel: 'Articles Panel',
+  guestBook: 'Guest Book',
+  statisticsPanel: 'Statistics Panel',
+  githubProfileView: 'GitHub Profile Viewer',
+  terminal: 'Terminal',
+  petsPanel: 'Pets Panel',
+  logsPanel: 'Logs Panel',
+  settingsEditor: 'Settings Editor',
+  cvGenerator: 'CV Generator',
+  projectSuggestions: 'AI Project Suggestions',
+  projectsView: 'Projects View',
+  featureStatusAdminPanel: 'Feature Status Admin Panel', // New panel
+};
+
+export const DEFAULT_FEATURE_STATUSES: FeaturesStatusState = {
+  explorer: 'active',
+  searchPanel: 'active',
+  aiChat: 'active',
+  articlesPanel: 'active',
+  guestBook: 'active',
+  statisticsPanel: 'active',
+  githubProfileView: 'active',
+  terminal: 'active',
+  petsPanel: 'active',
+  logsPanel: 'active',
+  settingsEditor: 'active',
+  cvGenerator: 'active',
+  projectSuggestions: 'active',
+  projectsView: 'active',
+  featureStatusAdminPanel: 'disabled', // Default to disabled, only accessible in dev mode
+};

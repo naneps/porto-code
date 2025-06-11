@@ -1,5 +1,5 @@
-
-import { AppMenuItem, SidebarItemConfig, Tab, ProjectDetail, EditorPaneId } from '../../App/types';
+import { AppMenuItem, SidebarItemConfig, Tab, ProjectDetail, EditorPaneId, FeaturesStatusState, FeatureId, LogLevel, NotificationType } from '../../App/types';
+import { ALL_FEATURE_IDS, ICONS as AppIcons } from '../../App/constants'; // Use AppIcons to avoid conflict
 import { LucideIcon, Command, Eye, EyeOff, Play, FileTerminal, Cat, BarChart3 as StatisticsIconLucide, Settings, Columns, Rows, ArrowLeftRight, ListChecks, Github, MessageSquare } from 'lucide-react';
 
 interface MenuConfigArgs {
@@ -7,7 +7,7 @@ interface MenuConfigArgs {
   onToggleSidebar: () => void;
   isSidebarVisible: boolean;
   onOpenAboutModal: () => void;
-  icons: { [key: string]: LucideIcon };
+  icons: { [key: string]: LucideIcon }; // Keep this as it's directly used from App.tsx
   sidebarItems: SidebarItemConfig[];
   projectsData: ProjectDetail[];
   onRunItem: (config: { id: string, fileName: string, title: string, type: Tab['type'] }) => void;
@@ -24,10 +24,29 @@ interface MenuConfigArgs {
   onMoveEditorToOtherPane: () => void;
   isSoundMuted: boolean; 
   onToggleSoundMute: () => void;
+  featuresStatus: FeaturesStatusState;
+  addNotificationAndLog: (message: string, type: NotificationType, duration?: number, actions?: any[], icon?: LucideIcon) => void;
 }
 
 export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subItems?: AppMenuItem[] }[] => {
-  // Helper to get a flat list of all file items from the sidebar structure
+  const { featuresStatus, addNotificationAndLog } = args;
+
+  const createMaintenanceAwareAction = (originalAction: () => void, featureId: FeatureId, featureName: string, defaultIcon?: LucideIcon): AppMenuItem => {
+    const status = featuresStatus[featureId];
+    if (status !== 'active') {
+      return {
+        label: `${featureName} [Maintenance]`,
+        action: () => {
+          addNotificationAndLog(`The ${featureName} feature is currently under maintenance.`, 'warning', 5000, undefined, AppIcons.HardHatIcon);
+          args.onOpenCommandPalette(); // Close menu by opening palette
+        },
+        icon: AppIcons.HardHatIcon || defaultIcon,
+      };
+    }
+    return { label: featureName, action: originalAction, icon: defaultIcon };
+  };
+
+
   const getAllFileItems = (items: SidebarItemConfig[]): SidebarItemConfig[] => {
     const files: SidebarItemConfig[] = [];
     const collect = (currentItems: SidebarItemConfig[]) => {
@@ -53,11 +72,7 @@ export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subIte
     name: 'View',
     subItems: [
       { label: 'Command Palette...', action: args.onOpenCommandPalette, icon: Command },
-      {
-        label: 'Toggle Explorer Sidebar',
-        action: args.onToggleSidebar,
-        icon: args.isSidebarVisible ? EyeOff : Eye
-      },
+      createMaintenanceAwareAction(args.onToggleSidebar, 'explorer', args.isSidebarVisible ? 'Hide Explorer Sidebar' : 'Show Explorer Sidebar', args.isSidebarVisible ? EyeOff : Eye),
       { separator: true },
       {
         label: 'Toggle Second Editor Group',
@@ -80,37 +95,13 @@ export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subIte
         icon: ArrowLeftRight,
       },
       { separator: true },
-      {
-        label: 'Toggle Statistics Panel',
-        action: args.onToggleStatisticsPanel,
-        icon: args.icons.statistics_icon || StatisticsIconLucide,
-      },
-      {
-        label: 'Open GitHub Profile Tab', // Updated Label
-        action: args.onToggleGitHubPanel, // This is now handleOpenGitHubProfileTab
-        icon: args.icons.github_icon || Github,
-      },
-      {
-        label: 'Open Guest Book',
-        action: args.onToggleGuestBookPanel,
-        icon: args.icons.guest_book_icon || MessageSquare,
-      },
+      createMaintenanceAwareAction(args.onToggleStatisticsPanel, 'statisticsPanel', 'Toggle Statistics Panel', args.icons.statistics_icon || StatisticsIconLucide),
+      createMaintenanceAwareAction(args.onToggleGitHubPanel, 'githubProfileView', 'Open GitHub Profile Tab', args.icons.github_icon || Github),
+      createMaintenanceAwareAction(args.onToggleGuestBookPanel, 'guestBook', 'Open Guest Book', args.icons.guest_book_icon || MessageSquare),
       { separator: true },
-      {
-        label: 'Toggle Terminal',
-        action: args.onToggleTerminal,
-        icon: args.icons.TerminalIcon || FileTerminal,
-      },
-      {
-        label: 'Toggle Pets Panel',
-        action: args.onTogglePetsPanel,
-        icon: args.icons.CatIcon || Cat,
-      },
-      {
-        label: 'Toggle Logs Panel',
-        action: args.onToggleLogsPanel,
-        icon: args.icons.LogsIcon || ListChecks,
-      },
+      createMaintenanceAwareAction(args.onToggleTerminal, 'terminal', 'Toggle Terminal', args.icons.TerminalIcon || FileTerminal),
+      createMaintenanceAwareAction(args.onTogglePetsPanel, 'petsPanel', 'Toggle Pets Panel', args.icons.CatIcon || Cat),
+      createMaintenanceAwareAction(args.onToggleLogsPanel, 'logsPanel', 'Toggle Logs Panel', args.icons.LogsIcon || ListChecks),
     ]
   },
   {
@@ -119,19 +110,15 @@ export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subIte
   {
     name: 'Run',
     subItems: [
-      {
-        label: 'Run CV Generator Script',
-        action: args.onRunCVGenerator,
-        icon: args.icons.generate_cv_icon || Play,
-      },
+      createMaintenanceAwareAction(args.onRunCVGenerator, 'cvGenerator', 'Run CV Generator Script', args.icons.generate_cv_icon || Play),
       { separator: true },
       ...allSidebarFiles
-        .filter(item => item.fileName !== 'generate_cv.ts') // fileName is guaranteed by getAllFileItems
+        .filter(item => item.fileName !== 'generate_cv.ts')
         .map(item => ({
-          label: `Run ${item.fileName}`, // item.fileName will be defined here
+          label: `Run ${item.fileName}`,
           action: () => args.onRunItem({
             id: `${item.id}_preview`,
-            fileName: item.fileName!, // Safe due to filtering and collection logic
+            fileName: item.fileName!,
             title: `Preview: ${item.title || item.fileName}`,
             type: 'json_preview',
           }),
@@ -143,7 +130,7 @@ export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subIte
           label: `Run Project: ${project.title}`,
           action: () => args.onRunItem({
             id: `${project.id}_preview`,
-            fileName: project.id, // Use project.id as fileName for project previews
+            fileName: project.id,
             title: `Preview: ${project.title}`,
             type: 'json_preview',
           }),
@@ -155,21 +142,13 @@ export const generateMenuConfig = (args: MenuConfigArgs): { name: string; subIte
   {
     name: 'Settings',
     subItems: [
-        {
-            label: 'Settings',
-            action: args.onOpenSettingsEditor,
-            icon: args.icons.settings_icon || Settings,
-        },
+        createMaintenanceAwareAction(args.onOpenSettingsEditor, 'settingsEditor', 'Settings', args.icons.settings_icon || Settings),
     ]
   },
   {
     name: 'Terminal',
     subItems: [
-        {
-            label: 'New Terminal',
-            action: args.onToggleTerminal,
-            icon: args.icons.TerminalIcon || FileTerminal,
-        }
+        createMaintenanceAwareAction(args.onToggleTerminal, 'terminal', 'New Terminal', args.icons.TerminalIcon || FileTerminal),
     ]
   },
   {

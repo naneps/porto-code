@@ -1,12 +1,14 @@
 
 import React, { useEffect, useRef } from 'react';
-import { LogEntry, LogLevel } from '../../App/types';
-import { ICONS } from '../../App/constants';
+import { LogEntry, LogLevel, FeatureStatus } from '../../App/types'; // Added FeatureStatus
+import { ICONS, ALL_FEATURE_IDS } from '../../App/constants';
 import { Info, AlertTriangle, XCircle, ChevronRightSquare, Bug, ListChecks } from 'lucide-react';
+import MaintenanceView from '../../UI/MaintenanceView'; // Added MaintenanceView
 
 interface LogsPanelProps {
   logs: LogEntry[];
   onClose: () => void;
+  featureStatus: FeatureStatus; // Added featureStatus
 }
 
 const LOG_LEVEL_CONFIG: Record<LogLevel, { icon: React.ElementType; colorClass: string; bgColorClass?: string }> = {
@@ -17,14 +19,20 @@ const LOG_LEVEL_CONFIG: Record<LogLevel, { icon: React.ElementType; colorClass: 
   error: { icon: XCircle, colorClass: 'text-[var(--notification-error-icon)]', bgColorClass: 'bg-[var(--notification-error-background)]' },
 };
 
-const LogsPanel: React.FC<LogsPanelProps> = ({ logs, onClose }) => {
+const LogsPanel: React.FC<LogsPanelProps> = ({ logs, onClose, featureStatus }) => {
   const logsEndRef = useRef<HTMLDivElement>(null);
   const CloseIcon = ICONS.x_icon;
   const PanelIcon = ICONS.LogsIcon || ListChecks;
 
   useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [logs]);
+    if (featureStatus === 'active') {
+      logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [logs, featureStatus]);
+
+  if (featureStatus !== 'active') {
+    return <MaintenanceView featureName={ALL_FEATURE_IDS.logsPanel} featureIcon={PanelIcon} />;
+  }
 
   const formatTimestamp = (date: Date): string => {
     return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}.${date.getMilliseconds().toString().padStart(3, '0')}`;

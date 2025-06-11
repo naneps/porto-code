@@ -16,41 +16,42 @@ const typeIcons: Record<NotificationItem['type'], LucideIcon> = {
   warning: AlertTriangle,
 };
 
-// Updated "soft dark" colors. Using Tailwind's darker shades.
-// Ensure these var() fallbacks match the theme.ts general colors if needed.
 const typeColors: Record<NotificationItem['type'], { bg: string; text: string; border: string, icon: string }> = {
   success: { 
-    bg: 'bg-[var(--notification-success-background,rgb(21,54,36))]', // Darker green, e.g., green-800/90 or custom
-    text: 'text-[var(--notification-success-foreground,rgb(134,239,172))]', // Lighter green text, e.g., green-300
-    border: 'border-[var(--notification-success-border,rgb(34,90,56))]', // Slightly lighter border, e.g., green-700
-    icon: 'text-[var(--notification-success-icon,rgb(74,222,128))]' // e.g., green-400
+    bg: 'bg-[var(--notification-success-background,rgb(21,54,36))]',
+    text: 'text-[var(--notification-success-foreground,rgb(134,239,172))]',
+    border: 'border-[var(--notification-success-border,rgb(34,90,56))]',
+    icon: 'text-[var(--notification-success-icon,rgb(74,222,128))]'
   },
   error: { 
-    bg: 'bg-[var(--notification-error-background,rgb(70,26,29))]', // Darker red
-    text: 'text-[var(--notification-error-foreground,rgb(252,165,165))]', // Lighter red text
-    border: 'border-[var(--notification-error-border,rgb(120,36,42))]', // Slightly lighter border
+    bg: 'bg-[var(--notification-error-background,rgb(70,26,29))]',
+    text: 'text-[var(--notification-error-foreground,rgb(252,165,165))]',
+    border: 'border-[var(--notification-error-border,rgb(120,36,42))]',
     icon: 'text-[var(--notification-error-icon,rgb(248,113,113))]' 
   },
   info: { 
-    bg: 'bg-[var(--notification-info-background,rgb(29,54,82))]', // Darker blue
-    text: 'text-[var(--notification-info-foreground,rgb(147,197,253))]', // Lighter blue text
-    border: 'border-[var(--notification-info-border,rgb(39,74,122))]', // Slightly lighter border
+    bg: 'bg-[var(--notification-info-background,rgb(29,54,82))]',
+    text: 'text-[var(--notification-info-foreground,rgb(147,197,253))]',
+    border: 'border-[var(--notification-info-border,rgb(39,74,122))]',
     icon: 'text-[var(--notification-info-icon,rgb(96,165,250))]' 
   },
   warning: { 
-    bg: 'bg-[var(--notification-warning-background,rgb(70,51,20))]', // Darker yellow/orange
-    text: 'text-[var(--notification-warning-foreground,rgb(252,211,77))]', // Lighter yellow text
-    border: 'border-[var(--notification-warning-border,rgb(110,71,30))]', // Slightly lighter border
+    bg: 'bg-[var(--notification-warning-background,rgb(70,51,20))]',
+    text: 'text-[var(--notification-warning-foreground,rgb(252,211,77))]',
+    border: 'border-[var(--notification-warning-border,rgb(110,71,30))]',
     icon: 'text-[var(--notification-warning-icon,rgb(251,191,36))]' 
   },
 };
 
 
 const NotificationItemComponent: React.FC<NotificationItemProps> = ({ notification, onDismiss }) => {
-  const { id, message, type, actions, icon: customIcon } = notification;
-  const IconComponent = customIcon || typeIcons[type];
+  const { id, message, type, actions, icon: customIcon, isLoadingProgressBar } = notification;
+  // Use typeIcons[type] if isLoadingProgressBar is true and no customIcon, or if customIcon is not provided
+  const IconToShow = customIcon && !isLoadingProgressBar ? customIcon : typeIcons[type];
   const colors = typeColors[type];
   const CloseIcon = ICONS.x_icon;
+  const isSpinnerIcon = customIcon === ICONS.SpinnerIcon && !isLoadingProgressBar;
+
 
   const [isVisible, setIsVisible] = useState(false);
   useEffect(() => {
@@ -72,9 +73,24 @@ const NotificationItemComponent: React.FC<NotificationItemProps> = ({ notificati
         flex items-start space-x-3
         transition-all duration-300 ease-out
         ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'}
+        overflow-hidden relative 
       `}
     >
-      {IconComponent && <IconComponent size={20} className={`${colors.icon} flex-shrink-0 mt-0.5`} />}
+      {isLoadingProgressBar && (
+        <div className="absolute top-0 left-0 w-full h-1.5"> 
+          <div className="linear-progress-bar !h-1.5 !top-0">
+             <div className="linear-progress-bar-indicator !h-1.5"></div>
+          </div>
+        </div>
+      )}
+      
+      {IconToShow && (
+        <IconToShow 
+          size={20} 
+          className={`${colors.icon} flex-shrink-0 mt-0.5 ${isSpinnerIcon ? 'animate-spin' : ''}`} 
+        />
+      )}
+
       <div className="flex-grow">
         <p className={`text-sm font-medium ${colors.text}`}>{message}</p>
         {actions && actions.length > 0 && (

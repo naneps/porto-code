@@ -1,3 +1,4 @@
+
 import { Theme, ThemeProperties, FontFamilyOption, FontSizeOption } from './types';
 
 // VSCode Dark+ (Based on default VSCode dark theme)
@@ -64,7 +65,8 @@ const vscodeDarkPlusProperties: ThemeProperties = {
   '--editor-tab-inactive-foreground': '#999999',
   '--editor-tab-hover-background': '#37373D',
   '--editor-tab-border': '#252525',
-  '--editor-tab-active-border-top': '#007ACC',
+  '--editor-tab-active-border-top': '#007ACC', // Kept for themes that might use top border
+  '--editor-tab-active-border-bottom': 'var(--focus-border)', // New for bottom active tab indicator
   '--editor-tab-icon-foreground': '#C5C5C5',
   '--editor-tab-icon-active-foreground': '#4EC9B0',
 
@@ -230,7 +232,8 @@ const vscodeLightPlusProperties: ThemeProperties = {
   '--editor-tab-inactive-foreground': '#586069',
   '--editor-tab-hover-background': '#DADADA',
   '--editor-tab-border': '#D1D1D1',
-  '--editor-tab-active-border-top': '#0366D6',
+  '--editor-tab-active-border-top': '#0366D6', // Kept for themes that might use top border
+  '--editor-tab-active-border-bottom': 'var(--focus-border)', // New for bottom active tab indicator
   '--editor-tab-icon-foreground': '#424242',
   '--editor-tab-icon-active-foreground': '#0366D6',
 
@@ -393,7 +396,8 @@ const githubDarkDefaultProperties: ThemeProperties = {
   '--editor-tab-inactive-foreground': '#8b949e',
   '--editor-tab-hover-background': '#21262d',
   '--editor-tab-border': '#30363d',
-  '--editor-tab-active-border-top': '#f78166', // Orange accent for active tab top border
+  '--editor-tab-active-border-top': '#f78166', // Orange accent for active tab top border (kept for themes that might use it)
+  '--editor-tab-active-border-bottom': '#f78166', // Orange accent
   '--editor-tab-icon-foreground': '#8b949e',
   '--editor-tab-icon-active-foreground': '#58a6ff',
 

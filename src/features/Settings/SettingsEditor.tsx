@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { ICONS } from '../../App/constants';
-import { Volume2, VolumeX, Palette, Type as FontIcon, ListTree, Terminal, Code2 as DevIcon, UserCircle2, Save, Github as GithubIconLucide } from 'lucide-react';
-import { Theme, FontFamilyOption, FontSizeOption, SettingsEditorProps as EditorProps } from '../../App/types'; 
+import { ICONS, ALL_FEATURE_IDS } from '../../App/constants';
+import { Volume2, VolumeX, Palette, Type as FontIcon, ListTree, Terminal, Code2 as DevIcon, UserCircle2, Save, Github as GithubIconLucide, RotateCcw as ResetIcon } from 'lucide-react';
+import { Theme, FontFamilyOption, FontSizeOption, SettingsEditorProps as EditorProps, FeatureStatus } from '../../App/types'; 
+import MaintenanceView from '../../UI/MaintenanceView'; // Import MaintenanceView
 
 interface SettingSelectProps {
   label: string;
@@ -95,6 +96,8 @@ const SettingsEditor: React.FC<EditorProps> = ({
   onUserGitHubUsernameChange,
   onSaveUserPreferences,
   addNotificationAndLog,
+  onClearLocalStorage,
+  featureStatus, // Added featureStatus
 }) => {
   const SoundIcon = isSoundMuted ? (ICONS.VolumeXIcon || VolumeX) : (ICONS.Volume2Icon || Volume2);
   const ThemeIcon = ICONS.theme_command || Palette;
@@ -104,6 +107,7 @@ const SettingsEditor: React.FC<EditorProps> = ({
   const DeveloperModeIcon = ICONS.Code2 || DevIcon;
   const UserProfileIcon = UserCircle2;
   const SaveIcon = Save;
+  const ClearSettingsIcon = ICONS.reset_settings_icon || ResetIcon;
 
   // Local state for inputs, initialized from props
   const [localNickname, setLocalNickname] = useState(userGuestBookNickname || '');
@@ -122,6 +126,10 @@ const SettingsEditor: React.FC<EditorProps> = ({
     onUserGitHubUsernameChange(localGitHubUsername.trim());
     onSaveUserPreferences(); // This might show a notification like "Settings Saved!"
   };
+
+  if (featureStatus !== 'active') {
+    return <MaintenanceView featureName={ALL_FEATURE_IDS.settingsEditor} featureIcon={ICONS.settings_icon} />;
+  }
 
   return (
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-[var(--editor-background)] text-[var(--editor-foreground)]">
@@ -234,7 +242,7 @@ const SettingsEditor: React.FC<EditorProps> = ({
           Developer
         </h2>
         <div className="space-y-0">
-            <div className="flex items-center justify-between py-3">
+            <div className="flex items-center justify-between py-3 border-b border-[var(--border-color)]">
                 <div className="flex items-center">
                     {DeveloperModeIcon && <DeveloperModeIcon size={18} className="mr-3 text-[var(--text-accent)] flex-shrink-0" />}
                     <div>
@@ -250,6 +258,31 @@ const SettingsEditor: React.FC<EditorProps> = ({
                     className="px-3 py-1.5 text-xs bg-[var(--modal-button-background)] text-[var(--modal-button-foreground)] hover:bg-[var(--modal-button-hover-background)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--focus-border)]"
                 >
                     {isDevModeEnabled ? 'Disable Dev Mode' : 'Enable Dev Mode'}
+                </button>
+            </div>
+        </div>
+      </section>
+      
+      <section className="mb-6 md:mb-8">
+        <h2 className="text-lg md:text-xl font-medium text-[var(--text-accent)] border-b border-[var(--border-color)] pb-2 mb-0">
+          Data Management
+        </h2>
+        <div className="space-y-0">
+            <div className="flex items-center justify-between py-3">
+                <div className="flex items-center">
+                    {ClearSettingsIcon && <ClearSettingsIcon size={18} className="mr-3 text-[var(--text-accent)] flex-shrink-0" />}
+                    <div>
+                        <label className="block text-sm font-medium text-[var(--editor-foreground)]">Clear Cached Settings</label>
+                        <p className="text-xs text-[var(--text-muted)]">
+                            Resets all application settings (theme, fonts, panel states, etc.) to their defaults.
+                        </p>
+                    </div>
+                </div>
+                <button
+                    onClick={onClearLocalStorage}
+                    className="px-3 py-1.5 text-xs bg-[var(--modal-button-background)] text-[var(--modal-button-foreground)] hover:bg-[var(--modal-button-hover-background)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--focus-border)]"
+                >
+                    Clear All Cached Settings
                 </button>
             </div>
         </div>

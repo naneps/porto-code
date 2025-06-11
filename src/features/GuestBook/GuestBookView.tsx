@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { GuestBookEntry, AIValidationStatus, GuestBookViewProps as ViewProps } from '../../App/types'; 
+import { GuestBookEntry, AIValidationStatus, GuestBookViewProps as ViewProps, FeatureStatus } from '../../App/types'; 
 import type { FirebaseUser as AuthUser } from '../../Utils/firebase'; 
 import { 
   auth, 
@@ -19,11 +19,13 @@ import {
 import { validateGuestBookMessageWithGemini } from '../../Utils/aiUtils';
 import GuestBookForm from './GuestBookForm';
 import GuestBookEntryItem from './GuestBookEntryItem';
-import { ICONS, PREDEFINED_EMOJIS } from '../../App/constants';
+import { ICONS, PREDEFINED_EMOJIS, ALL_FEATURE_IDS } from '../../App/constants';
 import { LogLevel } from '../../App/types';
 import { playSound } from '../../Utils/audioUtils';
+import MaintenanceView from '../../UI/MaintenanceView'; // Import MaintenanceView
+import { incrementStatistic } from '../../Utils/statisticsUtils'; // Added
 
-const GuestBookView: React.FC<ViewProps> = ({ addAppLog, currentUser, userGuestBookNickname, userGitHubUsername }) => {
+const GuestBookView: React.FC<ViewProps> = ({ addAppLog, currentUser, userGuestBookNickname, userGitHubUsername, featureStatus }) => {
   const [entries, setEntries] = useState<GuestBookEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false); 
   const [isFetchingInitialEntries, setIsFetchingInitialEntries] = useState(true);
@@ -41,6 +43,8 @@ const GuestBookView: React.FC<ViewProps> = ({ addAppLog, currentUser, userGuestB
 
 
   useEffect(() => {
+    if (featureStatus !== 'active') return; // Do not proceed if feature is not active
+
     addAppLog('info', 'GuestBookView mounted', 'GuestBook');
     // Auth state is now managed by App.tsx, currentUser is a prop.
     // We still log when currentUser prop changes.
@@ -73,9 +77,10 @@ const GuestBookView: React.FC<ViewProps> = ({ addAppLog, currentUser, userGuestB
       if (newEntryTimeoutRef.current) clearTimeout(newEntryTimeoutRef.current);
       addAppLog('info', 'GuestBookView unmounted, entries subscription cleaned up.', 'GuestBook');
     };
-  }, [addAppLog, isFetchingInitialEntries, currentUser]); // Added currentUser to deps
+  }, [addAppLog, isFetchingInitialEntries, currentUser, featureStatus]); // Added currentUser and featureStatus to deps
   
   useEffect(() => {
+    if (featureStatus !== 'active') return;
     const newEntry = entries.find(e => e.isNew);
     if (newEntry) {
       if (newEntryTimeoutRef.current) clearTimeout(newEntryTimeoutRef.current);
@@ -83,7 +88,7 @@ const GuestBookView: React.FC<ViewProps> = ({ addAppLog, currentUser, userGuestB
         setEntries(prev => prev.map(e => e.id === newEntry.id ? { ...e, isNew: false } : e));
       }, 3000); 
     }
-  }, [entries]);
+  }, [entries, featureStatus]);
 
 
   const handleSignIn = async (providerName: 'google' | 'github') => {
@@ -199,6 +204,7 @@ const GuestBookView: React.FC<ViewProps> = ({ addAppLog, currentUser, userGuestB
         currentUser.photoURL || undefined,
         finalGithubLogin 
       );
+      incrementStatistic('guestbook/total_entries'); // Increment guest book entry count
       playSound('chat-receive'); 
       addAppLog('info', 'Guest book message submitted successfully.', 'GuestBook', { validationStatus: aiValidationStatus });
 
@@ -276,6 +282,10 @@ const GuestBookView: React.FC<ViewProps> = ({ addAppLog, currentUser, userGuestB
       playSound('error');
     }
   };
+
+  if (featureStatus !== 'active') {
+    return <MaintenanceView featureName={ALL_FEATURE_IDS.guestBook} featureIcon={ICONS.guest_book_icon} />;
+  }
 
   return (
     <div className="flex flex-col h-full bg-[var(--editor-background)] text-[var(--editor-foreground)] overflow-y-auto relative">

@@ -1,15 +1,18 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PORTO CODE</title>
+  <link rel="icon" href="data:image/svg+xml,<svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'><rect width='32' height='32' rx='6' fill='%23007ACC'/><path d='M12 10L8 16L12 22' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M20 10L24 16L20 22' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>">
   <script type="importmap">
   {
     "imports": {
-      "react": "https://esm.sh/react@^19.1.0",
-      "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-      "react/": "https://esm.sh/react@^19.1.0/",
+      "react": "https://esm.sh/react@19",
+      "react-dom/": "https://esm.sh/react-dom@19/",
+      "react/": "https://esm.sh/react@19/",
       "lucide-react": "https://esm.sh/lucide-react@^0.513.0",
       "react-syntax-highlighter": "https://esm.sh/react-syntax-highlighter@^15.6.1",
       "react-syntax-highlighter/": "https://esm.sh/react-syntax-highlighter@^15.6.1/",
@@ -438,6 +441,86 @@
     .markdown-content a .ai-chat-file-widget-button,
     .markdown-content .ai-chat-file-widget-button {
       text-decoration: none !important;
+    }
+
+    /* Pets Panel Enhancements */
+    .pet-speech-bubble {
+      position: absolute;
+      background-color: var(--sidebar-item-hover-background, #2A2D2E);
+      color: var(--text-default, #D4D4D4);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem; /* 12px */
+      border: 1px solid var(--border-color, #333333);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      max-width: 150px;
+      text-align: center;
+      z-index: 10;
+      opacity: 0;
+      animation: fadeInBubble 0.3s ease-out forwards, fadeOutBubble 0.3s ease-in 5.7s forwards; /* Show for 5.7s + 0.3s fade in = 6s */
+    }
+
+    .pet-speech-bubble::after { /* Speech bubble tail */
+      content: '';
+      position: absolute;
+      bottom: -5px; /* Adjust to position tail correctly */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid var(--sidebar-item-hover-background, #2A2D2E);
+      filter: drop-shadow(0 1px 0.5px var(--border-color, #333333)); /* Attempt to match border color */
+    }
+
+    @keyframes fadeInBubble {
+      to { opacity: 1; transform: translateY(-5px) translateX(-50%); } /* Adjust translateX based on final bubble positioning logic */
+    }
+    @keyframes fadeOutBubble {
+      from { opacity: 1; transform: translateY(-5px) translateX(-50%); }
+      to { opacity: 0; transform: translateY(0px) translateX(-50%); }
+    }
+    
+    /* Keyframes for duck bobbing (can be applied via JS or directly if simple enough) */
+    @keyframes duckBob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    .pet-duck-bobbing {
+      animation: duckBob 1.5s ease-in-out infinite;
+    }
+    /* Keyframes for serpent slithering (can be applied via JS) - more complex, might rely on JS for position */
+    /* For now, JS handles the slight Y offset for slithering */
+
+
+    /* MaintenanceView Container */
+    .maintenance-view-container {
+      background-color: var(--editor-background, #1E1E1E); 
+      /* Subtler background if inside a panel that already has a strong background */
+      /* background-color: color-mix(in srgb, var(--editor-background, #1E1E1E) 90%, var(--border-color, #333333) 10%); */
+    }
+    /* Styles for Activity Bar Maintenance Badge */
+    .maintenance-icon-badge {
+      position: absolute;
+      bottom: 1px;
+      right: 1px;
+      background-color: var(--notification-warning-background);
+      color: var(--notification-warning-icon);
+      border-radius: 50%;
+      width: 14px; /* Increased size for better visibility */
+      height: 14px; /* Increased size for better visibility */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--notification-warning-border);
+      box-shadow: 0 0 3px rgba(0,0,0,0.3); /* Subtle shadow for pop */
+      z-index: 1; /* Ensure it's above the main icon slightly if needed */
+    }
+    /* For the icon inside the badge, if direct styling is needed, though color is inherited from .maintenance-icon-badge */
+    .maintenance-icon-badge > svg { 
+      /* The size is set via props in React (e.g., size={10}) */
+      /* color property from .maintenance-icon-badge will apply here */
     }
 
   </style>

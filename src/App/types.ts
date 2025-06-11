@@ -27,8 +27,8 @@ export interface ProjectDetail {
   title: string;
   description:string;
   technologies: string[];
-  year?: number;
-  related_skills?: string[];
+  year?: number; // Made optional, but AI will provide it
+  related_skills?: string[]; // New for AI suggestions
   webLink?: string;
   imageUrls?: string[];
 }
@@ -62,7 +62,8 @@ export interface Tab {
   title: string;
   type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview' | 'article_detail' | 'cv_preview' | 'settings_editor' | 'github_profile_view' | 'guest_book'; // Added 'guest_book'
   fileName?: string; // For file-based tabs and json_preview of files or projects
-  articleSlug?: string;
+  articleSlug?: string; // Remains for identifying which article is open
+  articleId?: number; // Added to store dev.to article ID
   githubUsername?: string; // For github_profile_view tab
 }
 
@@ -77,6 +78,7 @@ export interface SidebarItemConfig {
   children?: SidebarItemConfig[];
   actionType?: 'open_tab' | 'run_cv_generator'; // Default to 'open_tab'
   defaultOpen?: boolean; // For folders, initial expanded state
+  featureId?: FeatureId; // Associate sidebar item with a feature for status checking
 }
 
 
@@ -89,6 +91,7 @@ export interface Command {
   description?: string;
   value?: string;
   isSelected?: boolean;
+  featureId?: FeatureId; // Optional: Associate command with a feature
 }
 
 // Type for TitleBar menu items, allowing for nesting
@@ -100,6 +103,7 @@ export interface AppMenuItem {
   value?: string;
   isSelected?: boolean;
   separator?: boolean;
+  featureId?: FeatureId; // Optional: Associate menu item with a feature
 }
 
 // Theme related types
@@ -165,26 +169,69 @@ export interface SearchResultItem {
   tabType: Tab['type'];
 }
 
-// For Articles/Blog
-export interface ArticleItem {
-  id: string;
-  title: string;
-  date: string;
-  summary: string;
-  tags?: string[];
-  contentMarkdown: string;
-  slug: string;
-  imageUrl?: string;
+// For Articles/Blog from dev.to
+export interface DevToUser {
+  name: string;
+  username: string;
+  twitter_username: string | null;
+  github_username: string | null;
+  user_id: number;
+  website_url: string | null;
+  profile_image: string;
+  profile_image_90: string;
 }
 
-// For Statistics Panel
-export interface MockStatistics {
-  liveVisitors: number;
-  todayVisits: number;
-  uptime: string; // e.g., "1h 23m 45s"
-  mostVisitedPage: string;
-  currentlyViewed: string[];
+export interface ArticleItem {
+  type_of: string;
+  id: number; // dev.to article ID
+  title: string;
+  description: string; // Used as summary
+  readable_publish_date: string; // Used for display date
+  slug: string;
+  path: string;
+  url: string;
+  comments_count: number;
+  public_reactions_count: number;
+  collection_id: number | null;
+  published_timestamp: string; // Main date for sorting/internal use
+  positive_reactions_count: number;
+  cover_image: string | null; // Used as imageUrl
+  social_image: string;
+  canonical_url: string;
+  created_at: string;
+  edited_at: string | null;
+  crossposted_at: string | null;
+  published_at: string;
+  last_comment_at: string;
+  reading_time_minutes: number;
+  tag_list: string[]; // Used as tags
+  tags: string; // Raw tags string
+  body_markdown: string; // Used as contentMarkdown
+  user: DevToUser;
 }
+
+
+// For Statistics Panel
+export interface StatisticsData {
+  app_loads?: { total?: number };
+  tab_views?: { [tabId: string]: { count?: number } };
+  action_counts?: {
+    cv_downloads?: number;
+    ai_project_suggestions?: number;
+  };
+  guestbook?: { total_entries?: number };
+  theme_usage?: { [themeKey: string]: { count?: number } };
+}
+
+export interface StatisticsPanelProps {
+  isVisible: boolean;
+  statisticsData: StatisticsData | null;
+  isLoading: boolean;
+  error: string | null;
+  onClose: () => void;
+  featureStatus: FeatureStatus;
+}
+
 
 // For reorderable Activity Bar items
 export interface ActivityBarItemDefinition {
@@ -192,11 +239,13 @@ export interface ActivityBarItemDefinition {
   label: string;
   iconName: string; // Key to ICONS map in constants.tsx
   viewId: ActivityBarSelection; // The view this item activates
+  featureId?: FeatureId; // Associate with a feature for status checking
 }
 
 export interface ActivityBarItemConfig extends ActivityBarItemDefinition {
   icon: LucideIcon;
   action: () => void;
+  status?: FeatureStatus; // Added for maintenance status
 }
 
 // For Notifications
@@ -214,6 +263,8 @@ export interface NotificationItem {
   duration?: number; // in milliseconds, auto-dismiss if provided
   actions?: NotificationAction[];
   icon?: LucideIcon;
+  isLoadingProgressBar?: boolean; // Optional: to show linear progress instead of spinner
+  progressId?: string; // Optional: to identify and update progress notifications
 }
 
 // For content of projects.json
@@ -343,6 +394,13 @@ export interface MockGitHubStats {
     // For the mock contribution graph (52 weeks, 7 days)
     contributionGraphData: number[][]; // Array of weeks, each week is an array of 7 day activity levels (0-4)
 }
+export interface GitHubProfileViewProps {
+  username: string | undefined;
+  mockStats: MockGitHubStats;
+  addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void;
+  featureStatus: FeatureStatus;
+}
+
 
 // Guest Book Types
 export type AIValidationStatus = 'validated_ok' | 'validated_flagged' | 'validation_skipped' | 'validation_error' | 'pending';
@@ -367,6 +425,7 @@ export interface GuestBookViewProps {
   currentUser: FirebaseUser | null; // Add currentUser
   userGuestBookNickname: string | null; // Add custom nickname
   userGitHubUsername: string | null; // Add custom GitHub username
+  featureStatus: FeatureStatus;
 }
 
 export interface GuestBookFormProps {
@@ -403,6 +462,8 @@ export interface SettingsEditorProps {
   onUserGitHubUsernameChange: (username: string) => void;
   onSaveUserPreferences: () => void; 
   addNotificationAndLog: (message: string, type: NotificationType, duration?: number, actions?: NotificationAction[], icon?: LucideIcon) => void;
+  onClearLocalStorage: () => void; // New prop
+  featureStatus: FeatureStatus;
 }
 
 // Terminal Command Types
@@ -412,19 +473,22 @@ export interface TerminalCommandContext {
   portfolioData: PortfolioData;
   themes: Theme[];
   currentThemeName: string;
+  featuresStatus: FeaturesStatusState; // Added for command availability
   // Actions
-  openTab: (itemOrConfig: SidebarItemConfig | { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string }, isRunAction?: boolean, targetPaneId?: EditorPaneId) => void;
+  openTab: (itemOrConfig: SidebarItemConfig | { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string, articleId?: number }, isRunAction?: boolean, targetPaneId?: EditorPaneId) => void;
   changeTheme: (themeName: string) => void;
   appendToOutput: (text: string | string[]) => void;
   clearOutput: () => void;
   runScript: (scriptName: string, durationMs?: number, customSteps?: string[]) => void;
   addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void;
+  addNotification: (message: string, type: NotificationType, duration?: number, actions?: NotificationAction[], icon?: LucideIcon) => void; // For notifying about maintenance
 }
 
 export interface CommandDefinition {
   handler: (args: string[], context: TerminalCommandContext) => string | string[] | void;
   description: string;
   usage?: string; // e.g., "cat <filename>"
+  featureId?: FeatureId; // Optional: Associate command with a feature
 }
 
 
@@ -433,3 +497,108 @@ export type { ImageIconType as ImageIcon, ExternalLinkIcon };
 // Re-export FirebaseUser for convenience if used in multiple UI components
 // However, it's often cleaner for components to import directly from utils/firebase
 // export type { FirebaseUser } from '../utils/firebase';
+
+// Feature Status Types
+export type FeatureId = 
+  | 'explorer' 
+  | 'searchPanel' 
+  | 'aiChat' 
+  | 'articlesPanel' 
+  | 'guestBook' 
+  | 'statisticsPanel' 
+  | 'githubProfileView' 
+  | 'terminal' 
+  | 'petsPanel' 
+  | 'logsPanel' 
+  | 'settingsEditor'
+  | 'cvGenerator'
+  | 'projectSuggestions' // Added new AI project suggestion feature
+  | 'projectsView' 
+  | 'featureStatusAdminPanel'; // New panel for managing feature statuses
+
+export type FeatureStatus = 'active' | 'maintenance' | 'disabled';
+export type FeaturesStatusState = Record<FeatureId, FeatureStatus>;
+
+
+// Panel-specific prop types with featureStatus
+export interface ArticlesPanelProps {
+  isVisible: boolean;
+  articles: ArticleItem[];
+  isLoading: boolean; 
+  error: string | null; 
+  onClose: () => void;
+  onSelectArticle: (article: ArticleItem) => void;
+  activeArticleSlug: string | null;
+  onRetryFetch?: () => void; 
+  featureStatus: FeatureStatus;
+}
+
+export interface PetsPanelProps {
+  onClose: () => void; 
+  featureStatus: FeatureStatus;
+}
+
+export interface TerminalPanelProps {
+  output: string[];
+  onClose: () => void;
+  inputValue: string;
+  onInputChange: (value: string) => void;
+  onCommandSubmit: () => void;
+  featureStatus: FeatureStatus;
+}
+
+export interface LogsPanelProps {
+  logs: LogEntry[];
+  onClose: () => void;
+  featureStatus: FeatureStatus;
+}
+
+export interface SearchPanelProps {
+  isVisible: boolean;
+  searchTerm: string;
+  onSearchTermChange: (term: string) => void;
+  results: SearchResultItem[];
+  onResultClick: (result: SearchResultItem) => void;
+  onClose: () => void; 
+  featureStatus: FeatureStatus;
+}
+
+export interface AIChatInterfaceProps {
+  portfolioData: PortfolioData;
+  addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void;
+  messages: ChatMessage[];
+  input: string;
+  setInput: (input: string) => void;
+  isLoading: boolean;
+  error: string | null;
+  apiKeyAvailable: boolean;
+  onSendMessage: () => Promise<void>;
+  handleOpenTab: (itemOrConfig: { id?: string, fileName?: string, type?: Tab['type'], title?: string, articleSlug?: string, githubUsername?: string }, isRunAction?: boolean, targetPaneId?: EditorPaneId) => void;
+  currentPaneIdForChat: EditorPaneId; 
+  featureStatus: FeatureStatus;
+}
+
+// Props for TabContent component
+export interface TabContentProps {
+  tab: Tab;
+  content: any;
+  portfolioData: PortfolioData;
+  onOpenProjectTab: (projectId: string, projectTitle: string) => void;
+  currentThemeName: string;
+  onContextMenuRequest: (x: number, y: number, tabId: string, isCVContext?: boolean) => void;
+  aiGeneratedProjects: ProjectDetail[];
+  onSuggestNewAIProject: (userKeywords?: string) => void;
+  isAISuggestingProject: boolean;
+  paneId: EditorPaneId;
+  addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void;
+  featureStatusForProjectsView?: FeatureStatus; // Added for projects.json maintenance
+}
+
+// Props for FeatureStatusAdminPanel
+export interface FeatureStatusAdminPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentStatuses: FeaturesStatusState;
+  onSaveChangesToFirebase: (newStatuses: FeaturesStatusState) => Promise<void>;
+  allFeatureIds: Record<FeatureId, string>;
+}

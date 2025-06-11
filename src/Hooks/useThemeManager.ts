@@ -1,13 +1,16 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { PREDEFINED_THEMES, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS, generateCSSVariables, TERMINAL_FONT_SIZE_OPTIONS } from '../App/themes';
-import { FontSizeOption } from '../App/types';
+import { FontSizeOption, LogLevel } from '../App/types';
+import { incrementStatistic } from '../Utils/statisticsUtils'; // Added
 
 export const useThemeManager = (
   passedInDefaultThemeName: string,
   passedInDefaultFontFamilyId: string,
   passedInDefaultEditorFontSizeId: string,
   currentTerminalFontSizeIdExt: string, // Keep existing params for terminal font
-  terminalFontSizesExt: FontSizeOption[]
+  terminalFontSizesExt: FontSizeOption[],
+  addAppLog?: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void // Optional addAppLog
 ) => {
   const [currentThemeName, setCurrentThemeName] = useState<string>(() => localStorage.getItem('portfolio-theme') || passedInDefaultThemeName);
   const [currentFontFamilyId, setCurrentFontFamilyId] = useState<string>(() => localStorage.getItem('portfolio-font-family') || passedInDefaultFontFamilyId);
@@ -47,7 +50,13 @@ export const useThemeManager = (
 
   }, [currentThemeName, currentFontFamilyId, currentEditorFontSizeId, currentTerminalFontSizeIdExt, terminalFontSizesExt, passedInDefaultThemeName, passedInDefaultFontFamilyId, passedInDefaultEditorFontSizeId]);
 
-  const handleThemeChange = useCallback((themeName: string) => setCurrentThemeName(themeName), []);
+  const handleThemeChange = useCallback((themeName: string) => {
+    setCurrentThemeName(themeName);
+    const sanitizedThemeName = themeName.replace(/\+/g, '_plus_').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+    incrementStatistic(`theme_usage/${sanitizedThemeName}/count`);
+    if(addAppLog) addAppLog('action', `Theme changed to ${themeName} via useThemeManager`, 'ThemeManager');
+  }, [addAppLog]);
+
   const handleFontFamilyChange = useCallback((fontId: string) => setCurrentFontFamilyId(fontId), []);
   const handleFontSizeChange = useCallback((sizeId: string) => setCurrentEditorFontSizeId(sizeId), []); // This is for editor font size
 

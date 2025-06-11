@@ -1,3 +1,4 @@
+
 import { PortfolioData, WorkExperienceEntry, ProjectDetail, LogLevel, AIValidationStatus } from '../App/types';
 import { generateFileContent } from '../App/constants';
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';

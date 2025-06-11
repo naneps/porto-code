@@ -1,18 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
-import { GitHubUser, GitHubEvent, GitHubRepo, MockGitHubStats, LogLevel } from '../../App/types';
-import { ICONS } from '../../App/constants';
+import { GitHubUser, GitHubEvent, GitHubRepo, MockGitHubStats, LogLevel, FeatureStatus } from '../../App/types';
+import { ICONS, ALL_FEATURE_IDS } from '../../App/constants';
 import { Github, Users, Eye, Star, GitFork, Briefcase, MapPin, Link as LinkIcon, ExternalLink, AlertTriangle, Loader2, MessageSquare, GitCommit, Tag } from 'lucide-react';
+import MaintenanceView from '../../UI/MaintenanceView';
 
 interface GitHubProfileViewProps {
   username: string | undefined;
   mockStats: MockGitHubStats;
   addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void;
+  featureStatus: FeatureStatus;
 }
 
 const GITHUB_API_BASE_URL = 'https://api.github.com';
 
-export const GitHubProfileView: React.FC<GitHubProfileViewProps> = ({ username, mockStats, addAppLog }) => {
+export const GitHubProfileView: React.FC<GitHubProfileViewProps> = ({ username, mockStats, addAppLog, featureStatus }) => {
   const [profile, setProfile] = useState<GitHubUser | null>(null);
   const [events, setEvents] = useState<GitHubEvent[]>([]);
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
@@ -20,6 +22,8 @@ export const GitHubProfileView: React.FC<GitHubProfileViewProps> = ({ username, 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (featureStatus !== 'active') return; // Do not fetch if feature is not active
+
     if (!username) {
       setError("GitHub username is not configured for this view.");
       addAppLog('error', "GitHub username not provided to GitHubProfileView.", 'GitHubProfileView');
@@ -72,7 +76,11 @@ export const GitHubProfileView: React.FC<GitHubProfileViewProps> = ({ username, 
     };
 
     fetchGitHubData();
-  }, [username, addAppLog]);
+  }, [username, addAppLog, featureStatus]); // Add featureStatus to dependency array
+
+  if (featureStatus !== 'active') {
+    return <MaintenanceView featureName={ALL_FEATURE_IDS.githubProfileView} featureIcon={ICONS.github_icon} />;
+  }
 
   const formatEventTitle = (event: GitHubEvent): React.ReactNode => {
     const repoLink = (

@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "19",
+    "react-dom": "19",
     "lucide-react": "^0.513.0",
     "react-syntax-highlighter": "^15.6.1",
     "react-markdown": "^10.1.0",

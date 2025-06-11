@@ -34,7 +34,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
   const [isDragOverEndZone, setIsDragOverEndZone] = useState<boolean>(false);
 
   if (tabs.length === 0 && !isLoading) {
-    return <div className={`h-[42px] bg-[var(--editor-tab-background)] border-b border-[var(--editor-tab-border)] relative ${className || ''}`}></div>; 
+    return <div className={`h-[42px] bg-[var(--editor-tab-background)] border-b border-[var(--editor-tab-border)] relative flex-shrink-0 ${className || ''}`}></div>; 
   }
   const CloseIcon = ICONS.x_icon;
 
@@ -120,7 +120,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
 
   return (
     <div 
-      className={`relative flex bg-[var(--editor-tab-background)] border-b border-[var(--editor-tab-border)] overflow-x-auto ${className || ''}`}
+      className={`relative flex bg-[var(--editor-tab-background)] border-b border-[var(--editor-tab-border)] overflow-x-auto flex-shrink-0 ${className || ''}`}
       role="tablist"
       aria-label={`Editor open files for ${paneId} pane`}
       onDragLeave={handleDragLeave} 
@@ -148,9 +148,11 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
         const iconColorClass = isActive ? 'text-[var(--editor-tab-icon-active-foreground)]' : 'text-[var(--editor-tab-icon-foreground)] group-hover/tab:text-[var(--editor-tab-active-foreground)]';
         const textColorClass = isActive ? 'text-[var(--editor-tab-active-foreground)]' : 'text-[var(--editor-tab-inactive-foreground)] group-hover/tab:text-[var(--editor-tab-active-foreground)]';
         const tabBackgroundClass = isActive ? 'bg-[var(--editor-tab-active-background)]' : 'bg-[var(--editor-tab-inactive-background)] hover:bg-[var(--editor-tab-hover-background)]';
-        const activeBorderClass = isActive ? 'border-t-2 border-[var(--editor-tab-active-border-top)]' : 'border-t-2 border-transparent';
         
-        let dynamicClasses = `${tabBackgroundClass} ${activeBorderClass}`;
+        // Use bottom border for active tab indicator
+        const activeBorderClass = isActive ? 'border-b-2 border-[var(--editor-tab-active-border-bottom,var(--focus-border))]' : 'border-b-2 border-transparent';
+        
+        let dynamicClasses = `${tabBackgroundClass} ${activeBorderClass} flex-shrink-0`; // Added flex-shrink-0 here
         if (isBeingDragged) dynamicClasses += ' opacity-50 ring-2 ring-[var(--focus-border)] ring-inset';
         if (isDropTarget) dynamicClasses += ' border-l-2 border-[var(--focus-border)]';
 
@@ -176,7 +178,8 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
             }}
             className={`flex items-center py-2 px-3 md:px-4 cursor-pointer border-r border-[var(--editor-tab-border)] whitespace-nowrap group/tab transition-all duration-150 ease-in-out relative focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[var(--focus-border)]
               ${dynamicClasses}`}
-            style={{paddingTop: isActive ? 'calc(0.5rem - 2px)' : '0.5rem'}} 
+            // Adjust paddingBottom for active tab to account for border, maintaining consistent height
+            style={{paddingBottom: isActive ? 'calc(0.5rem - 2px)' : '0.5rem'}} 
             title={tab.title}
           >
             <IconComponent size={16} className={`mr-2 flex-shrink-0 ${iconColorClass} pointer-events-none`} />
@@ -196,7 +199,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
         );
       })}
       <div 
-        className={`flex-grow bg-[var(--editor-tab-background)] h-full border-t-2 min-h-[38px] 
+        className={`flex-grow bg-[var(--editor-tab-background)] h-full border-b-2 min-h-[38px] 
                     ${isDragOverEndZone ? 'bg-[var(--editor-tab-hover-background)] border-[var(--focus-border)] border-dashed' : 'border-transparent'}`}
         onDragOver={(e) => handleDragOver(e, null)}
         onDragEnter={(e) => handleDragEnter(e, null)}
