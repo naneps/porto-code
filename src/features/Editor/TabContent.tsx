@@ -1,23 +1,23 @@
 
-import React, { useState } from 'react'; 
+import { ExternalLink, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import json from 'react-syntax-highlighter/dist/esm/languages/prism/json';
-import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript'; 
-import { Tab, PortfolioData, ProjectDetail, ProjectListingItem, EditorPaneId, LogLevel, MockGitHubStats, ChatMessage, GuestBookViewProps, SettingsEditorProps as EditorProps, ArticleItem, AIChatInterfaceProps as AIChatInterfacePropsType, FeatureStatus, TabContentProps as TabContentPropsType } from '../../App/types'; 
-import { ProjectCard } from '../../UI/ProjectCard/ProjectCard';
-import AIChatInterface from '../AIChat/AIChatInterface';
-import JsonPreviewView from './JsonPreviewView';
-import ReactMarkdown from 'react-markdown';
+import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
 import remarkGfm from 'remark-gfm';
-import { getSyntaxHighlighterTheme } from '../../Utils/syntaxHighlighterUtils';
-import { ICONS, ALL_FEATURE_IDS } from '../../App/constants';
-import { Loader2, ExternalLink } from 'lucide-react'; 
-import CVPreview from './CVPreview'; 
-import SettingsEditor from '../Settings/SettingsEditor';
-import { GitHubProfileView } from '../GitHub/GitHubProfileView'; 
-import GuestBookView from '../GuestBook/GuestBookView'; 
-import ArticleDetailView from '../Articles/ArticleDetailView'; // Import the new component
+import { ALL_FEATURE_IDS, ICONS } from '../../App/constants';
+import { AIChatInterfaceProps as AIChatInterfacePropsType, ArticleItem, SettingsEditorProps as EditorProps, FeatureStatus, GuestBookViewProps, MockGitHubStats, PortfolioData, ProjectDetail, ProjectListingItem, TabContentProps as TabContentPropsType } from '../../App/types';
 import MaintenanceView from '../../UI/MaintenanceView';
+import { ProjectCard } from '../../UI/ProjectCard/ProjectCard';
+import { getSyntaxHighlighterTheme } from '../../Utils/syntaxHighlighterUtils';
+import AIChatInterface from '../AIChat/AIChatInterface';
+import ArticleDetailView from '../Articles/ArticleDetailView'; // Import the new component
+import { GitHubProfileView } from '../GitHub/GitHubProfileView';
+import GuestBookView from '../GuestBook/GuestBookView';
+import SettingsEditor from '../Settings/SettingsEditor';
+import CVPreview from './CVPreview';
+import JsonPreviewView from './JsonPreviewView';
 
 
 SyntaxHighlighter.registerLanguage('json', json);
