@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { FeatureStatusAdminPanelProps, FeatureId, FeatureStatus, FeaturesStatusState } from '../../App/types';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ICONS } from '../../App/constants';
+import { FeatureId, FeatureStatus, FeatureStatusAdminPanelProps, FeaturesStatusState } from '../../App/types';
 
 const FeatureStatusAdminPanel: React.FC<FeatureStatusAdminPanelProps> = ({
   isOpen,
