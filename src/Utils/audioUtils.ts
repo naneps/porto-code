@@ -1,7 +1,7 @@
 // utils/audioUtils.ts
 
 // MASTER CONTROL FOR SOUNDS
-const SOUNDS_ENABLED = false; // Set to true if you have sound files in /public/sounds/
+const SOUNDS_ENABLED = true; // Set to true if you have sound files in /public/sounds/
 
 let isMuted = false;
 // Cache Audio objects to avoid re-creating them every time and to allow quick replay.
