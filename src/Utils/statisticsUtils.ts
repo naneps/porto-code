@@ -1,5 +1,4 @@
 
-
 import { database, ref, increment as firebaseIncrement, get as firebaseGet } from './firebase';
 import { StatisticsData } from '../App/types';
 import { STATISTICS_FIREBASE_PATH } from '../App/constants';
@@ -21,19 +20,28 @@ export async function incrementStatistic(pathSuffix: string): Promise<void> {
 
 /**
  * Fetches all statistics data from Firebase Realtime Database.
- * @returns A Promise that resolves to the StatisticsData object or null if an error occurs or no data exists.
+ * @returns A Promise that resolves to the StatisticsData object (or an empty object if no data), 
+ *          or null if a Firebase fetch error occurs.
  */
 export async function fetchStatistics(): Promise<StatisticsData | null> {
   try {
     const statsRef = ref(database, STATISTICS_FIREBASE_PATH);
     const snapshot = await firebaseGet(statsRef);
     if (snapshot.exists()) {
-      return snapshot.val() as StatisticsData;
+      const data = snapshot.val();
+      // If the node exists but its value is null (explicitly set) or not an object,
+      // treat it as if there's no data.
+      if (data === null || typeof data !== 'object') {
+        return {}; 
+      }
+      return data as StatisticsData;
     }
-    return null; // No data exists at the path
+    // Node doesn't exist, treat as no data.
+    return {};
   } catch (error) {
-    console.error("Failed to fetch statistics:", error);
-    return null; // Return null or throw, depending on desired error handling
+    console.error("Failed to fetch statistics from Firebase:", error);
+    // Return null only for actual Firebase errors (network, permissions, etc.)
+    return null; 
   }
 }
 

@@ -1,6 +1,7 @@
 
+
 import { PortfolioData, SidebarItemConfig, ProjectDetail, Command as AppCommandType, ArticleItem, ActivityBarItemDefinition, ActivityBarSelection, ProjectListingItem, MockGitHubStats, FeatureId, FeaturesStatusState, FeatureStatus } from './types';
-import { User, Briefcase, Code2, FolderKanban, Mail, FileJson2, LucideIcon, FileTerminal, HelpCircle, Eye, Palette, Type as FontIcon, Settings, GitFork, Bell, TerminalSquare, ArrowLeft, ArrowRight, SplitSquareHorizontal, LayoutGrid, UserCircle2 as UserProfileIcon, Minus, Square, X, ChevronDown, ChevronRight, Search, Check, Files, FileCode, Bot, FileText, Link, Phone, MousePointerClick, Command, Newspaper, Play, Cat, Volume2, VolumeX, Sparkles, BarChart3, Folder as FolderClosed, FolderOpen, FileCode2 as FileCodeIcon, FileBadge, ExternalLink as ExternalLinkIcon, Image as ImageIcon, ListChecks, Github, MessageSquare, Loader2, Send, Heart, Info, CheckCircle2, AlertTriangle, RotateCcw, MessageSquarePlus, PawPrint, Waves, Bird, HardHat, ListFilter } from 'lucide-react'; // Added PawPrint, Waves, Bird, HardHat, ListFilter
+import { User, Briefcase, Code2, FolderKanban, Mail, FileJson2, LucideIcon, FileTerminal, HelpCircle, Eye, Palette, Type as FontIcon, Settings, GitFork, Bell, TerminalSquare, ArrowLeft, ArrowRight, SplitSquareHorizontal, LayoutGrid, UserCircle2 as UserProfileIcon, Minus, Square, X, ChevronDown, ChevronRight, Search, Check, Files, FileCode, Bot, FileText, Link, Phone, MousePointerClick, Command, Newspaper, Play, Cat, Volume2, VolumeX, Sparkles, BarChart3, Folder as FolderClosed, FolderOpen, FileCode2 as FileCodeIcon, FileBadge, ExternalLink as ExternalLinkIcon, Image as ImageIcon, ListChecks, Github, MessageSquare, Loader2, Send, Heart, Info, CheckCircle2, AlertTriangle, RotateCcw, MessageSquarePlus, PawPrint, Waves, Bird, HardHat, ListFilter, LayoutPanelTop } from 'lucide-react'; // Changed LayoutPanelBottom to LayoutPanelTop
 import { MOCK_CV_GENERATOR_CODE } from '../Assets/generate_cv_code';
 
 export const STATISTICS_FIREBASE_PATH = 'app_statistics'; // Base path for statistics in Firebase
@@ -264,7 +265,9 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'RubberDuckIcon': Bird, // Replaced RubberDuck with Bird
   'WavesIcon': Waves, 
   'HardHatIcon': HardHat,
-  'feature_status_admin_icon': ListFilter, // Icon for the new admin panel
+  'feature_status_admin_icon': ListFilter,
+  'guide.md': HelpCircle, 
+  'layout_panel_bottom': LayoutPanelTop, // Changed LayoutPanelBottom to LayoutPanelTop
 };
 
 export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
@@ -325,6 +328,7 @@ export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
     actionType: 'open_tab',
     // No specific featureId, it's a general info file
     children: [
+      { id: 'guide.md', label: 'guide.md', fileName: 'guide.md', icon: ICONS['guide.md'], type: 'file', title: 'Portfolio Guide', actionType: 'open_tab' },
       { id: 'support.md', label: 'support.md', fileName: 'support.md', icon: ICONS.heart_icon, type: 'file', title: 'Support the Creator', actionType: 'open_tab' },
     ],
   }
@@ -426,6 +430,65 @@ For direct donations via PayPal.
 ---
 
 Every bit of support is greatly appreciated and helps me continue building and sharing. Thank you!
+`;
+    case 'guide.md':
+      return `
+# Welcome to Porto Code - Your Interactive Guide!
+
+This portfolio is designed to look and feel like Visual Studio Code. Here's a quick guide to help you navigate and discover its features:
+
+## Key Areas
+
+*   **Title Bar (Top):**
+    *   **Menu:** Access main actions like File, View, Run, Settings, and Help.
+    *   **Navigation Arrows:** Go back and forward through your opened tabs history.
+    *   **App Name:** Shows "PORTO CODE -- Nandang Eka Prasetya".
+    *   **Layout Controls:** Toggle editor splits and other window controls.
+
+*   **Activity Bar (Far Left):**
+    *   Quickly switch between different views:
+        *   📄 **Explorer:** Browse portfolio files (like \\\`about.json\\\`, \\\`projects.json\\\`).
+        *   🔍 **Search:** Search through file contents.
+        *   🤖 **AI Assistant:** Chat with an AI to learn about Nandang.
+        *   📰 **Articles:** View articles written by Nandang (from dev.to).
+        *   📊 **Statistics:** View application usage statistics.
+        *   🐙 **GitHub:** View Nandang's GitHub profile activity.
+        *   ✍️ **Guest Book:** Leave a message or see what others have written.
+        *   ⚙️ **Settings:** Customize themes, fonts, and other preferences (via gear icon at bottom of Activity Bar).
+
+*   **Sidebar (Left, next to Activity Bar):**
+    *   Displays content based on Activity Bar selection (e.g., File Explorer, Search Panel, Articles Panel).
+    *   **File Explorer:** Click on files (e.g., \\\`about.json\\\`) to open them in the editor. Folders can be expanded/collapsed.
+
+*   **Editor Area (Center):**
+    *   **Editor Tabs:** Opened files appear as tabs at the top of this area. You can switch between them, close them, or right-click for more options.
+    *   **Breadcrumbs:** Shows the path to the currently active file.
+    *   **Tab Content:** Displays the content of the selected file (e.g., JSON data, project details, AI chat).
+        *   **\\\`projects.json\\\`:** Shows interactive project cards. Click a card to see detailed project info.
+        *   **\\\`generate_cv.ts\\\`:** Right-click this file in the editor tab or sidebar and select "Run CV Generator Script" to download Nandang's CV.
+        *   **Markdown Files (\\\`.md\\\`):** Files like this guide are rendered as formatted text.
+
+*   **Bottom Panel (Bottom):**
+    *   Contains tabs for:
+        *   ⌨️ **Terminal:** An interactive terminal where you can type commands (try \\\`help\\\`).
+        *   🐾 **Pets:** Fun animated pets to keep you company.
+        *   📋 **Logs:** View application logs for debugging or information.
+    *   Toggle visibility via View menu, Command Palette, or \\\`Ctrl+\\\\\\\`\\\` (Cmd+\\\\\\\`\\\`).
+
+*   **Status Bar (Very Bottom):**
+    *   Displays app version, current theme, sound status, and notification count.
+    *   Click items to access related actions (e.g., click theme name to open Command Palette for theme change).
+
+## Useful Shortcuts & Tips
+
+*   **Command Palette (\\\`Ctrl+Shift+P\\\` or \\\`Cmd+Shift+P\\\`):** Your go-to for finding commands, opening files, changing themes, and more. Just start typing!
+*   **Toggle Explorer Sidebar (\\\`Ctrl+B\\\` or \\\`Cmd+B\\\`):** Quickly show or hide the file explorer.
+*   **Context Menus:** Right-click on editor tabs or sidebar items for relevant actions.
+*   **Settings (Gear Icon in Activity Bar or File Menu):** Customize your experience, including themes, fonts, and sound.
+
+---
+
+Enjoy exploring the portfolio! If you have any questions, try asking the **AI Assistant** or check the **About Portfolio** option in the Help menu.
 `;
     default:
       content = { error: 'File not found or content generation not implemented.' };

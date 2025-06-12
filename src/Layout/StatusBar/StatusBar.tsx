@@ -11,6 +11,8 @@ interface StatusBarProps {
   notificationsCount: number;
   onOpenCommandPalette: () => void;
   onOpenAboutModal: () => void;
+  isBottomPanelVisible: boolean; // New prop
+  onToggleBottomPanel: () => void; // New prop
 }
 
 const StatusBar: React.FC<StatusBarProps> = ({
@@ -21,10 +23,13 @@ const StatusBar: React.FC<StatusBarProps> = ({
   notificationsCount,
   onOpenCommandPalette,
   onOpenAboutModal,
+  isBottomPanelVisible, // Destructure new prop
+  onToggleBottomPanel,  // Destructure new prop
 }) => {
   const SoundIcon = isSoundMuted ? (ICONS.VolumeXIcon || ICONS.default) : (ICONS.Volume2Icon || ICONS.default) ;
   const ThemeIcon = ICONS.Palette || ICONS.theme_command || ICONS.default;
   const BellIcon = ICONS.Bell || ICONS.bell_icon || ICONS.default;
+  const BottomPanelToggleIcon = ICONS.layout_panel_bottom || ICONS.default;
 
   const handleVersionClick = () => {
     playSound('ui-click');
@@ -43,6 +48,10 @@ const StatusBar: React.FC<StatusBarProps> = ({
   const handleBellClick = () => {
     playSound('ui-click');
     onOpenCommandPalette(); 
+  };
+
+  const handleBottomPanelToggleClick = () => {
+    onToggleBottomPanel(); // Sound is handled by the passed-in function
   };
 
   return (
@@ -82,6 +91,15 @@ const StatusBar: React.FC<StatusBarProps> = ({
           aria-pressed={!isSoundMuted}
         >
           {SoundIcon && <SoundIcon size={14} />}
+        </button>
+        <button
+          onClick={handleBottomPanelToggleClick}
+          className={`flex items-center hover:bg-[var(--statusbar-item-hover-background)] px-1 py-0.5 rounded transition-colors ${isBottomPanelVisible ? 'bg-[var(--statusbar-item-hover-background)]' : ''}`}
+          title="Toggle Bottom Panel (Ctrl+` or Cmd+`)"
+          aria-label="Toggle bottom panel visibility"
+          aria-pressed={isBottomPanelVisible}
+        >
+          {BottomPanelToggleIcon && <BottomPanelToggleIcon size={14} />}
         </button>
         <button
           onClick={handleBellClick}

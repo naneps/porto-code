@@ -1,5 +1,6 @@
 
-import { LucideIcon, ImageIcon as ImageIconType, ExternalLink as ExternalLinkIcon } from 'lucide-react'; // Added ImageIconType and ExternalLinkIcon
+
+import { LucideIcon, ImageIcon as ImageIconType, ExternalLink as ExternalLinkIcon, LayoutPanelTop } from 'lucide-react'; // Changed LayoutPanelBottom to LayoutPanelTop
 import type { FirebaseUser } from '../Utils/firebase'; // Corrected import
 
 export interface Address {
@@ -128,6 +129,18 @@ export interface FontSizeOption {
   value: string;
   lineHeight?: string;
 }
+
+// For Theme Customization
+export interface CustomizableCSSVariable {
+  variable: string; // e.g., '--app-background'
+  label: string;    // e.g., 'Application Background'
+  group: string;    // e.g., 'General UI', 'Editor', 'Syntax'
+}
+
+export interface CustomColorOverrides {
+  [themeName: string]: ThemeProperties; // themeName -> { cssVar: colorValue }
+}
+
 
 export interface ChatMessage {
   id: string;
@@ -462,8 +475,15 @@ export interface SettingsEditorProps {
   onUserGitHubUsernameChange: (username: string) => void;
   onSaveUserPreferences: () => void; 
   addNotificationAndLog: (message: string, type: NotificationType, duration?: number, actions?: NotificationAction[], icon?: LucideIcon) => void;
-  onClearLocalStorage: () => void; // New prop
+  onClearLocalStorage: () => void;
   featureStatus: FeatureStatus;
+  // Theme Customization Props
+  customColorOverrides: ThemeProperties; // Changed from CustomColorOverrides
+  currentThemeBaseProperties: ThemeProperties;
+  onApplyCustomColorOverride: (variableName: string, colorValue: string) => void;
+  onSaveCustomThemeOverrides: () => void;
+  onResetCustomThemeOverrides: () => void;
+  onResetSingleColorOverride: (variableName: string) => void;
 }
 
 // Terminal Command Types
@@ -493,7 +513,7 @@ export interface CommandDefinition {
 
 
 // Adding specific Lucide icons if they are not already part of the general LucideIcon type
-export type { ImageIconType as ImageIcon, ExternalLinkIcon };
+export type { ImageIconType as ImageIcon, ExternalLinkIcon, LayoutPanelTop }; // Changed LayoutPanelBottom to LayoutPanelTop
 // Re-export FirebaseUser for convenience if used in multiple UI components
 // However, it's often cleaner for components to import directly from utils/firebase
 // export type { FirebaseUser } from '../utils/firebase';

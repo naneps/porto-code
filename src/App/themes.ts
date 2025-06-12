@@ -1,5 +1,5 @@
 
-import { Theme, ThemeProperties, FontFamilyOption, FontSizeOption } from './types';
+import { Theme, ThemeProperties, FontFamilyOption, FontSizeOption, CustomizableCSSVariable } from './types';
 
 // VSCode Dark+ (Based on default VSCode dark theme)
 const vscodeDarkPlusProperties: ThemeProperties = {
@@ -537,3 +537,28 @@ export function generateCSSVariables(properties: ThemeProperties): string {
     .map(([key, value]) => `${key}: ${value};`)
     .join('\n');
 }
+
+export const CUSTOMIZABLE_CSS_VARIABLES: CustomizableCSSVariable[] = [
+  { variable: '--app-background', label: 'Application Background', group: 'General UI' },
+  { variable: '--text-default', label: 'Default Text Color', group: 'General UI' },
+  { variable: '--text-accent', label: 'Primary Accent Color', group: 'General UI' },
+  { variable: '--focus-border', label: 'Focus/Active Border Color', group: 'General UI' },
+  { variable: '--link-foreground', label: 'Link Color', group: 'General UI' },
+  { variable: '--border-color', label: 'Default Border Color', group: 'General UI' },
+  
+  { variable: '--titlebar-background', label: 'Title Bar Background', group: 'Components' },
+  { variable: '--activitybar-background', label: 'Activity Bar Background', group: 'Components' },
+  { variable: '--sidebar-background', label: 'Sidebar Background', group: 'Components' },
+  { variable: '--editor-background', label: 'Editor Background', group: 'Components' },
+  { variable: '--editor-tab-active-background', label: 'Active Editor Tab Background', group: 'Components' },
+  { variable: '--terminal-background', label: 'Terminal Background', group: 'Components' },
+  { variable: '--statusbar-background', label: 'Status Bar Background', group: 'Components' },
+  { variable: '--modal-background', label: 'Modal Background', group: 'Components' },
+  { variable: '--modal-button-background', label: 'Modal Button Background', group: 'Components' },
+
+  { variable: '--syntax-keyword', label: 'Syntax: Keyword', group: 'Syntax Highlighting' },
+  { variable: '--syntax-string', label: 'Syntax: String', group: 'Syntax Highlighting' },
+  { variable: '--syntax-comment', label: 'Syntax: Comment', group: 'Syntax Highlighting' },
+  { variable: '--syntax-number', label: 'Syntax: Number', group: 'Syntax Highlighting' },
+  { variable: '--syntax-function', label: 'Syntax: Function', group: 'Syntax Highlighting' },
+];

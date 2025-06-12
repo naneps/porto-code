@@ -1,9 +1,11 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { ICONS, ALL_FEATURE_IDS } from '../../App/constants';
-import { Volume2, VolumeX, Palette, Type as FontIcon, ListTree, Terminal, Code2 as DevIcon, UserCircle2, Save, Github as GithubIconLucide, RotateCcw as ResetIcon } from 'lucide-react';
-import { Theme, FontFamilyOption, FontSizeOption, SettingsEditorProps as EditorProps, FeatureStatus } from '../../App/types'; 
-import MaintenanceView from '../../UI/MaintenanceView'; // Import MaintenanceView
+import { Volume2, VolumeX, Palette, Type as FontIcon, ListTree, Terminal, Code2 as DevIcon, UserCircle2, Save, Github as GithubIconLucide, RotateCcw as ResetIcon, Wand2 } from 'lucide-react';
+import { Theme, FontFamilyOption, FontSizeOption, SettingsEditorProps as EditorProps, FeatureStatus, CustomizableCSSVariable, ThemeProperties } from '../../App/types'; 
+import MaintenanceView from '../../UI/MaintenanceView';
+import { CUSTOMIZABLE_CSS_VARIABLES } from '../../App/themes'; // Import the list
 
 interface SettingSelectProps {
   label: string;
@@ -88,7 +90,6 @@ const SettingsEditor: React.FC<EditorProps> = ({
   onTerminalFontSizeChange,
   isDevModeEnabled, 
   onToggleDevMode,
-  // New props for user preferences
   currentUser,
   userGuestBookNickname,
   onUserGuestBookNicknameChange,
@@ -97,7 +98,14 @@ const SettingsEditor: React.FC<EditorProps> = ({
   onSaveUserPreferences,
   addNotificationAndLog,
   onClearLocalStorage,
-  featureStatus, // Added featureStatus
+  featureStatus,
+  // Theme Customization Props
+  customColorOverrides,
+  currentThemeBaseProperties,
+  onApplyCustomColorOverride,
+  onSaveCustomThemeOverrides,
+  onResetCustomThemeOverrides,
+  onResetSingleColorOverride,
 }) => {
   const SoundIcon = isSoundMuted ? (ICONS.VolumeXIcon || VolumeX) : (ICONS.Volume2Icon || Volume2);
   const ThemeIcon = ICONS.theme_command || Palette;
@@ -108,8 +116,8 @@ const SettingsEditor: React.FC<EditorProps> = ({
   const UserProfileIcon = UserCircle2;
   const SaveIcon = Save;
   const ClearSettingsIcon = ICONS.reset_settings_icon || ResetIcon;
+  const CustomizeThemeIcon = Wand2;
 
-  // Local state for inputs, initialized from props
   const [localNickname, setLocalNickname] = useState(userGuestBookNickname || '');
   const [localGitHubUsername, setLocalGitHubUsername] = useState(userGitHubUsername || '');
 
@@ -124,12 +132,17 @@ const SettingsEditor: React.FC<EditorProps> = ({
   const handleSaveIdentitySettings = () => {
     onUserGuestBookNicknameChange(localNickname.trim());
     onUserGitHubUsernameChange(localGitHubUsername.trim());
-    onSaveUserPreferences(); // This might show a notification like "Settings Saved!"
+    onSaveUserPreferences();
   };
 
   if (featureStatus !== 'active') {
     return <MaintenanceView featureName={ALL_FEATURE_IDS.settingsEditor} featureIcon={ICONS.settings_icon} />;
   }
+
+  const groupedCustomizableVars = CUSTOMIZABLE_CSS_VARIABLES.reduce((acc, item) => {
+    (acc[item.group] = acc[item.group] || []).push(item);
+    return acc;
+  }, {} as Record<string, CustomizableCSSVariable[]>);
 
   return (
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-[var(--editor-background)] text-[var(--editor-foreground)]">
@@ -234,6 +247,67 @@ const SettingsEditor: React.FC<EditorProps> = ({
             Icon={TerminalFontSizeIcon}
             description="Controls the font size in pixels for the integrated terminal."
           />
+        </div>
+      </section>
+
+      <section className="mb-6 md:mb-8">
+        <div className="flex items-center border-b border-[var(--border-color)] pb-2 mb-4">
+            {CustomizeThemeIcon && <CustomizeThemeIcon size={20} className="mr-2 text-[var(--text-accent)]" />}
+            <h2 className="text-lg md:text-xl font-medium text-[var(--text-accent)]">
+                Customize Theme Colors ({currentThemeName})
+            </h2>
+        </div>
+        
+        {Object.entries(groupedCustomizableVars).map(([groupName, vars]) => (
+          <div key={groupName} className="mb-4">
+            <h3 className="text-md font-semibold text-[var(--editor-foreground)] mb-2">{groupName}</h3>
+            <div className="space-y-1 grid grid-cols-1 md:grid-cols-2 gap-x-4">
+              {vars.map(({ variable, label }) => {
+                const currentValue: string = customColorOverrides[variable] || currentThemeBaseProperties[variable] || '#000000';
+                return (
+                  <div key={variable} className="flex items-center justify-between py-1.5 border-b border-[var(--border-color)] border-opacity-50 last:border-b-0 md:[&:nth-last-child(-n+2)]:border-b-0">
+                    <label htmlFor={`color-${variable}`} className="text-xs text-[var(--text-muted)] mr-2 truncate" title={variable}>
+                      {label}
+                    </label>
+                    <div className="flex items-center space-x-1.5">
+                      <input
+                        type="color"
+                        id={`color-${variable}`}
+                        value={currentValue}
+                        onChange={(e) => onApplyCustomColorOverride(variable, e.target.value)}
+                        className="w-6 h-6 p-0 border-none rounded cursor-pointer bg-transparent"
+                        title={`Current: ${currentValue}. Click to change.`}
+                      />
+                       <span className="text-xs font-mono text-[var(--text-muted)] w-14 text-center">{currentValue.toUpperCase()}</span>
+                       <button 
+                          onClick={() => onResetSingleColorOverride(variable)}
+                          className="p-0.5 text-[var(--text-muted)] hover:text-[var(--link-foreground)]"
+                          title={`Reset ${label} to theme default`}
+                          aria-label={`Reset ${label}`}
+                        >
+                          <ResetIcon size={12} />
+                        </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        
+        <div className="mt-6 flex flex-col sm:flex-row gap-2">
+            <button
+                onClick={onSaveCustomThemeOverrides}
+                className="flex items-center justify-center px-3 py-1.5 text-xs bg-[var(--modal-button-background)] text-[var(--modal-button-foreground)] rounded-md hover:bg-[var(--modal-button-hover-background)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-border)] transition-colors"
+            >
+                <SaveIcon size={14} className="mr-1.5" /> Save Customizations for {currentThemeName}
+            </button>
+            <button
+                onClick={onResetCustomThemeOverrides}
+                className="flex items-center justify-center px-3 py-1.5 text-xs bg-[var(--sidebar-item-hover-background)] hover:bg-[var(--activitybar-hover-background)] text-[var(--modal-foreground)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--focus-border)] transition-colors"
+            >
+                <ResetIcon size={14} className="mr-1.5" /> Reset All Customizations for {currentThemeName}
+            </button>
         </div>
       </section>
 

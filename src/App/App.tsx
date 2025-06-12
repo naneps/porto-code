@@ -1,19 +1,6 @@
 
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import FeatureStatusAdminPanel from '../Features/Admin/FeatureStatusAdminPanel'; // Added import
-import ArticlesPanel from '../Features/Articles/ArticlesPanel';
-import CommandPalette from '../Features/Commands/CommandPalette';
-import TabContent from '../Features/Editor/TabContent';
-import WelcomeView from '../Features/Editor/WelcomeView';
-import LogsPanel from '../Features/Logs/LogsPanel';
-import AboutModal from '../Features/Modals/AboutModal';
-import PasskeyPromptModal from '../Features/Modals/PasskeyPromptModal';
-import ProfilePopup from '../Features/Modals/ProfilePopup';
-import NotificationContainer from '../Features/Notifications/NotificationContainer';
-import PetsPanel from '../Features/Pets/PetsPanel';
-import SearchPanel from '../Features/Search/SearchPanel';
-import StatisticsPanel from '../Features/Statistics/StatisticsPanel';
-import TerminalPanel from '../Features/Terminal/TerminalPanel';
 import ActivityBar from '../Layout/ActivityBar/ActivityBar';
 import BottomPanelTabs from '../Layout/BottomPanelTabs/BottomPanelTabs';
 import Breadcrumbs from '../Layout/Breadcrumbs/Breadcrumbs';
@@ -23,6 +10,20 @@ import StatusBar from '../Layout/StatusBar/StatusBar';
 import { TitleBar } from '../Layout/TitleBar/TitleBar';
 import ContextMenu from '../UI/ContextMenu/ContextMenu';
 import MaintenanceView from '../UI/MaintenanceView';
+import FeatureStatusAdminPanel from '../features/Admin/FeatureStatusAdminPanel'; // Added import
+import ArticlesPanel from '../features/Articles/ArticlesPanel';
+import CommandPalette from '../features/Commands/CommandPalette';
+import TabContent from '../features/Editor/TabContent';
+import WelcomeView from '../features/Editor/WelcomeView';
+import LogsPanel from '../features/Logs/LogsPanel';
+import AboutModal from '../features/Modals/AboutModal';
+import PasskeyPromptModal from '../features/Modals/PasskeyPromptModal';
+import ProfilePopup from '../features/Modals/ProfilePopup';
+import NotificationContainer from '../features/Notifications/NotificationContainer';
+import PetsPanel from '../features/Pets/PetsPanel';
+import SearchPanel from '../features/Search/SearchPanel';
+import StatisticsPanel from '../features/Statistics/StatisticsPanel';
+import TerminalPanel from '../features/Terminal/TerminalPanel';
 import { ALL_FEATURE_IDS, APP_VERSION, DEFAULT_ACTIVITY_BAR_ITEMS, DEFAULT_FEATURE_STATUSES, SIDEBAR_ITEMS as DEFAULT_SIDEBAR_ITEMS, generateFileContent, generateProjectDetailContent, ICONS, MAX_LOG_ENTRIES, MOCK_GITHUB_STATS, PORTFOLIO_DATA } from './constants'; // Added STATISTICS_FIREBASE_PATH
 import { DEFAULT_FONT_FAMILY_ID, DEFAULT_FONT_SIZE_ID, DEFAULT_TERMINAL_FONT_SIZE_ID, DEFAULT_THEME_NAME, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS, PREDEFINED_THEMES, TERMINAL_FONT_SIZE_OPTIONS } from './themes';
 import { ActivityBarItemConfig, ActivityBarItemDefinition, ActivityBarSelection, AIChatInterfaceProps, ArticleItem, BottomPanelTabId, ContextMenuItem, EditorPaneId, EditorPaneState, FeatureId, FeaturesStatusState, LogEntry, LogLevel, NotificationType, ProjectDetail, SearchResultItem, SettingsEditorProps, SidebarItemConfig, StatisticsData, Tab, TabContentProps, TerminalCommandContext } from './types'; // Added StatisticsData, StatisticsPanelProps
@@ -229,6 +230,12 @@ const App: React.FC = () => {
     handleThemeChange: rawHandleThemeChange,
     handleFontFamilyChange: rawHandleFontFamilyChange,
     handleFontSizeChange: rawHandleEditorFontSizeChange,
+    customColorOverrides, // Theme customization prop
+    currentThemeBaseProperties, // Theme customization prop
+    applyCustomColorOverride, // Theme customization function
+    saveCustomThemeOverrides, // Theme customization function
+    resetCustomThemeOverrides, // Theme customization function
+    resetSingleColorOverride, // Theme customization function
   } = useThemeManager(
     DEFAULT_THEME_NAME,
     DEFAULT_FONT_FAMILY_ID,
@@ -934,6 +941,18 @@ const App: React.FC = () => {
   }, [isBottomPanelVisible, addAppLog, featuresStatus, addNotificationAndLog]);
   const handleCloseBottomPanel = useCallback(() => { setIsBottomPanelVisible(false); playSound('panel-toggle'); addAppLog('action', 'Bottom panel closed.', 'User'); }, [addAppLog]);
   
+  const handleToggleBottomPanelStatusBar = useCallback(() => {
+    playSound('panel-toggle');
+    setIsBottomPanelVisible(prev => {
+        const newVisibility = !prev;
+        if (newVisibility && !activeBottomPanelId) {
+            setActiveBottomPanelId('terminal');
+        }
+        addAppLog('action', `Bottom panel ${newVisibility ? 'shown' : 'hidden'} via status bar.`, 'User');
+        return newVisibility;
+    });
+  }, [activeBottomPanelId, addAppLog]);
+
   const handleSuggestNewAIProject = useCallback(async (userKeywords?: string) => {
     if (featuresStatus.projectSuggestions !== 'active') {
       addNotificationAndLog(`The AI Project Suggestions feature (${ALL_FEATURE_IDS.projectSuggestions}) is currently under maintenance.`, 'warning', 5000, undefined, ICONS.HardHatIcon);
@@ -1056,7 +1075,19 @@ const App: React.FC = () => {
   }, [addAppLog, featuresStatus, addNotificationAndLog]);
 
 
-  useGlobalEventHandlers({ toggleSidebarVisibility, openCommandPalette, isCommandPaletteOpen, closeCommandPalette, isAboutModalOpen, closeAboutModal, contextMenuVisible: editorContextMenuState.visible || sidebarContextMenuState.visible, setContextMenuVisible: (visible) => { if (!visible) { closeEditorContextMenu(); closeSidebarContextMenu();}}, toggleTerminalVisibility: toggleTerminalPanel, togglePetsPanelVisibility: togglePetsPanel, isDevModeEnabled });
+  useGlobalEventHandlers({ 
+    toggleSidebarVisibility, 
+    openCommandPalette, 
+    isCommandPaletteOpen, 
+    closeCommandPalette, 
+    isAboutModalOpen, 
+    closeAboutModal, 
+    contextMenuVisible: editorContextMenuState.visible || sidebarContextMenuState.visible, 
+    setContextMenuVisible: (visible) => { if (!visible) { closeEditorContextMenu(); closeSidebarContextMenu();}}, 
+    toggleTerminalVisibility: handleToggleBottomPanelStatusBar, // Updated to use generic bottom panel toggle
+    togglePetsPanelVisibility: togglePetsPanel, // Kept specific for other shortcuts/actions if any
+    isDevModeEnabled 
+  });
 
   const handleToggleSearchPanel = useCallback(() => {
     if (featuresStatus.searchPanel !== 'active') {
@@ -1314,8 +1345,7 @@ const App: React.FC = () => {
             'portfolio-bottomPanelHeight', 'portfolio-isBottomPanelVisible',
             'portfolio-activeBottomPanelId', 'portfolio-chatMessages',
             'portfolio-guestbook-nickname', 'portfolio-guestbook-github-username',
-            'portfolio-soundMuted'
-            // 'portfolio-feature-statuses' - Do not clear this if it's meant to be a "remote" config
+            'portfolio-soundMuted', 'portfolio-theme-customizations' // Added theme customizations
         ];
         keysToClear.forEach(key => localStorage.removeItem(key));
         addNotificationAndLog("All cached settings have been cleared. Reloading application...", 'success', 4000, undefined, ICONS.CheckCircle2);
@@ -1363,7 +1393,9 @@ const App: React.FC = () => {
     openAboutModal, icons: ICONS, handleToggleSearchPanel, handleToggleArticlesPanel, handleToggleStatisticsPanel, 
     handleToggleGitHubPanel: handleOpenGitHubProfileTab, 
     handleOpenGuestBook: handleOpenGuestBookTab,
-    toggleTerminalVisibility: toggleTerminalPanel, togglePetsPanelVisibility: togglePetsPanel, toggleLogsPanelVisibility: toggleLogsPanel,
+    toggleTerminalVisibility: handleToggleBottomPanelStatusBar, // Updated to use generic toggle
+    togglePetsPanelVisibility: togglePetsPanel, // Specific toggles can still exist for targeted actions
+    toggleLogsPanelVisibility: toggleLogsPanel,   // Specific toggles can still exist for targeted actions
     handleToggleSoundMute, isSoundMuted, handleRunCVGenerator, handleOpenSettingsEditor,
     terminalFontSizes: TERMINAL_FONT_SIZE_OPTIONS, currentTerminalFontSizeId, handleTerminalFontSizeChange,
     handleToggleRightEditorPane, handleFocusEditorPane, handleMoveEditorToOtherPane, addAppLog,
@@ -1375,7 +1407,7 @@ const App: React.FC = () => {
     openCommandPalette, PREDEFINED_THEMES, handleThemeChange, currentThemeName, FONT_FAMILY_OPTIONS, handleEditorFontFamilyChange,
     currentFontFamilyId, FONT_SIZE_OPTIONS, handleEditorFontSizeChange, currentEditorFontSizeId, openAboutModal, ICONS,
     handleToggleSearchPanel, handleToggleArticlesPanel, handleToggleStatisticsPanel, handleOpenGitHubProfileTab, handleOpenGuestBookTab,
-    toggleTerminalPanel, togglePetsPanel, toggleLogsPanel,
+    handleToggleBottomPanelStatusBar, togglePetsPanel, toggleLogsPanel, // Updated toggle for terminal/bottom panel
     handleToggleSoundMute, isSoundMuted, handleRunCVGenerator, handleOpenSettingsEditor,
     currentTerminalFontSizeId, handleTerminalFontSizeChange,
     handleToggleRightEditorPane, handleFocusEditorPane, handleMoveEditorToOtherPane, addAppLog,
@@ -1429,6 +1461,12 @@ const App: React.FC = () => {
             onSaveUserPreferences: handleSaveUserPreferences, addNotificationAndLog,
             onClearLocalStorage: handleClearLocalStorage,
             featureStatus: featuresStatus.settingsEditor,
+            customColorOverrides,
+            currentThemeBaseProperties,
+            onApplyCustomColorOverride: applyCustomColorOverride,
+            onSaveCustomThemeOverrides: saveCustomThemeOverrides,
+            onResetCustomThemeOverrides: resetCustomThemeOverrides,
+            onResetSingleColorOverride: resetSingleColorOverride,
         };
         return settingsProps;
     }
@@ -1436,7 +1474,16 @@ const App: React.FC = () => {
     if (activeTab.type === 'guest_book') return { addAppLog, currentUser, userGuestBookNickname, userGitHubUsername, featureStatus: featuresStatus.guestBook }; 
     if (activeTab.fileName) return generateFileContent(activeTab.fileName, PORTFOLIO_DATA);
     return null;
-  }, [editorPanes.left.activeTabId, editorPanes.left.openTabs, PORTFOLIO_DATA, orderedSidebarItems, aiGeneratedProjects, isSoundMuted, handleToggleSoundMute, currentThemeName, handleThemeChange, currentFontFamilyId, handleEditorFontFamilyChange, currentEditorFontSizeId, handleEditorFontSizeChange, currentTerminalFontSizeId, handleTerminalFontSizeChange, isDevModeEnabled, handleToggleDevMode, chatMessages, chatInput, setChatInput, chatIsLoading, chatError, chatApiKeyAvailable, handleChatSendMessage, handleOpenTab, addAppLog, currentUser, userGuestBookNickname,userGitHubUsername, handleUserGuestBookNicknameChange, handleUserGitHubUsernameChange, handleSaveUserPreferences, addNotificationAndLog, devToArticles, handleClearLocalStorage, featuresStatus]);
+  }, [
+    editorPanes.left.activeTabId, editorPanes.left.openTabs, PORTFOLIO_DATA, orderedSidebarItems, aiGeneratedProjects, 
+    isSoundMuted, handleToggleSoundMute, currentThemeName, handleThemeChange, currentFontFamilyId, handleEditorFontFamilyChange, 
+    currentEditorFontSizeId, handleEditorFontSizeChange, currentTerminalFontSizeId, handleTerminalFontSizeChange, 
+    isDevModeEnabled, handleToggleDevMode, chatMessages, chatInput, setChatInput, chatIsLoading, chatError, 
+    chatApiKeyAvailable, handleChatSendMessage, handleOpenTab, addAppLog, currentUser, userGuestBookNickname, 
+    userGitHubUsername, handleUserGuestBookNicknameChange, handleUserGitHubUsernameChange, handleSaveUserPreferences, 
+    addNotificationAndLog, devToArticles, handleClearLocalStorage, featuresStatus,
+    customColorOverrides, currentThemeBaseProperties, applyCustomColorOverride, saveCustomThemeOverrides, resetCustomThemeOverrides, resetSingleColorOverride // Added theme customization dependencies
+  ]);
   
   const activeContentDetailsForRightPane: TabContentProps['content'] | AIChatInterfaceProps | null = useMemo(() => {
     const activeTab = editorPanes.right.openTabs.find(tab => tab.id === editorPanes.right.activeTabId);
@@ -1475,6 +1522,12 @@ const App: React.FC = () => {
             onSaveUserPreferences: handleSaveUserPreferences, addNotificationAndLog,
             onClearLocalStorage: handleClearLocalStorage,
             featureStatus: featuresStatus.settingsEditor,
+            customColorOverrides,
+            currentThemeBaseProperties,
+            onApplyCustomColorOverride: applyCustomColorOverride,
+            onSaveCustomThemeOverrides: saveCustomThemeOverrides,
+            onResetCustomThemeOverrides: resetCustomThemeOverrides,
+            onResetSingleColorOverride: resetSingleColorOverride,
         };
         return settingsProps;
     }
@@ -1482,7 +1535,16 @@ const App: React.FC = () => {
     if (activeTab.type === 'guest_book') return { addAppLog, currentUser, userGuestBookNickname, userGitHubUsername, featureStatus: featuresStatus.guestBook }; 
     if (activeTab.fileName) return generateFileContent(activeTab.fileName, PORTFOLIO_DATA);
     return null;
-  }, [editorPanes.right.activeTabId, editorPanes.right.openTabs, PORTFOLIO_DATA, orderedSidebarItems, aiGeneratedProjects, isSoundMuted, handleToggleSoundMute, currentThemeName, handleThemeChange, currentFontFamilyId, handleEditorFontFamilyChange, currentEditorFontSizeId, handleEditorFontSizeChange, currentTerminalFontSizeId, handleTerminalFontSizeChange, isDevModeEnabled, handleToggleDevMode, chatMessages, chatInput, setChatInput, chatIsLoading, chatError, chatApiKeyAvailable, handleChatSendMessage, handleOpenTab, addAppLog, currentUser, userGuestBookNickname,userGitHubUsername, handleUserGuestBookNicknameChange, handleUserGitHubUsernameChange, handleSaveUserPreferences, addNotificationAndLog, devToArticles, handleClearLocalStorage, featuresStatus]);
+  }, [
+    editorPanes.right.activeTabId, editorPanes.right.openTabs, PORTFOLIO_DATA, orderedSidebarItems, aiGeneratedProjects, 
+    isSoundMuted, handleToggleSoundMute, currentThemeName, handleThemeChange, currentFontFamilyId, handleEditorFontFamilyChange, 
+    currentEditorFontSizeId, handleEditorFontSizeChange, currentTerminalFontSizeId, handleTerminalFontSizeChange, 
+    isDevModeEnabled, handleToggleDevMode, chatMessages, chatInput, setChatInput, chatIsLoading, chatError, 
+    chatApiKeyAvailable, handleChatSendMessage, handleOpenTab, addAppLog, currentUser, userGuestBookNickname, 
+    userGitHubUsername, handleUserGuestBookNicknameChange, handleUserGitHubUsernameChange, handleSaveUserPreferences, 
+    addNotificationAndLog, devToArticles, handleClearLocalStorage, featuresStatus,
+    customColorOverrides, currentThemeBaseProperties, applyCustomColorOverride, saveCustomThemeOverrides, resetCustomThemeOverrides, resetSingleColorOverride // Added theme customization dependencies
+  ]);
 
   const renderEditorPane = (paneId: EditorPaneId) => {
     const paneState = editorPanes[paneId];
@@ -1654,6 +1716,8 @@ const App: React.FC = () => {
         notificationsCount={notificationsHook.notifications.length}
         onOpenCommandPalette={openCommandPalette}
         onOpenAboutModal={openAboutModal}
+        isBottomPanelVisible={isBottomPanelVisible} 
+        onToggleBottomPanel={handleToggleBottomPanelStatusBar}
       />
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeCommandPalette} commands={commands} />
       <AboutModal isOpen={isAboutModalOpen} onClose={closeAboutModal} />

@@ -29,6 +29,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
   const SeparatorIcon = ICONS.chevron_right_icon;
   const ProjectsJSONIcon = ICONS['projects.json']; 
   const CVGeneratorFolderIcon = ICONS.folder_closed_icon; 
+  const SupportFolderIcon = ICONS.folder_closed_icon; 
 
   let FinalSegmentIcon: React.ElementType | undefined = ICONS.default;
   if (activeTab.type === 'file' && activeTab.fileName && ICONS[activeTab.fileName]) {
@@ -123,7 +124,27 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activeTab, portfolioData, onO
         </>
       )}
 
-      {(activeTab.type === 'file' && activeTab.fileName !== 'generate_cv.ts' || activeTab.type === 'json_preview') && (
+      {(activeTab.type === 'file' && (activeTab.fileName === 'support.md' || activeTab.fileName === 'guide.md')) && (
+        <>
+          {SupportFolderIcon && (
+             <button 
+              onClick={() => { /* Optional: Action to focus SUPPORT folder in sidebar */}}
+              className="flex items-center hover:text-[var(--breadcrumbs-focus-foreground)] transition-colors duration-150"
+              title="SUPPORT Folder"
+            >
+              <SupportFolderIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)] opacity-75" />
+              <span>SUPPORT</span>
+            </button>
+          )}
+          {SeparatorIcon && <SeparatorIcon size={16} className="mx-1 text-[var(--breadcrumbs-separator-color)]" />}
+          <div className="flex items-center text-[var(--breadcrumbs-focus-foreground)]">
+            {FinalSegmentIcon && <FinalSegmentIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />}
+            <span>{activeTab.title}</span>
+          </div>
+        </>
+      )}
+      
+      {(activeTab.type === 'file' && !['generate_cv.ts', 'support.md', 'guide.md'].includes(activeTab.fileName || '') || activeTab.type === 'json_preview') && (
          <div className="flex items-center text-[var(--breadcrumbs-focus-foreground)]">
             {FinalSegmentIcon && <FinalSegmentIcon size={14} className="mr-1.5 text-[var(--breadcrumbs-icon-foreground)]" />}
             <span>{activeTab.title}</span>
