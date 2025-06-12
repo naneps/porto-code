@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
-import { ArticleItem, ArticlesPanelProps, FeatureStatus } from '../../App/types'; 
-import { ICONS, ALL_FEATURE_IDS } from '../../App/constants'; 
-import { Loader2, AlertTriangle } from 'lucide-react'; 
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ALL_FEATURE_IDS, ICONS } from '../../App/constants';
+import { ArticleItem, ArticlesPanelProps } from '../../App/types';
 import MaintenanceView from '../../UI/MaintenanceView';
 
 const ArticlesPanel: React.FC<ArticlesPanelProps> = ({

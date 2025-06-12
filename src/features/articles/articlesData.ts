@@ -1,5 +1,4 @@
 
-import { ArticleItem } from '../../App/types'; // Adjusted path
 
 // SAMPLE_ARTICLES is no longer directly used by ArticlesPanel after dev.to integration.
 // Keeping it here for now in case it's used by other utilities or for reference.

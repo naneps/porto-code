@@ -1,17 +1,8 @@
 
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import ActivityBar from '../Layout/ActivityBar/ActivityBar';
-import BottomPanelTabs from '../Layout/BottomPanelTabs/BottomPanelTabs';
-import Breadcrumbs from '../Layout/Breadcrumbs/Breadcrumbs';
-import EditorTabs from '../Layout/EditorTabs/EditorTabs';
-import { Sidebar } from '../Layout/Sidebar/Sidebar';
-import StatusBar from '../Layout/StatusBar/StatusBar';
-import { TitleBar } from '../Layout/TitleBar/TitleBar';
-import ContextMenu from '../UI/ContextMenu/ContextMenu';
-import MaintenanceView from '../UI/MaintenanceView';
 import FeatureStatusAdminPanel from '../features/Admin/FeatureStatusAdminPanel'; // Added import
-import ArticlesPanel from '../features/Articles/ArticlesPanel';
+import ArticlesPanel from '../features/articles/articlesPanel';
 import CommandPalette from '../features/Commands/CommandPalette';
 import TabContent from '../features/Editor/TabContent';
 import WelcomeView from '../features/Editor/WelcomeView';
@@ -24,6 +15,15 @@ import PetsPanel from '../features/Pets/PetsPanel';
 import SearchPanel from '../features/Search/SearchPanel';
 import StatisticsPanel from '../features/Statistics/StatisticsPanel';
 import TerminalPanel from '../features/Terminal/TerminalPanel';
+import ActivityBar from '../Layout/ActivityBar/ActivityBar';
+import BottomPanelTabs from '../Layout/BottomPanelTabs/BottomPanelTabs';
+import Breadcrumbs from '../Layout/Breadcrumbs/Breadcrumbs';
+import EditorTabs from '../Layout/EditorTabs/EditorTabs';
+import { Sidebar } from '../Layout/Sidebar/Sidebar';
+import StatusBar from '../Layout/StatusBar/StatusBar';
+import { TitleBar } from '../Layout/TitleBar/TitleBar';
+import ContextMenu from '../UI/ContextMenu/ContextMenu';
+import MaintenanceView from '../UI/MaintenanceView';
 import { ALL_FEATURE_IDS, APP_VERSION, DEFAULT_ACTIVITY_BAR_ITEMS, DEFAULT_FEATURE_STATUSES, SIDEBAR_ITEMS as DEFAULT_SIDEBAR_ITEMS, generateFileContent, generateProjectDetailContent, ICONS, MAX_LOG_ENTRIES, MOCK_GITHUB_STATS, PORTFOLIO_DATA } from './constants'; // Added STATISTICS_FIREBASE_PATH
 import { DEFAULT_FONT_FAMILY_ID, DEFAULT_FONT_SIZE_ID, DEFAULT_TERMINAL_FONT_SIZE_ID, DEFAULT_THEME_NAME, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS, PREDEFINED_THEMES, TERMINAL_FONT_SIZE_OPTIONS } from './themes';
 import { ActivityBarItemConfig, ActivityBarItemDefinition, ActivityBarSelection, AIChatInterfaceProps, ArticleItem, BottomPanelTabId, ContextMenuItem, EditorPaneId, EditorPaneState, FeatureId, FeaturesStatusState, LogEntry, LogLevel, NotificationType, ProjectDetail, SearchResultItem, SettingsEditorProps, SidebarItemConfig, StatisticsData, Tab, TabContentProps, TerminalCommandContext } from './types'; // Added StatisticsData, StatisticsPanelProps
