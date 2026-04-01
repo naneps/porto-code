@@ -12,6 +12,13 @@ export interface EducationEntry {
   school: string;
   major: string;
   period: string;
+  gpa?: string; // e.g. "3.5 / 4.0"
+}
+
+export interface CertificationEntry {
+  issuer: string;   // e.g. "Dicoding Indonesia"
+  title: string;    // e.g. "Belajar Membuat Aplikasi Flutter"
+  year?: string;    // e.g. "2023"
 }
 
 export interface Position {
@@ -40,12 +47,13 @@ export interface PortfolioData {
   email: string;
   phone: string;
   address: Address;
-  summary?: string; // Added summary
+  summary?: string;
   education: EducationEntry[];
   current_position: Position;
   work_experience: WorkExperienceEntry[];
   skills: string[];
-  projects: ProjectDetail[]; // Changed from string[]
+  certifications?: CertificationEntry[]; // New
+  projects: ProjectDetail[];
   linkedIn: string;
   instagram?: string;
   tiktok?: string;
@@ -53,8 +61,10 @@ export interface PortfolioData {
     name: string;
     url: string;
   };
-  avatarUrl?: string; // Added avatarUrl
-  role?: string; // Added top-level role
+  avatarUrl?: string;
+  role?: string;
+  availability?: string; // e.g. "Open to full-time ... roles"
+  languages?: string[];  // e.g. ["Indonesian (native)", "English (basic)"]
 }
 
 

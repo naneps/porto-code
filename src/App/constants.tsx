@@ -1,6 +1,6 @@
 
 
-import { PortfolioData, SidebarItemConfig, ProjectDetail, Command as AppCommandType, ArticleItem, ActivityBarItemDefinition, ActivityBarSelection, ProjectListingItem, MockGitHubStats, FeatureId, FeaturesStatusState, FeatureStatus } from './types';
+import { PortfolioData, CertificationEntry, SidebarItemConfig, ProjectDetail, Command as AppCommandType, ArticleItem, ActivityBarItemDefinition, ActivityBarSelection, ProjectListingItem, MockGitHubStats, FeatureId, FeaturesStatusState, FeatureStatus } from './types';
 import { User, Briefcase, Code2, FolderKanban, Mail, FileJson2, LucideIcon, FileTerminal, HelpCircle, Eye, Palette, Type as FontIcon, Settings, GitFork, Bell, TerminalSquare, ArrowLeft, ArrowRight, SplitSquareHorizontal, LayoutGrid, UserCircle2 as UserProfileIcon, Minus, Square, X, ChevronDown, ChevronRight, Search, Check, Files, FileCode, Bot, FileText, Link, Phone, MousePointerClick, Command, Newspaper, Play, Cat, Volume2, VolumeX, Sparkles, BarChart3, Folder as FolderClosed, FolderOpen, FileCode2 as FileCodeIcon, FileBadge, ExternalLink as ExternalLinkIcon, Image as ImageIcon, ListChecks, Github, MessageSquare, Loader2, Send, Heart, Info, CheckCircle2, AlertTriangle, RotateCcw, MessageSquarePlus, PawPrint, Waves, Bird, HardHat, ListFilter, LayoutPanelTop } from 'lucide-react'; // Changed LayoutPanelBottom to LayoutPanelTop
 import { MOCK_CV_GENERATOR_CODE } from '../Assets/generate_cv_code';
 
@@ -10,58 +10,74 @@ export const PORTFOLIO_DATA: PortfolioData = {
   name: "Nandang Eka Prasetya",
   nickname: "Nande",
   email: "ekaprasetya2244@gmail.com",
-  phone: "+6281802192111",
-  avatarUrl: "https://media.licdn.com/dms/image/D5603AQFovS5UWc6iAA/profile-displayphoto-shrink_200_200/0/1738660203129?e=1754524800&v=beta&t=qovbV5WiLMKwY4d72QXJbRGEnFVmxOpxqSMQ642p8ZY", 
-  role: "Mobile Developer", 
+  phone: "+628802192111",
+  avatarUrl: "https://media.licdn.com/dms/image/D5603AQFovS5UWc6iAA/profile-displayphoto-shrink_200_200/0/1738660203129?e=1754524800&v=beta&t=qovbV5WiLMKwY4d72QXJbRGEnFVmxOpxqSMQ642p8ZY",
+  role: "Full Stack Developer (Mobile & Web)",
   address: {
     city: "Indramayu",
-    full: "Indramayu, Indonesia"
+    full: "Indramayu, West Java, Indonesia"
   },
-  summary: "Experienced Mobile Developer specializing in Flutter, with a proven track record of creating innovative and high-performance mobile applications. Proficient in developing cross-platform solutions and integrating advanced technologies such as AI and robotics. Skilled in delivering end-to-end solutions for industries including retail, entertainment, F&B, and logistics. Adept at working in Agile Scrum environments and quickly learning emerging technologies.",
+  summary: "Full Stack Developer with 2+ years of experience, primarily focused on mobile (Flutter) and frontend (Vue.js/Nuxt.js) development. Experienced in building and scaling production-grade applications including POS systems, self-service kiosks, and booking platforms. Skilled in REST API integration, real-time system handling, and performance optimization. Also contributes to backend development using Laravel and PHP. Comfortable working across the full stack in Agile environments.",
   education: [
     {
       school: "Politeknik Negeri Indramayu",
-      major: "Diploma (D3) in Informatics",
-      period: "2020 - 2023"
+      major: "D3 Informatics Engineering",
+      period: "2020 - 2023",
+      gpa: "3.5 / 4.0"
     }
   ],
   current_position: {
     role: "Mobile Developer",
     company: "Yubi Technology",
     period: "Oct 2023 - Present",
-    description: "Developed a variety of mobile applications using Flutter, including POS systems, self-service kiosks, warehouse management, and HR solutions, reducing manual steps by an average of 5 per workflow and cutting processing time by several minutes per transaction. Successfully developed a self-service kiosk application for Kios Kopi, integrating with a robotic barista to automate coffee preparation, handling up to 200 orders per day with minimal human intervention. Proficient in utilizing REST APIs for efficient communication between mobile applications and backend servers, reducing data retrieval time from seconds to milliseconds and handling thousands of requests per day."
+    description: "Developed and maintained 8+ Flutter-based production apps: POS System, Kitchen Display System (KDS), Self-Service FnB App, Payment Service, Self-Service Kiosk, Booking System, Warehouse Management, and HR Application. Engineered a self-service kiosk integrated with robot barista hardware, capable of processing 200+ real-time orders daily. Optimized REST API communication and app performance, ensuring fast and stable responses in high-load production environments. Contributed to frontend development (Vue.js/Nuxt.js) and supported backend services (Laravel), improving cross-team integration. Collaborated with cross-functional teams in Agile workflows to deliver scalable, maintainable features on schedule."
   },
   work_experience: [
     {
       role: "Mobile Developer",
       company: "Yubi Technology",
       period: "Oct 2023 - Present",
-      description: "Developed a variety of mobile applications using Flutter, including POS systems, self-service kiosks, warehouse management, and HR solutions, reducing manual steps by an average of 5 per workflow and cutting processing time by several minutes per transaction. Successfully developed a self-service kiosk application for Kios Kopi, integrating with a robotic barista to automate coffee preparation, handling up to 200 orders per day with minimal human intervention. Proficient in utilizing REST APIs for efficient communication between mobile applications and backend servers, reducing data retrieval time from seconds to milliseconds and handling thousands of requests per day."
+      description: "Developed and maintained 8+ Flutter-based production apps: POS System, Kitchen Display System (KDS), Self-Service FnB App, Payment Service, Self-Service Kiosk, Booking System, Warehouse Management, and HR Application. Engineered a self-service kiosk integrated with robot barista hardware, capable of processing 200+ real-time orders daily. Optimized REST API communication and app performance, ensuring fast and stable responses in high-load production environments. Contributed to frontend development (Vue.js/Nuxt.js) and supported backend services (Laravel), improving cross-team integration. Collaborated with cross-functional teams in Agile workflows to deliver scalable, maintainable features on schedule."
     },
     {
-      role: "Mobile Developer",
+      role: "Mobile Developer (Part-Time)",
       company: "PT ACQ Teknologi Indonesia",
       period: "Jul 2024 - Jan 2025",
-      description: "Developed and maintained a mobile app for a startup, ensuring reliable communication and a seamless user experience, leading to an increase in positive user feedback and higher daily active users. Collaborated with the team to design and implement key features, enhancing app usability and simplifying the booking process, reducing steps from 5 to 3 and cutting booking time by 10 seconds. Focused on delivering a user-friendly interface and optimizing app performance, reducing app load time by 2 seconds and improving session duration per user."
+      description: "Built a Flutter-based startup booking application from initial concept through production release. Integrated REST APIs for search, booking, and schedule management, enabling a seamless end-to-end user experience. Designed a scalable architecture to support future feature expansion."
     },
     {
-      role: "Frontend Developer",
+      role: "Frontend Developer (Freelance)",
       company: "Latena Teknologi Nusantara",
       period: "Apr 2023 - Jun 2023",
-      description: "Developed and designed intuitive and responsive user interfaces (UI) for web applications, ensuring seamless user experiences. Contributed to the development of a CMS platform for Job Portal and Company Profile using NuxtJS, enhancing dynamic web page functionality. Collaborated closely with backend teams to ensure proper alignment between frontend and backend functionalities, integrating data from multiple sources through APIs for accurate data presentation."
+      description: "Developed responsive web interfaces for a CMS Job Portal and company profile website using Nuxt.js. Integrated multiple external APIs into the frontend layer with high data accuracy and cross-device compatibility."
     },
     {
-      role: "Frontend Developer",
+      role: "Frontend Developer (Internship)",
       company: "Roketin",
       period: "Jul 2022 - Dec 2022",
-      description: "Developed and designed user interfaces (UI) for web applications using Vue.js, ensuring a visually appealing and user-friendly experience. Collaborated with backend teams in an Agile Scrum environment to align frontend and backend logic, enhancing overall functionality. Integrated APIs from various sources, ensuring accurate data presentation and improving app functionality."
+      description: "Built user-friendly interfaces for the Roketin Support System using Vue.js. Integrated Laravel-based REST APIs and collaborated in Agile Scrum teams to deliver iterative improvements."
     }
   ],
   skills: [
-    "Flutter", "Dart", "REST API", "Firebase", "State Management (Provider, GetX)",
-    "Freezed", "Google ML Kit", "POS System", "HR Apps", "Warehouse System",
-    "Self-Service Kiosk Integration", "Git & GitHub", "NuxtJS", "Vue.js"
+    "Flutter", "Dart", "Firebase", "REST API",
+    "Vue.js", "Nuxt.js", "React", "HTML", "CSS",
+    "PHP", "Laravel",
+    "Git", "GitHub", "CI/CD", "Figma", "Prompt Engineering AI",
+    "State Management (Provider, GetX)", "Freezed", "Google ML Kit",
+    "POS System", "Self-Service Kiosk Integration", "Warehouse System", "HR Apps"
   ],
+  certifications: [
+    {
+      issuer: "Dicoding Indonesia",
+      title: "Belajar Membuat Aplikasi Flutter (Flutter Developer Certification)"
+    },
+    {
+      issuer: "Dicoding Indonesia",
+      title: "AI for Developers"
+    }
+  ],
+  availability: "Open to full-time Mobile Developer (Flutter) roles — remote or on-site",
+  languages: ["Indonesian (native)", "English (basic)"],
   projects: [
     {
       id: "project_0_buildify",
@@ -143,6 +159,8 @@ export const PORTFOLIO_DATA: PortfolioData = {
     url: "https://github.com/naneps"
   }
 };
+
+
 
 // Helper to generate random contribution data for the mock graph
 const generateMockContributionGraph = (weeks = 52, days = 7): number[][] => {
@@ -348,11 +366,14 @@ export function generateFileContent(fileName: string, data: PortfolioData): stri
       content = {
         name: data.name,
         nickname: data.nickname,
+        role: data.role,
         summary: data.summary,
         current_position: data.current_position,
-        education: data.education,
-        role: data.role, 
-        avatarUrl: data.avatarUrl, 
+        education: data.education,  // includes gpa field
+        certifications: data.certifications,
+        availability: data.availability,
+        languages: data.languages,
+        avatarUrl: data.avatarUrl,
       };
       break;
     case 'experience.json':
@@ -388,15 +409,11 @@ export function generateFileContent(fileName: string, data: PortfolioData): stri
         address: data.address,
         linkedIn: data.linkedIn,
       };
-      if (data.instagram) {
-        content.instagram = data.instagram;
-      }
-      if (data.tiktok) {
-        content.tiktok = data.tiktok;
-      }
-      if (data.otherSocial) {
-        content.otherSocial = data.otherSocial;
-      }
+      if (data.instagram) content.instagram = data.instagram;
+      if (data.tiktok) content.tiktok = data.tiktok;
+      if (data.otherSocial) content.otherSocial = data.otherSocial;
+      if (data.availability) content.availability = data.availability;
+      if (data.languages) content.languages = data.languages;
       break;
     case 'generate_cv.ts':
       return MOCK_CV_GENERATOR_CODE;
