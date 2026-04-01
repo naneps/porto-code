@@ -191,17 +191,18 @@ const generateMockContributionGraph = (weeks = 52, days = 7): number[][] => {
 
 
 export const MOCK_GITHUB_STATS: MockGitHubStats = {
-    totalContributionsLastYear: 3115, 
-    commitStreak: 128, 
+    totalContributionsLastYear: 1247,
+    commitStreak: 42,
     topLanguages: [
-        { name: 'Dart', percentage: 45, color: '#00B4AB' },
-        { name: 'Flutter (UI)', percentage: 30, color: '#02569B' },
-        { name: 'JavaScript', percentage: 10, color: '#F7DF1E' },
-        { name: 'Python', percentage: 8, color: '#3572A5' },
-        { name: 'Other', percentage: 7, color: '#8B949E' }
+        { name: 'Dart', percentage: 52, color: '#00B4AB' },
+        { name: 'JavaScript', percentage: 18, color: '#F7DF1E' },
+        { name: 'PHP', percentage: 14, color: '#777BB4' },
+        { name: 'TypeScript', percentage: 10, color: '#3178C6' },
+        { name: 'Other', percentage: 6, color: '#8B949E' },
     ],
     contributionGraphData: generateMockContributionGraph()
 };
+
 
 
 export const ICONS: { [key: string]: LucideIcon } = {

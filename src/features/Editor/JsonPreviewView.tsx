@@ -49,11 +49,11 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
     </a>
   );
 
-  const renderDetailItem = (label: string, value: string | JSX.Element | string[] | number | undefined, Icon?: React.ElementType) => {
+  const renderDetailItem = (label: string, value: string | React.ReactNode | string[] | number | undefined, Icon?: React.ElementType) => {
     if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) {
         return null;
     }
-    let displayValue: JSX.Element | string | number;
+    let displayValue: React.ReactNode;
     if (Array.isArray(value)) {
       displayValue = (
         <div className="flex flex-wrap gap-1">
@@ -192,19 +192,84 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
 
   if (fileId === 'skills.json') {
     const { skills } = jsonData as { skills: string[] };
+
+    const categories: { label: string; color: string; borderColor: string; keys: string[] }[] = [
+      {
+        label: 'Mobile Development',
+        color: 'text-[#00B4AB]',
+        borderColor: 'border-[#00B4AB]',
+        keys: ['Flutter', 'Dart', 'Firebase', 'REST API', 'State Management (Provider, GetX)', 'Freezed', 'Google ML Kit'],
+      },
+      {
+        label: 'Frontend Web',
+        color: 'text-[#F7DF1E]',
+        borderColor: 'border-[#F7DF1E]',
+        keys: ['Vue.js', 'Nuxt.js', 'React', 'HTML', 'CSS'],
+      },
+      {
+        label: 'Backend',
+        color: 'text-[#777BB4]',
+        borderColor: 'border-[#777BB4]',
+        keys: ['PHP', 'Laravel'],
+      },
+      {
+        label: 'Tools & DevOps',
+        color: 'text-[var(--text-accent)]',
+        borderColor: 'border-[var(--text-accent)]',
+        keys: ['Git', 'GitHub', 'CI/CD', 'Figma', 'Prompt Engineering AI'],
+      },
+    ];
+
+    const categorisedKeys = categories.flatMap(c => c.keys);
+    const otherSkills = skills.filter(s => !categorisedKeys.includes(s));
+
     return (
       <div className="p-3 sm:p-4 md:p-6 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
-        {renderSectionTitle("Skills", Code2Icon)}
-        <div className="flex flex-wrap gap-1.5 sm:gap-2">
-          {skills.map((skill, index) => (
-            <span key={index} className="px-2 sm:px-3 py-1 bg-[var(--sidebar-item-hover-background)] text-[var(--text-accent)] rounded-full text-xs sm:text-sm border border-[var(--text-accent)] shadow-sm">
-              {skill}
-            </span>
-          ))}
+        {renderSectionTitle('Skills', Code2Icon)}
+        <div className="space-y-5 mt-1">
+          {categories.map(cat => {
+            const matched = skills.filter(s => cat.keys.includes(s));
+            if (!matched.length) return null;
+            return (
+              <div key={cat.label}>
+                <p className={`text-xs font-semibold uppercase tracking-widest mb-2 ${cat.color}`}>
+                  {cat.label}
+                </p>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                  {matched.map((skill, i) => (
+                    <span
+                      key={i}
+                      className={`px-2 sm:px-3 py-1 bg-[var(--sidebar-item-hover-background)] rounded-full text-xs sm:text-sm border ${cat.borderColor} ${cat.color} shadow-sm`}
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+          {otherSkills.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-2 text-[var(--text-muted)]">
+                Domain Experience
+              </p>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                {otherSkills.map((skill, i) => (
+                  <span
+                    key={i}
+                    className="px-2 sm:px-3 py-1 bg-[var(--sidebar-item-hover-background)] text-[var(--text-default)] rounded-full text-xs sm:text-sm border border-[var(--border-color)] shadow-sm"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
   }
+
 
   if (fileId === 'contact.json') {
     const { email, phone, address, linkedIn, instagram, tiktok, otherSocial } = jsonData as PortfolioData;
