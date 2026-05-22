@@ -40,51 +40,51 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ projectId, projectTitl
   return (
     <div
       onClick={onClick}
-      className="bg-[var(--sidebar-background)] rounded-lg shadow-lg overflow-hidden cursor-pointer transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-105 border border-[var(--border-color)] hover:border-[var(--focus-border)] group/card flex flex-col"
+      className="bg-[var(--sidebar-background)]/50 backdrop-blur-md rounded-xl shadow-md overflow-hidden cursor-pointer transition-all duration-300 ease-in-out hover:shadow-[0_12px_32px_rgba(0,122,204,0.12)] hover:-translate-y-1 hover:bg-[var(--sidebar-background)]/85 border border-[var(--border-color)]/60 hover:border-[var(--text-accent)]/50 group/card flex flex-col"
     >
-      <div className="relative w-full h-40 flex-shrink-0">
+      <div className="relative w-full h-40 flex-shrink-0 overflow-hidden">
         <img
           src={currentDisplayImage}
           alt={`Cover for ${projectTitle} - Image ${currentImageIndex + 1}`}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500 ease-out"
           onError={(e) => (e.currentTarget.src = placeholderImage)}
         />
         {hasMultipleImages && (
           <>
             <button
               onClick={handlePrevImage}
-              className="absolute top-1/2 left-1 transform -translate-y-1/2 bg-black/30 text-white p-1 rounded-full opacity-0 group-hover/card:opacity-100 hover:bg-black/60 transition-opacity focus:outline-none focus:ring-1 focus:ring-white"
+              className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black/40 text-white p-1.5 rounded-full opacity-0 group-hover/card:opacity-100 hover:bg-black/70 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-white"
               aria-label="Previous image"
             >
-              <PrevIcon size={18} />
+              <PrevIcon size={14} />
             </button>
             <button
               onClick={handleNextImage}
-              className="absolute top-1/2 right-1 transform -translate-y-1/2 bg-black/30 text-white p-1 rounded-full opacity-0 group-hover/card:opacity-100 hover:bg-black/60 transition-opacity focus:outline-none focus:ring-1 focus:ring-white"
+              className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-black/40 text-white p-1.5 rounded-full opacity-0 group-hover/card:opacity-100 hover:bg-black/70 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-white"
               aria-label="Next image"
             >
-              <NextIcon size={18} />
+              <NextIcon size={14} />
             </button>
-            <div className="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">
+            <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-md font-semibold tracking-wider">
               {currentImageIndex + 1} / {displayImages.length}
             </div>
           </>
         )}
       </div>
-      <div className="p-4 flex flex-col flex-grow">
-        <div className="flex items-center mb-2">
-          {FileIcon && <FileIcon size={18} className="text-[var(--text-accent)] mr-2 flex-shrink-0" />}
-          <h3 className="text-md font-semibold text-[var(--link-foreground)] truncate" title={projectTitle}>
+      <div className="p-4 sm:p-5 flex flex-col flex-grow text-left">
+        <div className="flex items-center mb-2.5">
+          {FileIcon && <FileIcon size={16} className="text-[var(--text-accent)] mr-2 flex-shrink-0" />}
+          <h3 className="text-sm sm:text-base font-bold text-[var(--link-foreground)] truncate group-hover/card:text-[var(--link-hover-foreground)] transition-colors duration-200" title={projectTitle}>
             {projectTitle}
           </h3>
         </div>
 
         {technologies && technologies.length > 0 && (
-          <div className="mb-2 flex flex-wrap gap-1.5">
+          <div className="mb-3.5 flex flex-wrap gap-1.5">
             {technologies.map((tech, index) => (
               <span
                 key={index}
-                className="text-[0.65rem] bg-[var(--editor-tab-inactive-background)] text-[var(--text-muted)] px-1.5 py-0.5 rounded-sm border border-[var(--border-color)]"
+                className="text-[10px] font-semibold bg-[var(--text-accent)]/10 text-[var(--text-accent)] px-2 py-0.5 rounded-full border border-[var(--text-accent)]/15 tracking-wide"
                 title={tech}
               >
                 {tech}
@@ -93,12 +93,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ projectId, projectTitl
           </div>
         )}
         
-        <p className="text-xs text-[var(--text-muted)] mb-3 mt-auto flex-grow"> {/* mt-auto pushes Open Details down */}
-          Click to view details for this project.
+        <p className="text-xs text-[var(--text-muted)] mb-4 mt-auto flex-grow leading-relaxed">
+          Click to view comprehensive project details, architecture, and live links.
         </p>
-        <div className="flex items-center text-sm text-[var(--link-foreground)] hover:text-[var(--link-hover-foreground)]">
+        <div className="flex items-center text-xs sm:text-sm font-bold text-[var(--link-foreground)] group-hover/card:text-[var(--link-hover-foreground)] transition-colors duration-200">
           <span>Open Details</span>
-          {ArrowIcon && <ArrowIcon size={16} className="ml-1" />}
+          {ArrowIcon && <ArrowIcon size={14} className="ml-1 group-hover/card:translate-x-1.5 transition-transform duration-200 ease-out" />}
         </div>
       </div>
     </div>

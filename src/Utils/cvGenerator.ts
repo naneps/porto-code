@@ -4,7 +4,7 @@ import { PortfolioData } from '../App/types';
 const FONT_SIZE_NORMAL = 10;
 const FONT_SIZE_SECTION = 12;
 const FONT_SIZE_NAME = 22;
-const LINE_HEIGHT = 1.5;
+const LINE_HEIGHT = 1.4;
 const MARGIN = 50;
 const CONTENT_WIDTH_OFFSET = 2 * MARGIN;
 
@@ -40,49 +40,75 @@ function measureWrappedHeight(
   return totalHeight;
 }
 
-/** Draws text and returns how much vertical space was consumed. */
-function drawText(
-  page: PDFPage,
-  text: string,
-  x: number,
-  y: number,
-  font: PDFFont,
-  size: number,
-  color = TEXT,
-  maxWidth?: number
-): number {
-  const options: any = { x, y, font, size, color, lineHeight: size * LINE_HEIGHT };
-  if (maxWidth) options.maxWidth = maxWidth;
-  page.drawText(text, options);
-  return maxWidth
-    ? measureWrappedHeight(text, font, size, maxWidth)
-    : size * LINE_HEIGHT;
-}
+class PDFContext {
+  pdfDoc: PDFDocument;
+  currentPage: PDFPage;
+  y: number;
+  width: number;
+  height: number;
+  regularFont: PDFFont;
+  boldFont: PDFFont;
 
-/** Draws a thin horizontal rule. */
-function drawRule(page: PDFPage, y: number, pageWidth: number) {
-  page.drawLine({
-    start: { x: MARGIN, y },
-    end:   { x: pageWidth - MARGIN, y },
-    thickness: 0.5,
-    color: DIVIDER,
-  });
-}
+  constructor(pdfDoc: PDFDocument, startPage: PDFPage, regularFont: PDFFont, boldFont: PDFFont) {
+    this.pdfDoc = pdfDoc;
+    this.currentPage = startPage;
+    const { width, height } = startPage.getSize();
+    this.width = width;
+    this.height = height;
+    this.y = height - MARGIN;
+    this.regularFont = regularFont;
+    this.boldFont = boldFont;
+  }
 
-/** Draws a blue accent section header + rule, returns height consumed. */
-function drawSectionHeader(
-  page: PDFPage,
-  title: string,
-  y: number,
-  pageWidth: number,
-  boldFont: PDFFont
-): number {
-  let consumed = 0;
-  consumed += drawText(page, title.toUpperCase(), MARGIN, y - consumed, boldFont, FONT_SIZE_SECTION, ACCENT);
-  consumed += 3;
-  drawRule(page, y - consumed, pageWidth);
-  consumed += 6;
-  return consumed;
+  ensureSpace(neededHeight: number) {
+    if (this.y - neededHeight < MARGIN) {
+      this.currentPage = this.pdfDoc.addPage();
+      this.y = this.height - MARGIN;
+    }
+  }
+
+  drawText(text: string, size: number, isBold: boolean, color = TEXT, maxWidth?: number, xOffset = 0) {
+    const font = isBold ? this.boldFont : this.regularFont;
+    const actualMaxWidth = maxWidth || (this.width - CONTENT_WIDTH_OFFSET - xOffset);
+    const heightConsumed = measureWrappedHeight(text, font, size, actualMaxWidth);
+    
+    this.ensureSpace(heightConsumed);
+    
+    this.currentPage.drawText(text, {
+      x: MARGIN + xOffset,
+      y: this.y - size,
+      font,
+      size,
+      color,
+      lineHeight: size * LINE_HEIGHT,
+      maxWidth: actualMaxWidth
+    });
+    
+    this.y -= heightConsumed;
+  }
+
+  drawSectionHeader(title: string) {
+    const font = this.boldFont;
+    const headerHeight = FONT_SIZE_SECTION * LINE_HEIGHT + 3 + 6 + 10;
+    this.ensureSpace(headerHeight);
+    
+    this.currentPage.drawText(title.toUpperCase(), {
+      x: MARGIN,
+      y: this.y - FONT_SIZE_SECTION,
+      font,
+      size: FONT_SIZE_SECTION,
+      color: ACCENT
+    });
+    this.y -= FONT_SIZE_SECTION * LINE_HEIGHT + 3;
+    
+    this.currentPage.drawLine({
+      start: { x: MARGIN, y: this.y },
+      end: { x: this.width - MARGIN, y: this.y },
+      thickness: 0.5,
+      color: DIVIDER,
+    });
+    this.y -= 6 + 10;
+  }
 }
 
 // ─── main export ──────────────────────────────────────────────────────────────
@@ -90,36 +116,35 @@ function drawSectionHeader(
 export async function createCV_PDF(data: PortfolioData): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
   const page   = pdfDoc.addPage();
-  const { width, height } = page.getSize();
-  const contentWidth = width - CONTENT_WIDTH_OFFSET;
-  let y = height - MARGIN;
-
+  
   const regular = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold    = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
+  const ctx = new PDFContext(pdfDoc, page, regular, bold);
+
   // ── HEADER ────────────────────────────────────────────────────────────────
-  y -= drawText(page, data.name, MARGIN, y, bold, FONT_SIZE_NAME, ACCENT);
+  ctx.drawText(data.name, FONT_SIZE_NAME, true, ACCENT);
   if (data.role) {
-    y -= drawText(page, data.role, MARGIN, y, regular, FONT_SIZE_NORMAL + 1, MUTED);
+    ctx.drawText(data.role, FONT_SIZE_NORMAL + 1, false, MUTED);
   }
-  y -= 4;
+  ctx.y -= 4;
 
   const contactParts: string[] = [data.email, data.phone];
   if (data.address?.full)  contactParts.push(data.address.full);
   if (data.linkedIn)       contactParts.push(data.linkedIn.replace(/^https?:\/\//, ''));
-  y -= drawText(page, contactParts.join('  |  '), MARGIN, y, regular, FONT_SIZE_NORMAL - 1, MUTED, contentWidth);
-  y -= 12;
+  ctx.drawText(contactParts.join('  |  '), FONT_SIZE_NORMAL - 1, false, MUTED);
+  ctx.y -= 12;
 
   // ── SUMMARY ───────────────────────────────────────────────────────────────
   if (data.summary) {
-    y -= drawSectionHeader(page, 'Professional Summary', y, width, bold);
-    y -= drawText(page, data.summary, MARGIN, y, regular, FONT_SIZE_NORMAL, TEXT, contentWidth);
-    y -= 10;
+    ctx.drawSectionHeader('Professional Summary');
+    ctx.drawText(data.summary, FONT_SIZE_NORMAL, false, TEXT);
+    ctx.y -= 10;
   }
 
   // ── TECHNICAL SKILLS ──────────────────────────────────────────────────────
   if (data.skills?.length) {
-    y -= drawSectionHeader(page, 'Technical Skills', y, width, bold);
+    ctx.drawSectionHeader('Technical Skills');
 
     // Group skills into categories matching the data order
     const categories: { label: string; keys: string[] }[] = [
@@ -133,70 +158,70 @@ export async function createCV_PDF(data: PortfolioData): Promise<Uint8Array> {
       const matched = data.skills.filter(s => cat.keys.includes(s));
       if (!matched.length) continue;
       const line = `${cat.label}: ${matched.join(', ')}`;
-      y -= drawText(page, line, MARGIN, y, regular, FONT_SIZE_NORMAL, TEXT, contentWidth);
-      y -= 2;
+      ctx.drawText(line, FONT_SIZE_NORMAL, false, TEXT);
+      ctx.y -= 2;
     }
 
     // Remaining skills not in any category
     const categorised = categories.flatMap(c => c.keys);
     const rest = data.skills.filter(s => !categorised.includes(s));
     if (rest.length) {
-      y -= drawText(page, `Other: ${rest.join(', ')}`, MARGIN, y, regular, FONT_SIZE_NORMAL, TEXT, contentWidth);
-      y -= 2;
+      ctx.drawText(`Other: ${rest.join(', ')}`, FONT_SIZE_NORMAL, false, TEXT);
+      ctx.y -= 2;
     }
-    y -= 8;
+    ctx.y -= 8;
   }
 
   // ── WORK EXPERIENCE ───────────────────────────────────────────────────────
   if (data.work_experience?.length) {
-    y -= drawSectionHeader(page, 'Work Experience', y, width, bold);
+    ctx.drawSectionHeader('Work Experience');
     for (const exp of data.work_experience) {
       const header = `${exp.role}  —  ${exp.company}`;
-      y -= drawText(page, header, MARGIN, y, bold, FONT_SIZE_NORMAL);
-      y -= drawText(page, exp.period, MARGIN, y, regular, FONT_SIZE_NORMAL - 1, MUTED);
-      y -= 2;
+      ctx.drawText(header, FONT_SIZE_NORMAL, true, TEXT);
+      ctx.drawText(exp.period, FONT_SIZE_NORMAL - 1, false, MUTED);
+      ctx.y -= 2;
       if (exp.description) {
-        y -= drawText(page, exp.description, MARGIN + 10, y, regular, FONT_SIZE_NORMAL - 1, MUTED, contentWidth - 10);
+        ctx.drawText(exp.description, FONT_SIZE_NORMAL - 1, false, MUTED, undefined, 10);
       }
-      y -= 8;
+      ctx.y -= 8;
     }
   }
 
   // ── EDUCATION ─────────────────────────────────────────────────────────────
   if (data.education?.length) {
-    y -= drawSectionHeader(page, 'Education', y, width, bold);
+    ctx.drawSectionHeader('Education');
     for (const edu of data.education) {
       const header = `${edu.school}  (${edu.period})`;
-      y -= drawText(page, header, MARGIN, y, bold, FONT_SIZE_NORMAL);
+      ctx.drawText(header, FONT_SIZE_NORMAL, true, TEXT);
       const detail = edu.gpa ? `${edu.major}  •  GPA: ${edu.gpa}` : edu.major;
-      y -= drawText(page, detail, MARGIN + 10, y, regular, FONT_SIZE_NORMAL - 1, MUTED);
-      y -= 8;
+      ctx.drawText(detail, FONT_SIZE_NORMAL - 1, false, MUTED, undefined, 10);
+      ctx.y -= 8;
     }
   }
 
   // ── CERTIFICATIONS ────────────────────────────────────────────────────────
   if (data.certifications?.length) {
-    y -= drawSectionHeader(page, 'Certifications', y, width, bold);
+    ctx.drawSectionHeader('Certifications');
     for (const cert of data.certifications) {
       const line = cert.year
         ? `${cert.issuer}  —  ${cert.title}  (${cert.year})`
         : `${cert.issuer}  —  ${cert.title}`;
-      y -= drawText(page, `• ${line}`, MARGIN, y, regular, FONT_SIZE_NORMAL, TEXT, contentWidth);
-      y -= 3;
+      ctx.drawText(`• ${line}`, FONT_SIZE_NORMAL, false, TEXT);
+      ctx.y -= 3;
     }
-    y -= 5;
+    ctx.y -= 5;
   }
 
   // ── ADDITIONAL ────────────────────────────────────────────────────────────
   const hasAdditional = data.availability || data.languages?.length;
   if (hasAdditional) {
-    y -= drawSectionHeader(page, 'Additional', y, width, bold);
+    ctx.drawSectionHeader('Additional');
     if (data.availability) {
-      y -= drawText(page, `Availability: ${data.availability}`, MARGIN, y, regular, FONT_SIZE_NORMAL, TEXT, contentWidth);
-      y -= 3;
+      ctx.drawText(`Availability: ${data.availability}`, FONT_SIZE_NORMAL, false, TEXT);
+      ctx.y -= 3;
     }
     if (data.languages?.length) {
-      y -= drawText(page, `Languages: ${data.languages.join(', ')}`, MARGIN, y, regular, FONT_SIZE_NORMAL, TEXT, contentWidth);
+      ctx.drawText(`Languages: ${data.languages.join(', ')}`, FONT_SIZE_NORMAL, false, TEXT);
     }
   }
 

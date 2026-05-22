@@ -95,7 +95,7 @@ export const useGeminiChat = (
       addAppLog('debug', 'Generated contextual prompt for AI.', 'AI', { promptLength: prompt.length });
       
       const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-preview-04-17', 
+        model: 'gemini-2.5-flash', 
         contents: prompt,
       });
 

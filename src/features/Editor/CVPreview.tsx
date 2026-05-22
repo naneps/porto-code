@@ -32,6 +32,39 @@ const CVPreview: React.FC<{ portfolioData: PortfolioData }> = ({ portfolioData }
     </span>
   );
 
+  const renderFormattedDescription = (desc: string) => {
+    const lines = desc.split('\n');
+    const elements: React.ReactNode[] = [];
+    
+    lines.forEach((line, index) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('-')) {
+        const content = trimmed.substring(1).trim();
+        const isNested = line.startsWith('  -') || line.startsWith('    -') || line.startsWith('\t-');
+        elements.push(
+          <li 
+            key={index} 
+            className={`relative pl-3.5 mb-1 leading-relaxed text-xs text-[var(--text-default)] ${
+              isNested 
+                ? 'ml-4 text-[var(--text-muted)] before:content-["○"] before:absolute before:left-0 before:text-[var(--text-accent)]/70' 
+                : 'before:content-["•"] before:absolute before:left-0 before:text-[var(--text-accent)] font-medium'
+            }`}
+          >
+            {content}
+          </li>
+        );
+      } else if (trimmed) {
+        elements.push(
+          <p key={index} className="text-xs text-[var(--text-default)] mb-1 leading-relaxed font-semibold mt-1">
+            {line}
+          </p>
+        );
+      }
+    });
+    
+    return <ul className="space-y-1 my-1 ml-2">{elements}</ul>;
+  };
+
 
   return (
     <div className="p-4 sm:p-6 md:p-8 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto font-sans antialiased">
@@ -70,7 +103,11 @@ const CVPreview: React.FC<{ portfolioData: PortfolioData }> = ({ portfolioData }
             <div className="mb-2">
               <h3 className="text-md font-semibold text-[var(--editor-tab-active-foreground)]">{current_position.role}</h3>
               <p className="text-sm text-[var(--text-default)]">{current_position.company} ({current_position.period})</p>
-              {current_position.description && <p className="text-xs text-[var(--text-muted)] mt-1 text-justify">{current_position.description}</p>}
+              {current_position.description && (
+                <div className="mt-1 text-justify">
+                  {renderFormattedDescription(current_position.description)}
+                </div>
+              )}
             </div>
           </section>
         )}
@@ -83,7 +120,11 @@ const CVPreview: React.FC<{ portfolioData: PortfolioData }> = ({ portfolioData }
               <div key={index} className="mb-3 last:mb-0">
                 <h3 className="text-md font-semibold text-[var(--editor-tab-active-foreground)]">{exp.role}</h3>
                 <p className="text-sm text-[var(--text-default)]">{exp.company} <span className="text-[var(--text-muted)]">({exp.period})</span></p>
-                {exp.description && <p className="text-xs text-[var(--text-muted)] mt-1 text-justify">{exp.description}</p>}
+                {exp.description && (
+                  <div className="mt-1 text-justify">
+                    {renderFormattedDescription(exp.description)}
+                  </div>
+                )}
               </div>
             ))}
           </section>

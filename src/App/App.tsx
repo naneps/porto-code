@@ -1120,7 +1120,7 @@ const App: React.FC = () => {
 
       if (devToArticles.length === 0 && !articlesError) {
         addNotificationAndLog(
-          "Fetching articles from dev.to...", 'info', 0, undefined, 
+          "Loading latest articles...", 'info', 0, undefined, 
           ICONS.Info, true, ARTICLES_LOADING_NOTIFICATION_ID
         );
         const fetchSuccessful = await triggerFetchDevToArticles();
@@ -1582,6 +1582,10 @@ const App: React.FC = () => {
               paneId={paneId} 
               addAppLog={addAppLog}
               featureStatusForProjectsView={featuresStatus.projectsView} 
+              allArticles={devToArticles}
+              onOpenArticle={handleOpenArticleTab}
+              onCloseTab={(tabId) => handleCloseTab(paneId, tabId)}
+              addNotificationAndLog={addNotificationAndLog}
             />
           ) : (
             <WelcomeView 

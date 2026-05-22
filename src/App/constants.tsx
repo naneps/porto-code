@@ -10,7 +10,7 @@ export const PORTFOLIO_DATA: PortfolioData = {
   name: "Nandang Eka Prasetya",
   nickname: "Nande",
   email: "ekaprasetya2244@gmail.com",
-  phone: "+628802192111",
+  phone: "08802192111",
   avatarUrl: "https://media.licdn.com/dms/image/D5603AQFovS5UWc6iAA/profile-displayphoto-shrink_200_200/0/1738660203129?e=1754524800&v=beta&t=qovbV5WiLMKwY4d72QXJbRGEnFVmxOpxqSMQ642p8ZY",
   role: "Full Stack Developer (Mobile & Web)",
   address: {
@@ -30,41 +30,39 @@ export const PORTFOLIO_DATA: PortfolioData = {
     role: "Mobile Developer",
     company: "Yubi Technology",
     period: "Oct 2023 - Present",
-    description: "Developed and maintained 8+ Flutter-based production apps: POS System, Kitchen Display System (KDS), Self-Service FnB App, Payment Service, Self-Service Kiosk, Booking System, Warehouse Management, and HR Application. Engineered a self-service kiosk integrated with robot barista hardware, capable of processing 200+ real-time orders daily. Optimized REST API communication and app performance, ensuring fast and stable responses in high-load production environments. Contributed to frontend development (Vue.js/Nuxt.js) and supported backend services (Laravel), improving cross-team integration. Collaborated with cross-functional teams in Agile workflows to deliver scalable, maintainable features on schedule."
+    description: "- Developed and maintained 8+ Flutter-based production apps:\n  - POS System\n  - Kitchen Display System (KDS)\n  - Self-Service FnB App\n  - Payment Service\n  - Self-Service Kiosk\n  - Booking System\n  - Warehouse Management\n  - HR Application\n- Engineered a self-service kiosk integrated with robot barista hardware, capable of processing 200+ real-time orders daily.\n- Optimized REST API communication and app performance, ensuring fast and stable responses in high-load production environments.\n- Contributed to frontend development (Vue.js/Nuxt.js) and supported backend services (Laravel), improving cross-team integration.\n- Collaborated with cross-functional teams in Agile workflows to deliver scalable, maintainable features on schedule."
   },
   work_experience: [
     {
       role: "Mobile Developer",
       company: "Yubi Technology",
       period: "Oct 2023 - Present",
-      description: "Developed and maintained 8+ Flutter-based production apps: POS System, Kitchen Display System (KDS), Self-Service FnB App, Payment Service, Self-Service Kiosk, Booking System, Warehouse Management, and HR Application. Engineered a self-service kiosk integrated with robot barista hardware, capable of processing 200+ real-time orders daily. Optimized REST API communication and app performance, ensuring fast and stable responses in high-load production environments. Contributed to frontend development (Vue.js/Nuxt.js) and supported backend services (Laravel), improving cross-team integration. Collaborated with cross-functional teams in Agile workflows to deliver scalable, maintainable features on schedule."
+      description: "- Developed and maintained 8+ Flutter-based production apps:\n  - POS System\n  - Kitchen Display System (KDS)\n  - Self-Service FnB App\n  - Payment Service\n  - Self-Service Kiosk\n  - Booking System\n  - Warehouse Management\n  - HR Application\n- Engineered a self-service kiosk integrated with robot barista hardware, capable of processing 200+ real-time orders daily.\n- Optimized REST API communication and app performance, ensuring fast and stable responses in high-load production environments.\n- Contributed to frontend development (Vue.js/Nuxt.js) and supported backend services (Laravel), improving cross-team integration.\n- Collaborated with cross-functional teams in Agile workflows to deliver scalable, maintainable features on schedule."
     },
     {
       role: "Mobile Developer (Part-Time)",
       company: "PT ACQ Teknologi Indonesia",
       period: "Jul 2024 - Jan 2025",
-      description: "Built a Flutter-based startup booking application from initial concept through production release. Integrated REST APIs for search, booking, and schedule management, enabling a seamless end-to-end user experience. Designed a scalable architecture to support future feature expansion."
+      description: "- Built a Flutter-based startup booking application from initial concept through production release.\n- Integrated REST APIs for search, booking, and schedule management, enabling a seamless end-to-end user experience.\n- Designed a scalable architecture to support future feature expansion."
     },
     {
       role: "Frontend Developer (Freelance)",
       company: "Latena Teknologi Nusantara",
       period: "Apr 2023 - Jun 2023",
-      description: "Developed responsive web interfaces for a CMS Job Portal and company profile website using Nuxt.js. Integrated multiple external APIs into the frontend layer with high data accuracy and cross-device compatibility."
+      description: "- Developed responsive web interfaces for a CMS Job Portal and company profile website using Nuxt.js.\n- Integrated multiple external APIs into the frontend layer with high data accuracy and cross-device compatibility."
     },
     {
       role: "Frontend Developer (Internship)",
       company: "Roketin",
       period: "Jul 2022 - Dec 2022",
-      description: "Built user-friendly interfaces for the Roketin Support System using Vue.js. Integrated Laravel-based REST APIs and collaborated in Agile Scrum teams to deliver iterative improvements."
+      description: "- Built user-friendly interfaces for the Roketin Support System using Vue.js.\n- Integrated Laravel-based REST APIs and collaborated in Agile Scrum teams to deliver iterative improvements."
     }
   ],
   skills: [
     "Flutter", "Dart", "Firebase", "REST API",
-    "Vue.js", "Nuxt.js", "React", "HTML", "CSS",
+    "Vue.js", "Nuxt.js", "HTML", "CSS", "React",
     "PHP", "Laravel",
-    "Git", "GitHub", "CI/CD", "Figma", "Prompt Engineering AI",
-    "State Management (Provider, GetX)", "Freezed", "Google ML Kit",
-    "POS System", "Self-Service Kiosk Integration", "Warehouse System", "HR Apps"
+    "Git", "GitHub", "CI/CD", "Figma", "Prompt Engineering AI"
   ],
   certifications: [
     {
@@ -77,7 +75,7 @@ export const PORTFOLIO_DATA: PortfolioData = {
     }
   ],
   availability: "Open to full-time Mobile Developer (Flutter) roles — remote or on-site",
-  languages: ["Indonesian (native)", "English (basic)"],
+  languages: ["Indonesian (Native)", "English (Basic)"],
   projects: [
     {
       id: "project_0_buildify",
@@ -468,7 +466,7 @@ This portfolio is designed to look and feel like Visual Studio Code. Here's a qu
         *   📄 **Explorer:** Browse portfolio files (like \\\`about.json\\\`, \\\`projects.json\\\`).
         *   🔍 **Search:** Search through file contents.
         *   🤖 **AI Assistant:** Chat with an AI to learn about Nandang.
-        *   📰 **Articles:** View articles written by Nandang (from dev.to).
+        *   📰 **Articles:** View articles crawled from news sources.
         *   📊 **Statistics:** View application usage statistics.
         *   🐙 **GitHub:** View Nandang's GitHub profile activity.
         *   ✍️ **Guest Book:** Leave a message or see what others have written.

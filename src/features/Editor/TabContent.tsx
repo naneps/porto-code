@@ -41,6 +41,10 @@ const TabContent: React.FC<TabContentPropsType> = ({
   paneId, 
   addAppLog,
   featureStatusForProjectsView, // Added prop
+  allArticles = [],
+  onOpenArticle,
+  onCloseTab,
+  addNotificationAndLog,
 }) => {
   const [finalSyntaxTheme, setFinalSyntaxTheme] = React.useState<any>({});
   const SparklesIcon = ICONS.SparklesIcon;
@@ -146,7 +150,15 @@ const TabContent: React.FC<TabContentPropsType> = ({
   if (tab.type === 'article_detail') {
     const articleData = content as ArticleItem;
     // Pass the article data to the new ArticleDetailView component
-    return <ArticleDetailView article={articleData} />;
+    return (
+      <ArticleDetailView 
+        article={articleData} 
+        allArticles={allArticles}
+        onOpenArticle={onOpenArticle}
+        onCloseTab={() => onCloseTab?.(tab.id)}
+        addNotificationAndLog={addNotificationAndLog}
+      />
+    );
   }
   
   if (tab.type === 'json_preview' && tab.fileName) {

@@ -128,7 +128,7 @@ Example of the JSON structure:
   addAppLog('debug', 'Requesting AI project suggestion.', 'AIService', { skills: developerSkills, userKeywords });
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash-preview-04-17", 
+        model: "gemini-2.5-flash", 
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -136,7 +136,7 @@ Example of the JSON structure:
         }
     });
     
-    let jsonStr = response.text.trim();
+    let jsonStr = (response.text || "").trim();
     const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
     const match = jsonStr.match(fenceRegex);
     if (match && match[2]) {
@@ -195,7 +195,7 @@ export const validateGuestBookMessageWithGemini = async (
 
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-04-17",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         temperature: 0.1, // Low temperature for deterministic classification
@@ -203,7 +203,7 @@ export const validateGuestBookMessageWithGemini = async (
       }
     });
 
-    const validationText = response.text.trim().toUpperCase();
+    const validationText = (response.text || "").trim().toUpperCase();
     addAppLog('info', `Gemini validation response: ${validationText}`, 'GuestBookValidation');
 
     if (validationText === 'OK') {

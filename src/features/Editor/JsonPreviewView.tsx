@@ -30,12 +30,46 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
 
 
   const renderSectionTitle = (title: string, Icon?: React.ElementType, isAISuggestion?: boolean) => (
-    <div className="flex items-center mb-2 sm:mb-3 mt-4 sm:mt-5 first:mt-0">
-      {isAISuggestion && SparklesIcon && <SparklesIcon size={18} className="text-yellow-400 mr-1.5 sm:mr-2" />}
-      {Icon && <Icon size={18} className="text-[var(--text-accent)] mr-1.5 sm:mr-2" />}
-      <h2 className="text-lg sm:text-xl font-semibold text-[var(--text-accent)]">{title}</h2>
+    <div className="flex items-center mb-4 mt-6 first:mt-0 pb-1.5 border-b border-[var(--border-color)]/50 relative">
+      {isAISuggestion && SparklesIcon && <SparklesIcon size={18} className="text-yellow-400 mr-2 animate-pulse" />}
+      {Icon && <Icon size={18} className="text-[var(--text-accent)] mr-2 flex-shrink-0" />}
+      <h2 className="text-xs sm:text-sm font-bold tracking-widest text-[var(--text-accent)] uppercase">{title}</h2>
+      <div className="absolute bottom-0 left-0 w-12 h-[2px] bg-gradient-to-r from-[var(--text-accent)] to-transparent"></div>
     </div>
   );
+
+  const renderFormattedDescription = (desc: string) => {
+    const lines = desc.split('\n');
+    const elements: React.ReactNode[] = [];
+    
+    lines.forEach((line, index) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('-')) {
+        const content = trimmed.substring(1).trim();
+        const isNested = line.startsWith('  -') || line.startsWith('    -') || line.startsWith('\t-');
+        elements.push(
+          <li 
+            key={index} 
+            className={`relative pl-3.5 mb-1.5 leading-relaxed text-xs sm:text-sm text-[var(--text-default)] ${
+              isNested 
+                ? 'ml-6 text-[var(--text-muted)] before:content-["○"] before:absolute before:left-0 before:text-[var(--text-accent)]/70' 
+                : 'before:content-["•"] before:absolute before:left-0 before:text-[var(--text-accent)] font-medium'
+            }`}
+          >
+            {content}
+          </li>
+        );
+      } else if (trimmed) {
+        elements.push(
+          <p key={index} className="text-xs sm:text-sm text-[var(--text-default)] mb-2 leading-relaxed">
+            {line}
+          </p>
+        );
+      }
+    });
+    
+    return <ul className="space-y-1.5 my-2.5">{elements}</ul>;
+  };
 
   const renderClickableLink = (href: string, text: string, Icon?: React.ElementType) => (
     <a
@@ -58,23 +92,23 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
       displayValue = (
         <div className="flex flex-wrap gap-1">
           {value.map((item, index) => (
-            <span key={index} className="px-1.5 sm:px-2 py-0.5 bg-[var(--sidebar-item-hover-background)] text-[var(--text-default)] rounded-sm text-[0.65rem] sm:text-xs border border-[var(--border-color)]">
+            <span key={index} className="px-2 py-0.5 bg-[var(--sidebar-item-hover-background)]/80 text-[var(--text-default)] rounded-md text-[10px] border border-[var(--border-color)]/60">
               {item}
             </span>
           ))}
         </div>
       );
     } else if (typeof value === 'string' && (value.startsWith('http') || value.startsWith('mailto:') || value.startsWith('tel:'))) {
-        displayValue = <span className="text-xs sm:text-sm break-all">{value}</span>
+        displayValue = <span className="text-xs sm:text-sm break-all font-medium">{value}</span>
     } else {
-      displayValue = <span className="text-xs sm:text-sm">{value as string | number}</span>;
+      displayValue = <span className="text-xs sm:text-sm font-medium">{value as string | number}</span>;
     }
 
     return (
-      <div className="mb-1.5 sm:mb-2 flex items-start">
-        {Icon && <Icon size={14} className="text-[var(--text-muted)] mr-1.5 sm:mr-2 mt-0.5 sm:mt-1 flex-shrink-0" />}
+      <div className="mb-2 flex items-start">
+        {Icon && <Icon size={14} className="text-[var(--text-muted)] mr-2 mt-0.5 flex-shrink-0" />}
         <div className="text-xs sm:text-sm">
-          <span className="font-medium text-[var(--editor-foreground)]">{label}: </span>
+          <span className="font-semibold text-[var(--editor-foreground)]/80">{label}: </span>
           <span className="text-[var(--text-default)]">{displayValue}</span>
         </div>
       </div>
@@ -87,16 +121,16 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
     const isAISuggestion = fileId.startsWith('ai_project_');
 
     return (
-      <div className="p-3 sm:p-4 md:p-6 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
+      <div className="p-4 sm:p-6 md:p-8 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
         {renderSectionTitle(isAISuggestion ? project.title : `Project Preview: ${project.title}`, ProjectIcon, isAISuggestion)}
         {isAISuggestion && <p className="text-[0.65rem] sm:text-xs text-yellow-500 mb-2 sm:mb-3 ml-6 sm:ml-7 -mt-1 sm:-mt-2">This project idea was suggested by AI.</p>}
 
         {!isAISuggestion && renderDetailItem("ID", project.id)}
 
         {renderSectionTitle("Description", InfoIcon)}
-        <p className="text-xs sm:text-sm text-[var(--text-default)] mb-3 sm:mb-4 ml-6 sm:ml-7 whitespace-pre-line leading-relaxed">
-          {project.description}
-        </p>
+        <div className="text-xs sm:text-sm text-[var(--text-default)] mb-4 ml-6 sm:ml-7 whitespace-pre-line leading-relaxed">
+          {renderFormattedDescription(project.description)}
+        </div>
 
         {renderDetailItem("Technologies", project.technologies, TechIcon)}
         {project.year && renderDetailItem("Year", project.year.toString(), CalendarIcon)}
@@ -106,13 +140,13 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
         {project.imageUrls && project.imageUrls.length > 0 && (
           <>
             {renderSectionTitle("Project Visuals", ImageIcon)}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 ml-6 sm:ml-7 mb-3 sm:mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 ml-6 sm:ml-7 mb-4">
               {project.imageUrls.map((url, index) => (
                 <img
                   key={index}
                   src={url}
                   alt={`${project.title} - Visual ${index + 1}`}
-                  className="w-full h-auto object-contain rounded-md border border-[var(--border-color)] shadow-sm max-h-60"
+                  className="w-full h-auto object-contain rounded-xl border border-[var(--border-color)]/60 shadow-md max-h-60 hover:scale-[1.01] transition-transform duration-300"
                   loading="lazy"
                 />
               ))}
@@ -121,12 +155,12 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
         )}
 
         {project.webLink && ExternalLink && (
-          <div className="mt-3 sm:mt-4 ml-6 sm:ml-7">
+          <div className="mt-4 ml-6 sm:ml-7">
              <a
               href={project.webLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-3 py-1.5 bg-[var(--modal-button-background)] text-[var(--modal-button-foreground)] hover:bg-[var(--modal-button-hover-background)] rounded-md text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--focus-border)] transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-[var(--modal-button-background)] text-[var(--modal-button-foreground)] hover:bg-[var(--modal-button-hover-background)] rounded-lg text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--focus-border)] transition-colors shadow-sm"
             >
               <ExternalLink size={14} className="mr-1.5 sm:mr-2" />
               Visit Website
@@ -143,32 +177,45 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
       name: string; nickname: string; summary?: string; current_position: Position; education: EducationEntry[];
     };
     return (
-      <div className="p-3 sm:p-4 md:p-6 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
+      <div className="p-4 sm:p-6 md:p-8 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
         {renderSectionTitle("About Me", UserIcon)}
-        {renderDetailItem("Full Name", name)}
-        {renderDetailItem("Nickname", nickname)}
+        <div className="bg-[var(--sidebar-background)]/30 border border-[var(--border-color)]/60 rounded-xl p-4 sm:p-5 mb-4">
+          {renderDetailItem("Full Name", name)}
+          {renderDetailItem("Nickname", nickname)}
+        </div>
 
         {summary && (
           <>
             {renderSectionTitle("Summary", InfoIcon)}
-            <p className="text-[var(--text-default)] mb-3 sm:mb-4 whitespace-pre-line text-xs sm:text-sm leading-relaxed ml-6 sm:ml-7">{summary}</p>
+            <p className="text-[var(--text-default)] mb-4 whitespace-pre-line text-xs sm:text-sm leading-relaxed ml-6 sm:ml-7 bg-[var(--sidebar-background)]/20 p-4 rounded-xl border border-[var(--border-color)]/30">{summary}</p>
           </>
         )}
 
         {renderSectionTitle("Current Position", BriefcaseIcon)}
-        {renderDetailItem("Role", current_position.role)}
-        {renderDetailItem("Company", current_position.company)}
-        {renderDetailItem("Period", current_position.period)}
-        {current_position.description && <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5 sm:mt-1 ml-6 sm:ml-7 whitespace-pre-line">{current_position.description}</p>}
-
+        <div className="bg-[var(--sidebar-background)]/30 border border-[var(--border-color)]/60 rounded-xl p-4 sm:p-5 mb-4 hover:border-[var(--text-accent)]/20 transition-all duration-300">
+          {renderDetailItem("Role", current_position.role)}
+          {renderDetailItem("Company", current_position.company)}
+          {renderDetailItem("Period", current_position.period)}
+          {current_position.description && (
+            <div className="text-xs sm:text-sm text-[var(--text-muted)] mt-2.5 ml-6 sm:ml-7 border-t border-[var(--border-color)]/30 pt-2.5">
+              {renderFormattedDescription(current_position.description)}
+            </div>
+          )}
+        </div>
 
         {renderSectionTitle("Education", Code2Icon)}
-        {education.map((edu, index) => (
-          <div key={index} className="mb-2 sm:mb-3 pl-3 sm:pl-4 border-l-2 border-[var(--text-accent)]">
-            <p className="font-semibold text-sm sm:text-base">{edu.school}</p>
-            <p className="text-xs sm:text-sm text-[var(--text-muted)]">{edu.major} ({edu.period})</p>
-          </div>
-        ))}
+        <div className="relative pl-6 border-l-2 border-[var(--border-color)]/80 ml-4 space-y-5 my-4">
+          {education.map((edu, index) => (
+            <div key={index} className="relative">
+              <div className="absolute -left-[30px] top-1.5 w-3.5 h-3.5 rounded-full bg-[var(--editor-background)] border-2 border-[var(--text-accent)] flex items-center justify-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--text-accent)]"></div>
+              </div>
+              <p className="font-bold text-sm sm:text-base text-[var(--editor-foreground)]">{edu.school}</p>
+              <p className="text-xs sm:text-sm text-[var(--text-muted)] font-medium mt-0.5">{edu.major} ({edu.period})</p>
+              {edu.gpa && <p className="text-xs text-[var(--text-accent)] font-semibold mt-0.5">GPA: {edu.gpa}</p>}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -176,16 +223,22 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
   if (fileId === 'experience.json') {
     const { work_experience } = jsonData as { work_experience: WorkExperienceEntry[] };
     return (
-      <div className="p-3 sm:p-4 md:p-6 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
+      <div className="p-4 sm:p-6 md:p-8 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
         {renderSectionTitle("Work Experience", BriefcaseIcon)}
-        {work_experience.map((exp, index) => (
-          <div key={index} className="mb-3 sm:mb-4 p-2 sm:p-3 border border-[var(--border-color)] rounded-md bg-[var(--sidebar-background)]">
-            <h3 className="text-md sm:text-lg font-semibold text-[var(--link-foreground)]">{exp.role}</h3>
-            <p className="text-sm sm:text-md text-[var(--text-default)]">{exp.company}</p>
-            <p className="text-xs sm:text-sm text-[var(--text-muted)] mb-0.5 sm:mb-1">{exp.period}</p>
-            {exp.description && <p className="text-xs sm:text-sm text-[var(--text-muted)] whitespace-pre-line">{exp.description}</p>}
-          </div>
-        ))}
+        <div className="space-y-4">
+          {work_experience.map((exp, index) => (
+            <div key={index} className="p-4 sm:p-5 border border-[var(--border-color)]/60 rounded-xl bg-[var(--sidebar-background)]/30 hover:border-[var(--text-accent)]/30 hover:shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all duration-300 text-left">
+              <h3 className="text-sm sm:text-base font-bold text-[var(--link-foreground)]">{exp.role}</h3>
+              <p className="text-xs sm:text-sm font-semibold text-[var(--text-default)] mt-0.5">{exp.company}</p>
+              <p className="text-[10px] sm:text-xs text-[var(--text-muted)] font-medium mb-2">{exp.period}</p>
+              {exp.description && (
+                <div className="border-t border-[var(--border-color)]/30 mt-3 pt-3">
+                  {renderFormattedDescription(exp.description)}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -198,7 +251,7 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
         label: 'Mobile Development',
         color: 'text-[#00B4AB]',
         borderColor: 'border-[#00B4AB]',
-        keys: ['Flutter', 'Dart', 'Firebase', 'REST API', 'State Management (Provider, GetX)', 'Freezed', 'Google ML Kit'],
+        keys: ['Flutter', 'Dart', 'Firebase', 'REST API'],
       },
       {
         label: 'Frontend Web',
@@ -224,22 +277,22 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
     const otherSkills = skills.filter(s => !categorisedKeys.includes(s));
 
     return (
-      <div className="p-3 sm:p-4 md:p-6 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
+      <div className="p-4 sm:p-6 md:p-8 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
         {renderSectionTitle('Skills', Code2Icon)}
-        <div className="space-y-5 mt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
           {categories.map(cat => {
             const matched = skills.filter(s => cat.keys.includes(s));
             if (!matched.length) return null;
             return (
-              <div key={cat.label}>
-                <p className={`text-xs font-semibold uppercase tracking-widest mb-2 ${cat.color}`}>
+              <div key={cat.label} className="p-4 sm:p-5 bg-[var(--sidebar-background)]/35 border border-[var(--border-color)]/60 rounded-xl hover:border-[var(--border-color)] transition-all duration-300">
+                <p className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${cat.color}`}>
                   {cat.label}
                 </p>
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {matched.map((skill, i) => (
                     <span
                       key={i}
-                      className={`px-2 sm:px-3 py-1 bg-[var(--sidebar-item-hover-background)] rounded-full text-xs sm:text-sm border ${cat.borderColor} ${cat.color} shadow-sm`}
+                      className={`px-3 py-1 bg-[var(--sidebar-item-hover-background)]/70 rounded-full text-xs font-semibold border ${cat.borderColor}/40 ${cat.color} hover:scale-[1.03] transition-transform duration-150 cursor-default shadow-sm`}
                     >
                       {skill}
                     </span>
@@ -249,15 +302,15 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
             );
           })}
           {otherSkills.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-2 text-[var(--text-muted)]">
+            <div className="p-4 sm:p-5 bg-[var(--sidebar-background)]/35 border border-[var(--border-color)]/60 rounded-xl hover:border-[var(--border-color)] transition-all duration-300">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-3 text-[var(--text-muted)]">
                 Domain Experience
               </p>
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {otherSkills.map((skill, i) => (
                   <span
                     key={i}
-                    className="px-2 sm:px-3 py-1 bg-[var(--sidebar-item-hover-background)] text-[var(--text-default)] rounded-full text-xs sm:text-sm border border-[var(--border-color)] shadow-sm"
+                    className="px-3 py-1 bg-[var(--sidebar-item-hover-background)]/75 text-[var(--text-default)] rounded-full text-xs font-semibold border border-[var(--border-color)] shadow-sm cursor-default"
                   >
                     {skill}
                   </span>
@@ -274,20 +327,83 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
   if (fileId === 'contact.json') {
     const { email, phone, address, linkedIn, instagram, tiktok, otherSocial } = jsonData as PortfolioData;
     return (
-      <div className="p-3 sm:p-4 md:p-6 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
+      <div className="p-4 sm:p-6 md:p-8 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
         {renderSectionTitle("Contact Information", MailIcon)}
-        {email && renderDetailItem("Email", renderClickableLink(`mailto:${email}`, email, MailIcon))}
-        {phone && renderDetailItem("Phone", renderClickableLink(`tel:${phone}`, phone, PhoneIcon))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+          {email && (
+            <div className="p-5 rounded-xl border border-[var(--border-color)]/60 bg-[var(--sidebar-background)]/30 backdrop-blur-sm flex flex-col justify-between hover:border-[var(--text-accent)]/30 hover:shadow-md transition-all duration-300">
+              <div>
+                <div className="flex items-center text-[var(--text-accent)] mb-2">
+                  <MailIcon size={16} className="mr-2" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Email Address</span>
+                </div>
+                <p className="text-sm font-semibold text-[var(--editor-foreground)] break-all">{email}</p>
+              </div>
+              <a href={`mailto:${email}`} className="mt-4 inline-flex items-center justify-center text-xs font-bold px-3 py-2 bg-[var(--modal-button-background)] text-[var(--modal-button-foreground)] rounded-lg hover:bg-[var(--modal-button-hover-background)] transition-colors duration-200">
+                Send Email
+              </a>
+            </div>
+          )}
+          
+          {phone && (
+            <div className="p-5 rounded-xl border border-[var(--border-color)]/60 bg-[var(--sidebar-background)]/30 backdrop-blur-sm flex flex-col justify-between hover:border-[var(--text-accent)]/30 hover:shadow-md transition-all duration-300">
+              <div>
+                <div className="flex items-center text-[var(--text-accent)] mb-2">
+                  <PhoneIcon size={16} className="mr-2" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Phone Number</span>
+                </div>
+                <p className="text-sm font-semibold text-[var(--editor-foreground)]">{phone}</p>
+              </div>
+              <a href={`tel:${phone}`} className="mt-4 inline-flex items-center justify-center text-xs font-bold px-3 py-2 bg-[var(--modal-button-background)] text-[var(--modal-button-foreground)] rounded-lg hover:bg-[var(--modal-button-hover-background)] transition-colors duration-200">
+                Call Now
+              </a>
+            </div>
+          )}
 
-        {address && renderDetailItem("Address", `${address.full}`)}
+          {address && (
+            <div className="p-5 rounded-xl border border-[var(--border-color)]/60 bg-[var(--sidebar-background)]/30 backdrop-blur-sm flex flex-col justify-between hover:border-[var(--text-accent)]/30 hover:shadow-md transition-all duration-300">
+              <div>
+                <div className="flex items-center text-[var(--text-accent)] mb-2">
+                  <UserIcon size={16} className="mr-2" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Location</span>
+                </div>
+                <p className="text-sm font-semibold text-[var(--editor-foreground)]">{address.full}</p>
+              </div>
+              <span className="mt-4 text-[10px] text-[var(--text-muted)] font-medium text-center italic">
+                Indramayu, West Java, Indonesia
+              </span>
+            </div>
+          )}
 
-        {renderSectionTitle("Social Media", LinkIcon)}
-        {linkedIn && renderDetailItem("LinkedIn", renderClickableLink(linkedIn, "View LinkedIn Profile", LinkedinIcon))}
-        {instagram && renderDetailItem("Instagram", renderClickableLink(instagram, `@${instagram.split('/').pop() || 'nandang.prasetya'}`, InstagramIcon))}
-        {tiktok && renderDetailItem("TikTok", renderClickableLink(tiktok, `@${tiktok.split('/').pop() || 'nandangprasetyaa'}`, TiktokIcon))}
-        {otherSocial && renderDetailItem(otherSocial.name, renderClickableLink(otherSocial.url, `View ${otherSocial.name} Profile`,
-          otherSocial.name.toLowerCase() === 'github' ? GithubIcon : LinkIcon
-        ))}
+          <div className="p-5 rounded-xl border border-[var(--border-color)]/60 bg-[var(--sidebar-background)]/30 backdrop-blur-sm flex flex-col justify-between hover:border-[var(--text-accent)]/30 hover:shadow-md transition-all duration-300">
+            <div>
+              <div className="flex items-center text-[var(--text-accent)] mb-2">
+                <LinkIcon size={16} className="mr-2" />
+                <span className="text-xs font-bold uppercase tracking-wider">Social Links</span>
+              </div>
+              <div className="space-y-2 mt-2">
+                {linkedIn && (
+                  <a href={linkedIn} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs text-[var(--link-foreground)] hover:text-[var(--link-hover-foreground)] hover:underline">
+                    <LinkedinIcon size={14} className="mr-2" /> LinkedIn Profile
+                  </a>
+                )}
+                {otherSocial && otherSocial.name.toLowerCase() === 'github' && (
+                  <a href={otherSocial.url} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs text-[var(--link-foreground)] hover:text-[var(--link-hover-foreground)] hover:underline">
+                    <GithubIcon size={14} className="mr-2" /> GitHub Account
+                  </a>
+                )}
+                {instagram && (
+                  <a href={instagram} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs text-[var(--link-foreground)] hover:text-[var(--link-hover-foreground)] hover:underline">
+                    <InstagramIcon size={14} className="mr-2" /> Instagram
+                  </a>
+                )}
+              </div>
+            </div>
+            <span className="mt-4 text-[10px] text-[var(--text-muted)] font-medium text-center italic">
+              Connect on social platforms
+            </span>
+          </div>
+        </div>
       </div>
     );
   }
@@ -295,16 +411,18 @@ const JsonPreviewView: React.FC<JsonPreviewViewProps> = ({ jsonData, fileId, por
   if (fileId === 'projects.json') {
       const { projects } = jsonData as { projects: { id: string; title: string }[] };
       return (
-        <div className="p-3 sm:p-4 md:p-6 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
+        <div className="p-4 sm:p-6 md:p-8 bg-[var(--editor-background)] text-[var(--editor-foreground)] h-full overflow-auto">
             {renderSectionTitle("Projects List Preview", ProjectIcon)}
-            <p className="text-xs sm:text-sm text-[var(--text-muted)] mb-3 sm:mb-4 ml-6 sm:ml-7">
+            <p className="text-xs sm:text-sm text-[var(--text-muted)] mb-4 ml-6 sm:ml-7 bg-[var(--sidebar-background)]/20 p-4 rounded-xl border border-[var(--border-color)]/30 leading-relaxed">
                 This is a preview of the <code>projects.json</code> file. It lists all available projects.
                 To see detailed cards for each project, open <code>projects.json</code> normally (not in preview).
             </p>
-            <ul className="text-xs sm:text-sm">
+            <ul className="text-xs sm:text-sm ml-6 sm:ml-7 space-y-2">
                 {projects.map(p => (
-                    <li key={p.id} className="mb-1 ml-6 sm:ml-7">
-                        <span className="font-semibold">{p.title}</span> (ID: <code>{p.id}</code>)
+                    <li key={p.id} className="flex items-center">
+                        <span className="w-1.5 h-1.5 bg-[var(--text-accent)] rounded-full mr-2.5"></span>
+                        <span className="font-semibold text-[var(--editor-foreground)]">{p.title}</span>
+                        <span className="text-[var(--text-muted)] text-[10px] ml-2 font-mono">({p.id})</span>
                     </li>
                 ))}
             </ul>

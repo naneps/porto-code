@@ -231,6 +231,7 @@ export interface ArticleItem {
   tags: string; // Raw tags string
   body_markdown: string; // Used as contentMarkdown
   user: DevToUser;
+  category?: string; // New field for categorization
 }
 
 
@@ -622,6 +623,10 @@ export interface TabContentProps {
   paneId: EditorPaneId;
   addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void;
   featureStatusForProjectsView?: FeatureStatus; // Added for projects.json maintenance
+  allArticles?: ArticleItem[]; // For article detail related view
+  onOpenArticle?: (article: ArticleItem) => void; // For article details back/related navigation
+  onCloseTab?: (tabId: string) => void; // For article details back navigation
+  addNotificationAndLog?: (message: string, type: NotificationType, duration?: number, actions?: NotificationAction[], icon?: LucideIcon) => void; // For sharing toast/notif
 }
 
 // Props for FeatureStatusAdminPanel
