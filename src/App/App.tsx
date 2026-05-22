@@ -1200,6 +1200,273 @@ const App: React.FC = () => {
     }
   }, [isStatisticsPanelVisible, activityBarSelection, addAppLog, featuresStatus, addNotificationAndLog]);
 
+  // Deep Link Support - Apply hash route to workspace state
+  const applyHash = useCallback((hash: string) => {
+    if (!hash) return;
+    
+    // Check current active tab to avoid redundant activation
+    const currentActiveTab = editorPanes[focusedEditorPaneId].openTabs.find(
+      tab => tab.id === editorPanes[focusedEditorPaneId].activeTabId
+    );
+
+    // Explorer files
+    const allFiles = ['about.json', 'experience.json', 'skills.json', 'projects.json', 'contact.json', 'generate_cv.ts', 'guide.md', 'support.md'];
+    if (allFiles.includes(hash)) {
+      if (currentActiveTab && currentActiveTab.id === hash) return;
+      let title = hash;
+      if (hash === 'guide.md') title = 'Portfolio Guide';
+      if (hash === 'support.md') title = 'Support the Creator';
+      
+      handleOpenTab({
+        id: hash,
+        fileName: hash,
+        type: 'file',
+        title: title
+      }, false, focusedEditorPaneId);
+      return;
+    }
+    
+    // File preview
+    if (hash.endsWith('_preview')) {
+      const originalFileId = hash.replace('_preview', '');
+      if (allFiles.includes(originalFileId)) {
+        if (currentActiveTab && currentActiveTab.id === hash) return;
+        handleOpenPreviewTab(originalFileId, false, focusedEditorPaneId);
+        return;
+      }
+    }
+
+    // Specific views
+    if (hash === 'ai_chat') {
+      if (currentActiveTab && currentActiveTab.type === 'ai_chat') return;
+      handleOpenAIChatTab();
+      return;
+    }
+    if (hash === 'github') {
+      if (currentActiveTab && currentActiveTab.type === 'github_profile_view') return;
+      handleOpenGitHubProfileTab();
+      return;
+    }
+    if (hash === 'guest_book') {
+      if (currentActiveTab && currentActiveTab.type === 'guest_book') return;
+      handleOpenGuestBookTab();
+      return;
+    }
+    if (hash === 'settings') {
+      if (currentActiveTab && currentActiveTab.type === 'settings_editor') return;
+      handleOpenSettingsEditor();
+      return;
+    }
+    if (hash === 'cv_preview') {
+      if (currentActiveTab && currentActiveTab.type === 'cv_preview') return;
+      handleOpenTab({ id: 'cv_nandang_eka_prasetya.pdf', title: 'Nandang_Eka_Prasetya_CV.pdf', type: 'cv_preview', fileName: 'cv_nandang_eka_prasetya.pdf' }, false, focusedEditorPaneId);
+      return;
+    }
+    
+    // Project details
+    if (hash.startsWith('project_') || hash.startsWith('ai_project_')) {
+      if (currentActiveTab && currentActiveTab.id === hash) return;
+      const proj = PORTFOLIO_DATA.projects.find(p => p.id === hash);
+      const title = proj ? proj.title : 'Project Detail';
+      handleOpenTab({ id: hash, fileName: hash, type: 'project_detail', title: title }, false, focusedEditorPaneId);
+      return;
+    }
+
+    // Article details
+    if (hash.startsWith('article_')) {
+      if (currentActiveTab && currentActiveTab.id === hash) return;
+      const articleIdStr = hash.replace('article_', '');
+      const articleId = parseInt(articleIdStr, 10);
+      
+      const article = devToArticles.find(a => a.id === articleId);
+      if (article) {
+        handleOpenArticleTab(article);
+      } else {
+        handleOpenTab({
+          id: hash,
+          type: 'article_detail',
+          title: 'Article',
+          articleId: articleId
+        }, false, focusedEditorPaneId);
+      }
+      return;
+    }
+
+    // Sidebar panels
+    if (hash === 'search') {
+      if (isSearchPanelVisible && activityBarSelection === 'search') return;
+      setIsSearchPanelVisible(true);
+      setActivityBarSelection('search');
+      setIsSidebarVisible(false);
+      setIsArticlesPanelVisible(false);
+      setIsStatisticsPanelVisible(false);
+      return;
+    }
+    if (hash === 'articles') {
+      if (isArticlesPanelVisible && activityBarSelection === 'articles') return;
+      setIsArticlesPanelVisible(true);
+      setActivityBarSelection('articles');
+      setIsSidebarVisible(false);
+      setIsSearchPanelVisible(false);
+      setIsStatisticsPanelVisible(false);
+      return;
+    }
+    if (hash === 'statistics') {
+      if (isStatisticsPanelVisible && activityBarSelection === 'statistics') return;
+      setIsStatisticsPanelVisible(true);
+      setActivityBarSelection('statistics');
+      setIsSidebarVisible(false);
+      setIsSearchPanelVisible(false);
+      setIsArticlesPanelVisible(false);
+      return;
+    }
+    if (hash === 'explorer') {
+      if (isSidebarVisible && activityBarSelection === 'explorer') return;
+      setIsSidebarVisible(true);
+      setActivityBarSelection('explorer');
+      setIsSearchPanelVisible(false);
+      setIsArticlesPanelVisible(false);
+      setIsStatisticsPanelVisible(false);
+      return;
+    }
+  }, [
+    editorPanes,
+    focusedEditorPaneId,
+    handleOpenTab,
+    handleOpenPreviewTab,
+    handleOpenAIChatTab,
+    handleOpenGitHubProfileTab,
+    handleOpenGuestBookTab,
+    handleOpenSettingsEditor,
+    handleOpenArticleTab,
+    isSearchPanelVisible,
+    isArticlesPanelVisible,
+    isStatisticsPanelVisible,
+    isSidebarVisible,
+    activityBarSelection,
+    devToArticles
+  ]);
+
+  // Ref flag to prevent our own hash writes from re-triggering applyHash
+  const isUpdatingHashRef = useRef(false);
+
+  // Keep latest applyHash in a ref so the event listener below never needs
+  // to be re-registered when navigation changes applyHash's identity.
+  const applyHashRef = useRef(applyHash);
+  useEffect(() => {
+    applyHashRef.current = applyHash;
+  }); // intentionally no deps — runs every render to keep ref fresh
+
+  // Register the hashchange listener ONCE on mount only (empty dep array).
+  // This is critical — if we put applyHash in the dep array, every tab click
+  // re-registers the listener, re-reads the current hash, and schedules a
+  // 500 ms applyHash(currentHash) timer, which reverses navigation.
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (isUpdatingHashRef.current) return;
+      const hashText = window.location.hash.replace(/^#\/?/, '');
+      if (hashText) applyHashRef.current(hashText);
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    // Process initial URL hash only once on first mount
+    const initialHash = window.location.hash.replace(/^#\/?/, '');
+    const initTimer = initialHash
+      ? setTimeout(() => applyHashRef.current(initialHash), 500)
+      : undefined;
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      if (initTimer) clearTimeout(initTimer);
+    };
+  }, []); // ← empty: register once, never re-register on navigation
+
+  // Synchronize internal active views/tabs state changes back to URL hash
+  // Uses replaceState to avoid triggering hashchange events (prevents feedback loop)
+  useEffect(() => {
+    const currentTab = currentActiveTabForFocusedPane;
+    let hash = '';
+    
+    if (currentTab) {
+      if (currentTab.type === 'file') {
+        hash = currentTab.id;
+      } else if (currentTab.type === 'article_detail') {
+        hash = `article_${currentTab.articleId}`;
+      } else if (currentTab.type === 'ai_chat') {
+        hash = 'ai_chat';
+      } else if (currentTab.type === 'github_profile_view') {
+        hash = 'github';
+      } else if (currentTab.type === 'guest_book') {
+        hash = 'guest_book';
+      } else if (currentTab.type === 'settings_editor') {
+        hash = 'settings';
+      } else if (currentTab.type === 'cv_preview') {
+        hash = 'cv_preview';
+      } else if (currentTab.type === 'json_preview') {
+        hash = `${currentTab.id.replace('_preview', '')}_preview`;
+      } else if (currentTab.type === 'project_detail') {
+        hash = currentTab.id;
+      }
+    } else {
+      if (isSearchPanelVisible) {
+        hash = 'search';
+      } else if (isArticlesPanelVisible) {
+        hash = 'articles';
+      } else if (isStatisticsPanelVisible) {
+        hash = 'statistics';
+      } else if (isSidebarVisible) {
+        hash = 'explorer';
+      }
+    }
+
+    const currentHash = window.location.hash.replace(/^#\/?/, '');
+    if (hash) {
+      if (currentHash !== hash) {
+        // Use replaceState instead of window.location.hash to avoid firing hashchange
+        isUpdatingHashRef.current = true;
+        window.history.replaceState(null, '', `#/${hash}`);
+        // Reset flag after browser event queue clears
+        setTimeout(() => { isUpdatingHashRef.current = false; }, 0);
+      }
+    } else if (currentHash) {
+      isUpdatingHashRef.current = true;
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      setTimeout(() => { isUpdatingHashRef.current = false; }, 0);
+    }
+  }, [currentActiveTabForFocusedPane, isSidebarVisible, isSearchPanelVisible, isArticlesPanelVisible, isStatisticsPanelVisible]);
+
+  // Dynamic tab title resolver for articles when asynchronous fetching completes
+  useEffect(() => {
+    if (devToArticles.length === 0) return;
+    setEditorPanes(prevPanes => {
+      let changed = false;
+      const updatedPanes = { ...prevPanes };
+      
+      const updatePaneTabs = (paneId: EditorPaneId) => {
+        const pane = prevPanes[paneId];
+        const newTabs = pane.openTabs.map(tab => {
+          if (tab.type === 'article_detail' && tab.articleId && tab.title === 'Article') {
+            const article = devToArticles.find(a => a.id === tab.articleId);
+            if (article) {
+              changed = true;
+              return { ...tab, title: article.title };
+            }
+          }
+          return tab;
+        });
+        if (changed) {
+          updatedPanes[paneId] = { ...pane, openTabs: newTabs };
+        }
+      };
+      
+      updatePaneTabs('left');
+      updatePaneTabs('right');
+      
+      return changed ? updatedPanes : prevPanes;
+    });
+  }, [devToArticles]);
+
   const handleReorderSidebarItems = useCallback((draggedItemId: string, targetItemId: string, parentId?: string) => { setOrderedSidebarItems(prevItems => { const reorder = (items: SidebarItemConfig[], currentParentId?: string): SidebarItemConfig[] => { if (currentParentId === parentId) { const newItems = [...items]; const draggedIndex = newItems.findIndex(item => item.id === draggedItemId); const targetIndex = newItems.findIndex(item => item.id === targetItemId); if (draggedIndex !== -1 && targetIndex !== -1 && draggedIndex !== targetIndex) { const [dragged] = newItems.splice(draggedIndex, 1); newItems.splice(targetIndex, 0, dragged); playSound('ui-click'); addAppLog('debug', `Reordered sidebar item ${draggedItemId} to be near ${targetItemId}.`, 'User'); return newItems; } return items; } return items.map(item => { if (item.isFolder && item.children) { return { ...item, children: reorder(item.children, item.id) }; } return item; }); }; return reorder(prevItems, undefined); }); }, [addAppLog]);
   const handleReorderActivityBarItems = useCallback((draggedItemId: string, targetItemId: string) => { setOrderedActivityBarItemDefinitions(prevItems => { const draggedItemIndex = prevItems.findIndex(item => item.id === draggedItemId); const targetItemIndex = prevItems.findIndex(item => item.id === targetItemId); if (draggedItemIndex === -1 || targetItemIndex === -1 || draggedItemIndex === targetItemIndex) { return prevItems; } const newItems = [...prevItems]; const [draggedItem] = newItems.splice(draggedItemIndex, 1); newItems.splice(targetItemIndex, 0, draggedItem); playSound('ui-click'); addAppLog('debug', `Reordered activity bar item ${draggedItemId} to be near ${targetItemId}.`, 'User'); return newItems; }); }, [addAppLog]);
 
