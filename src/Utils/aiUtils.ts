@@ -1,9 +1,10 @@
 
-import { PortfolioData, WorkExperienceEntry, ProjectDetail, LogLevel, AIValidationStatus } from '../App/types';
+import { PortfolioData, WorkExperienceEntry, ProjectDetail, LogLevel, AIValidationStatus, ChatMessage } from '../App/types';
 import { generateFileContent } from '../App/constants';
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 
-export const getContextualPrompt = (userInput: string, portfolioData: PortfolioData): string => {
+// Build the system context block once per session
+export const buildSystemContext = (portfolioData: PortfolioData): string => {
     const about = JSON.parse(generateFileContent('about.json', portfolioData));
     const experience = JSON.parse(generateFileContent('experience.json', portfolioData));
     const skills = JSON.parse(generateFileContent('skills.json', portfolioData));
@@ -18,79 +19,112 @@ export const getContextualPrompt = (userInput: string, portfolioData: PortfolioD
     if (portfolioData.tiktok) contactDetails.push(`TikTok: ${portfolioData.tiktok}`);
     if (portfolioData.otherSocial) contactDetails.push(`${portfolioData.otherSocial.name}: ${portfolioData.otherSocial.url}`);
 
-    // List of files the AI can recommend for opening
     const availableFiles = ['about.json', 'experience.json', 'skills.json', 'projects.json', 'contact.json'];
 
-    return `
-You are a friendly, professional, and helpful AI assistant for Nandang Eka Prasetya's portfolio.
-You are embedded in Nandang's interactive portfolio website, which is designed to look and feel like the Visual Studio Code editor.
+    return `You are a friendly, professional, and helpful AI assistant for Nandang Eka Prasetya's portfolio.
+You are embedded in Nandang's interactive portfolio website, which is designed to look and feel like Visual Studio Code.
 Your goal is to answer questions about Nandang, his skills, experience, projects, and this website itself, based ONLY on the information provided below.
 Do not make up information or answer questions outside of this context. If the answer is not in the provided information, politely state that you don't have that specific detail.
-Keep your answers concise and well-formatted.
-**Use Markdown for formatting (e.g., for lists, bold, italics, inline code like \\\`example.json\\\`, and code blocks using triple backticks \\\`\`\`language\\ncode\\n\\\`\`\`).**
+Keep your answers concise and well-formatted using Markdown.
 
-**IMPORTANT: File Recommendations**
-If you mention a specific file that the user should open (like \\\`about.json\\\`, \\\`projects.json\\\`, etc.), first mention it naturally in your text.
-Then, at the VERY END of your entire response, list these recommended files in a special block.
-The block MUST start with \`%%FILE_RECOMMENDATIONS%%\` on its own line.
-Each subsequent line should contain a single filename enclosed in square brackets, like \`[filename.json]\`.
-The block MUST end with \`%%END_FILE_RECOMMENDATIONS%%\` on its own line.
-Only include files from this list: ${availableFiles.join(', ')}.
-Do NOT use any other markdown link format for file recommendations.
+**IMPORTANT: Response Format**
+At the VERY END of EVERY response, you MUST output a special JSON block (even if there are no file recommendations or follow-ups).
+The block must look exactly like this example:
 
-Example of how to recommend files:
-"...you can find more details in his projects file. You might also want to check his skills.
-%%FILE_RECOMMENDATIONS%%
-[projects.json]
-[skills.json]
-%%END_FILE_RECOMMENDATIONS%%"
+%%RESPONSE_META%%
+{
+  "recommendedFiles": ["about.json"],
+  "followUpQuestions": ["What are his key skills?", "Can you show his projects?", "How can I contact him?"]
+}
+%%END_RESPONSE_META%%
+
+Rules for the JSON block:
+- "recommendedFiles": array of filenames from this list ONLY: ${availableFiles.join(', ')}. Empty array [] if none relevant.
+- "followUpQuestions": array of exactly 3 short, specific follow-up questions the user might want to ask next. Always provide 3.
+- Do NOT put any markdown or explanation inside the JSON block.
 
 **About This Portfolio Website:**
-*   This website is Nandang Eka Prasetya's interactive portfolio.
-*   Its purpose is to showcase Nandang's skills, experience, and projects in a unique, VSCode-inspired interface.
-*   It was built using React, TypeScript, Tailwind CSS, and Vite. The AI chat assistant you are interacting with (that's you!) is powered by Google's Gemini API.
-*   Users can navigate different sections (like 'About', 'Experience', 'Projects') by clicking the corresponding files (e.g., \\\`about.json\\\`, \\\`experience.json\\\`) in the 'Explorer' sidebar on the left. They can also use the Command Palette (Ctrl+Shift+P or Cmd+Shift+P on a Mac) to search for files and commands.
+- Built with React, TypeScript, and Vite. AI powered by Google Gemini.
+- Navigate by clicking files in the 'Explorer' sidebar, or use Ctrl+Shift+P for the Command Palette.
 
 **Nandang Eka Prasetya's Information:**
-*   **Name:** ${portfolioData.name} (He also goes by ${portfolioData.nickname})
-*   **Summary:** ${portfolioData.summary || 'Nandang Eka Prasetya is a software developer.'}
-*   **Current Role:** ${about.current_position.role} at ${about.current_position.company} (from ${about.current_position.period})
-    *   **Description:** ${about.current_position.description || 'Details about current role.'}
-*   **Education:**
-    ${about.education.map((edu: { school: string, major: string, period: string}) => `  - ${edu.major} from ${edu.school} (${edu.period})`).join('\n    ')}
-*   **Contact & Socials:** ${contactDetails.join('; ')} (Details can be found in contact.json)
+- **Name:** ${portfolioData.name} (nickname: ${portfolioData.nickname})
+- **Role:** ${portfolioData.role || 'Full Stack Developer'}
+- **Summary:** ${portfolioData.summary || 'Software developer.'}
+- **Current Role:** ${about.current_position.role} at ${about.current_position.company} (${about.current_position.period})
+  - ${about.current_position.description || ''}
+- **Education:**
+  ${about.education.map((edu: { school: string, major: string, period: string, gpa?: string}) => `  - ${edu.major} at ${edu.school} (${edu.period})${edu.gpa ? ', GPA: ' + edu.gpa : ''}`).join('\n  ')}
+- **Contact & Socials:** ${contactDetails.join('; ')}
+- **Key Skills:** ${skills.skills.join(', ')}
+- **Work Experience:**
+  ${(experience.work_experience as WorkExperienceEntry[]).map(exp =>
+      `  - **${exp.role} at ${exp.company} (${exp.period})**\n    ${exp.description || ''}`
+  ).join('\n  ')}
+- **Projects:** ${projectTitles}`;
+};
 
-*   **Key Skills:** ${skills.skills.join(', ')} (Detailed list in skills.json)
+// Parse the %%RESPONSE_META%% block out of the AI response text
+export const parseResponseMeta = (rawText: string): {
+    cleanText: string;
+    recommendedFiles: string[];
+    followUpQuestions: string[];
+} => {
+    const metaBlockRegex = /%%RESPONSE_META%%\s*([\s\S]*?)\s*%%END_RESPONSE_META%%/;
+    const match = rawText.match(metaBlockRegex);
 
-*   **Work Experience:**
-    ${(experience.work_experience as WorkExperienceEntry[]).map(exp => 
-        `  - **${exp.role} at ${exp.company} (${exp.period})**\\n    *Description:* ${exp.description || 'No specific description provided.'}`
-    ).join('\n    ')}
-    (View more details in experience.json)
+    let recommendedFiles: string[] = [];
+    let followUpQuestions: string[] = [];
 
-*   **Project Titles:** ${projectTitles}
-    (For project details, the user can explore projects.json to see project cards, then click a card to open its details.)
+    if (match && match[1]) {
+        try {
+            const parsed = JSON.parse(match[1].trim());
+            recommendedFiles = Array.isArray(parsed.recommendedFiles) ? parsed.recommendedFiles : [];
+            followUpQuestions = Array.isArray(parsed.followUpQuestions) ? parsed.followUpQuestions : [];
+        } catch (_) {
+            // Malformed JSON — ignore gracefully
+        }
+    }
 
-**Guidance for Responding:**
-*   If a user asks for general info (e.g., "tell me about Nandang"), provide a brief summary based on the 'Summary' field.
-*   If a user asks about a specific section (e.g., "what are his skills?", "show me his projects", "how to contact him?"), mention the relevant JSON file in your text, and then list it in the \`%%FILE_RECOMMENDATIONS%%\` block at the end.
-*   If asked about how to use the website, explain the Explorer sidebar and Command Palette for navigation.
-*   Be polite and helpful!
+    const cleanText = rawText.replace(metaBlockRegex, '').trim();
+    return { cleanText, recommendedFiles, followUpQuestions };
+};
 
-Based on this information, please answer the following user question:
+// Build the contents array for multi-turn conversation history
+export const buildConversationContents = (
+    userInput: string,
+    history: ChatMessage[],
+    systemContext: string
+): string => {
+    // Build conversation history string (last 10 messages max to avoid token overflow)
+    const recentHistory = history.slice(-10);
+    let historyText = '';
+    if (recentHistory.length > 0) {
+        historyText = '\n\n**Previous conversation:**\n' + recentHistory.map(msg =>
+            `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text.substring(0, 500)}`
+        ).join('\n');
+    }
+
+    return `${systemContext}${historyText}
+
+Now answer the following:
 User: ${userInput}
-AI:`;
-  };
+Assistant:`;
+};
+
+// Legacy single-turn prompt builder (kept for backward compat)
+export const getContextualPrompt = (userInput: string, portfolioData: PortfolioData): string => {
+    return buildConversationContents(userInput, [], buildSystemContext(portfolioData));
+};
 
 
 export const fetchAIProjectSuggestion = async (
     developerSkills: string[],
     addAppLog: (level: LogLevel, message: string, source?: string, details?: Record<string, any>) => void,
-    userKeywords?: string // Added optional userKeywords
+    userKeywords?: string
   ): Promise<Omit<ProjectDetail, 'id'> | null> => {
   if (!process.env.API_KEY) {
     addAppLog('error', "API_KEY is not set. Cannot fetch AI project suggestion.", 'AIService');
-    console.error("API_KEY is not set. Cannot fetch AI project suggestion.");
     return null;
   }
 
@@ -116,14 +150,6 @@ Please generate the following details for the project:
 
 Return the response as a single, valid JSON object with exactly these keys: "title", "description", "technologies", "year", "related_skills".
 Do not include any other text or explanation outside of the JSON object.
-Example of the JSON structure:
-{
-  "title": "AI-Powered Recipe Recommender",
-  "description": "A mobile application that suggests recipes based on user dietary preferences, available ingredients, and cooking skill level. Features personalized meal plans and grocery list generation.",
-  "technologies": ["Flutter", "Firebase", "Python", "TensorFlow Lite"],
-  "year": ${new Date().getFullYear() + 1},
-  "related_skills": ["Mobile Development", "Machine Learning", "UI/UX Design"]
-}
 `;
   addAppLog('debug', 'Requesting AI project suggestion.', 'AIService', { skills: developerSkills, userKeywords });
   try {
@@ -142,7 +168,6 @@ Example of the JSON structure:
     if (match && match[2]) {
         jsonStr = match[2].trim();
     }
-    addAppLog('debug', 'Received AI project suggestion response.', 'AIService', { responseTextLength: jsonStr.length });
 
     const suggestedData = JSON.parse(jsonStr) as Omit<ProjectDetail, 'id'>;
 
@@ -158,12 +183,10 @@ Example of the JSON structure:
       return suggestedData;
     } else {
       addAppLog('error', "AI project suggestion response has incorrect structure.", 'AIService', { responseData: suggestedData, userKeywords });
-      console.error("AI project suggestion response has incorrect structure:", suggestedData);
       return null;
     }
   } catch (error: any) {
     addAppLog('error', "Error fetching or parsing AI project suggestion.", 'AIService', { error: error.message || String(error), userKeywords });
-    console.error("Error fetching or parsing AI project suggestion:", error);
     return null;
   }
 };
@@ -198,7 +221,7 @@ export const validateGuestBookMessageWithGemini = async (
       model: "gemini-2.5-flash",
       contents: prompt,
       config: {
-        temperature: 0.1, // Low temperature for deterministic classification
+        temperature: 0.1,
         topK: 1,
       }
     });
@@ -212,11 +235,10 @@ export const validateGuestBookMessageWithGemini = async (
       return 'validated_flagged';
     } else {
       addAppLog('warning', `Unexpected response from Gemini validation: ${validationText}`, 'GuestBookValidation');
-      return 'validation_error'; // Or validation_skipped if we want to be lenient
+      return 'validation_error';
     }
   } catch (error: any) {
     addAppLog('error', "Error during Gemini guest book message validation.", 'GuestBookValidation', { error: error.message || String(error) });
-    console.error("Error validating guest book message with Gemini:", error);
     return 'validation_error';
   }
 };

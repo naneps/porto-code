@@ -14,6 +14,7 @@ import { getSyntaxHighlighterTheme } from '../../Utils/syntaxHighlighterUtils';
 import AIChatInterface from '../AIChat/AIChatInterface';
 import { GitHubProfileView } from '../GitHub/GitHubProfileView';
 import GuestBookView from '../GuestBook/GuestBookView';
+import SpotifyView from '../Spotify/SpotifyView';
 import SettingsEditor from '../Settings/SettingsEditor';
 import ArticleDetailView from '../articles/ArticleDetailView'; // Import the new component
 import CVPreview from './CVPreview';
@@ -61,7 +62,7 @@ const TabContent: React.FC<TabContentPropsType> = ({
         onContextMenuRequest(event.pageX, event.pageY, tab.id, true);
         return;
     }
-    if (tab.type === 'cv_preview' || tab.type === 'settings_editor' || tab.type === 'github_profile_view' || tab.type === 'guest_book') return; 
+    if (tab.type === 'cv_preview' || tab.type === 'settings_editor' || tab.type === 'github_profile_view' || tab.type === 'guest_book' || tab.type === 'spotify_view') return; 
     const eligibleForPreview = ['about.json', 'experience.json', 'skills.json', 'contact.json', 'projects.json'].includes(tab.fileName || '');
     if (((tab.type === 'file' && eligibleForPreview) || (tab.type === 'project_detail' && !tab.id.startsWith('ai_project_'))) && !tab.id.endsWith('_preview')) {
         event.preventDefault();
@@ -99,8 +100,12 @@ const TabContent: React.FC<TabContentPropsType> = ({
   }
   
   if (tab.type === 'guest_book') {
-    const guestBookProps = content as GuestBookViewProps; // Assumes GuestBookViewProps in types.ts includes featureStatus
+    const guestBookProps = content as GuestBookViewProps;
     return <GuestBookView {...guestBookProps} />;
+  }
+
+  if (tab.type === 'spotify_view') {
+    return <SpotifyView />;
   }
 
 

@@ -42,6 +42,10 @@ import { createCV_PDF } from '../Utils/cvGenerator';
 import { auth, database, set as firebaseSet, FirebaseUser, onAuthStateChanged, onValue, ref } from '../Utils/firebase'; // Added firebaseSet
 import { fetchStatistics, incrementStatistic } from '../Utils/statisticsUtils'; // Added statistics utils
 import { processCommand } from '../Utils/terminalCommands';
+import SpotifyView from '../features/Spotify/SpotifyView';
+import NowPlayingWidget from '../features/Spotify/NowPlayingWidget';
+import { handleSpotifyCallback, isSpotifyAuthenticated } from '../Utils/spotifyUtils';
+
 
 
 const DEFAULT_LEFT_PANEL_WIDTH = 256;
@@ -123,6 +127,23 @@ const App: React.FC = () => {
     });
     return () => unsubscribeAuth();
   }, []);
+
+  // Handle Spotify OAuth callback (PKCE flow redirects back with ?code=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      handleSpotifyCallback(code).then((success) => {
+        if (success) {
+          addAppLog('info', 'Spotify authentication successful.', 'Spotify');
+          // Open the Spotify tab automatically after login
+          handleOpenTab({ id: 'spotify_view', type: 'spotify_view', title: '🎵 Spotify' });
+        } else {
+          addAppLog('error', 'Spotify authentication failed.', 'Spotify');
+        }
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch feature statuses from Firebase Realtime Database
   useEffect(() => {
@@ -1989,6 +2010,7 @@ const App: React.FC = () => {
         onOpenAboutModal={openAboutModal}
         isBottomPanelVisible={isBottomPanelVisible} 
         onToggleBottomPanel={handleToggleBottomPanelStatusBar}
+        onOpenSpotify={handleOpenSpotifyTab}
       />
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeCommandPalette} commands={commands} />
       <AboutModal isOpen={isAboutModalOpen} onClose={closeAboutModal} />

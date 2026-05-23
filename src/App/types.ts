@@ -71,7 +71,7 @@ export interface PortfolioData {
 export interface Tab {
   id: string;
   title: string;
-  type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview' | 'article_detail' | 'cv_preview' | 'settings_editor' | 'github_profile_view' | 'guest_book'; // Added 'guest_book'
+  type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview' | 'article_detail' | 'cv_preview' | 'settings_editor' | 'github_profile_view' | 'guest_book' | 'spotify_view';
   fileName?: string; // For file-based tabs and json_preview of files or projects
   articleSlug?: string; // Remains for identifying which article is open
   articleId?: number; // Added to store dev.to article ID
@@ -159,6 +159,8 @@ export interface ChatMessage {
   timestamp: Date;
   error?: boolean;
   recommendedFiles?: string[]; // Added to hold filenames for distinct widgets
+  suggestedFollowUps?: string[]; // AI-generated follow-up question chips
+  isStreaming?: boolean; // True while streaming is in progress
 }
 
 // Context Menu Types
