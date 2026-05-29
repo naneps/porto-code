@@ -10,18 +10,18 @@ const audioCache: { [key: string]: HTMLAudioElement } = {};
 // Define sound file paths. These point to actual .wav or .mp3 files
 // expected to be in a /public/sounds directory.
 const SOUND_FILES: { [key: string]: string } = {
-  'tab-open': '/sounds/ui_tab_open.wav',
-  'tab-close': '/sounds/ui_tab_close.wav',
-  'tab-select': '/sounds/ui_tab_select.wav',
-  'ui-click': '/sounds/ui_generic_click.wav',
-  'panel-toggle': '/sounds/ui_panel_toggle.wav',
-  'modal-toggle': '/sounds/ui_modal_toggle.wav',
+  // 'tab-open': '/sounds/ui_tab_open.wav',
+  // 'tab-close': '/sounds/ui_tab_close.wav',
+  // 'tab-select': '/sounds/ui_tab_select.wav',
+  // 'ui-click': '/sounds/ui_generic_click.wav',
+  // 'panel-toggle': '/sounds/ui_panel_toggle.wav',
+  // 'modal-toggle': '/sounds/ui_modal_toggle.wav',
   'chat-receive': '/sounds/chat_message_receive.wav',
-  'terminal-run': '/sounds/terminal_command_run.wav',
-  'terminal-complete': '/sounds/terminal_command_complete.wav',
-  'setting-change': '/sounds/ui_setting_change.wav',
-  'command-execute': '/sounds/ui_command_execute.wav',
-  'error': '/sounds/ui_error.wav',
+  // 'terminal-run': '/sounds/terminal_command_run.wav',
+  // 'terminal-complete': '/sounds/terminal_command_complete.wav',
+  // 'setting-change': '/sounds/ui_setting_change.wav',
+  // 'command-execute': '/sounds/ui_command_execute.wav',
+  // 'error': '/sounds/ui_error.wav',
   'notification': '/sounds/ui_notification.wav', // General notification/alert
 };
 
@@ -41,7 +41,7 @@ export function playSound(soundName: string): void {
 
   const soundFile = SOUND_FILES[soundName];
   if (!soundFile) {
-    console.warn(`Sound effect not found: ${soundName}`);
+    // Quietly return if the sound file is not configured/available in the workspace
     return;
   }
 

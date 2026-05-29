@@ -2,6 +2,7 @@
 import React from 'react';
 import { ICONS } from '../../App/constants';
 import { playSound } from '../../Utils/audioUtils';
+import NowPlayingWidget from '../../features/Spotify/NowPlayingWidget';
 
 interface StatusBarProps {
   version: string;
@@ -13,6 +14,7 @@ interface StatusBarProps {
   onOpenAboutModal: () => void;
   isBottomPanelVisible: boolean; // New prop
   onToggleBottomPanel: () => void; // New prop
+  onOpenSpotify?: () => void; // Added prop
 }
 
 const StatusBar: React.FC<StatusBarProps> = ({
@@ -25,6 +27,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
   onOpenAboutModal,
   isBottomPanelVisible, // Destructure new prop
   onToggleBottomPanel,  // Destructure new prop
+  onOpenSpotify, // Destructure
 }) => {
   const SoundIcon = isSoundMuted ? (ICONS.VolumeXIcon || ICONS.default) : (ICONS.Volume2Icon || ICONS.default) ;
   const ThemeIcon = ICONS.Palette || ICONS.theme_command || ICONS.default;
@@ -70,6 +73,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
         >
           v{version}
         </button>
+        {onOpenSpotify && <NowPlayingWidget onClick={onOpenSpotify} />}
       </div>
 
       {/* Right Section */}

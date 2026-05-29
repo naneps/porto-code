@@ -220,7 +220,7 @@ const SpotifyView: React.FC<SpotifyViewProps> = () => {
   const [loadingContent, setLoadingContent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const nowPlayingInterval = useRef<ReturnType<typeof setInterval>>();
+  const nowPlayingInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   const fetchNowPlaying = useCallback(async () => {
     if (!isSpotifyAuthenticated()) return;

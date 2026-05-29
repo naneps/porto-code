@@ -10,27 +10,27 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "19",
-    "react-dom": "19",
-    "lucide-react": "^0.513.0",
-    "react-syntax-highlighter": "^15.6.1",
-    "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1",
     "@google/genai": "^1.3.0",
-    "firebase": "^11.8.1",
-    "pdf-lib": "^1.17.1",
     "@mozilla/readability": "^0.6.0",
     "axios": "^1.16.0",
     "cheerio": "^1.2.0",
+    "firebase": "^11.8.1",
     "jsdom": "^29.1.1",
+    "lucide-react": "^0.513.0",
+    "pdf-lib": "^1.17.1",
+    "react": "19",
+    "react-dom": "19",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^16.1.1",
+    "remark-gfm": "^4.0.1",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
+    "@types/jsdom": "*",
     "@types/node": "^22.14.0",
-    "typescript": "~5.7.2",
-    "vite": "^6.2.0",
-    "tsx": "^4.19.2",
     "@types/xml2js": "*",
-    "@types/jsdom": "*"
+    "tsx": "^4.19.2",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
   }
 }

@@ -781,6 +781,10 @@ const App: React.FC = () => {
     addAppLog('action', `Opened GitHub Profile tab for ${username}.`, 'User');
   }, [handleOpenTab, focusedEditorPaneId, addAppLog, featuresStatus, addNotificationAndLog]);
 
+  const handleOpenSpotifyTab = useCallback(() => {
+    handleOpenTab({ id: 'spotify_view', type: 'spotify_view', title: '🎵 Spotify' }, false, focusedEditorPaneId);
+    addAppLog('action', 'Opened Spotify Integration tab.', 'User');
+  }, [handleOpenTab, focusedEditorPaneId, addAppLog]);
 
   const handleSelectTab = useCallback((paneId: EditorPaneId, tabId: string) => {
     playSound('tab-select');
@@ -1283,6 +1287,11 @@ const App: React.FC = () => {
       handleOpenTab({ id: 'cv_nandang_eka_prasetya.pdf', title: 'Nandang_Eka_Prasetya_CV.pdf', type: 'cv_preview', fileName: 'cv_nandang_eka_prasetya.pdf' }, false, focusedEditorPaneId);
       return;
     }
+    if (hash === 'spotify') {
+      if (currentActiveTab && currentActiveTab.type === 'spotify_view') return;
+      handleOpenSpotifyTab();
+      return;
+    }
     
     // Project details
     if (hash.startsWith('project_') || hash.startsWith('ai_project_')) {
@@ -1360,6 +1369,7 @@ const App: React.FC = () => {
     handleOpenGuestBookTab,
     handleOpenSettingsEditor,
     handleOpenArticleTab,
+    handleOpenSpotifyTab,
     isSearchPanelVisible,
     isArticlesPanelVisible,
     isStatisticsPanelVisible,
@@ -1424,6 +1434,8 @@ const App: React.FC = () => {
         hash = 'settings';
       } else if (currentTab.type === 'cv_preview') {
         hash = 'cv_preview';
+      } else if (currentTab.type === 'spotify_view') {
+        hash = 'spotify';
       } else if (currentTab.type === 'json_preview') {
         hash = `${currentTab.id.replace('_preview', '')}_preview`;
       } else if (currentTab.type === 'project_detail') {
@@ -1760,6 +1772,7 @@ const App: React.FC = () => {
     }
     if (activeTab.type === 'github_profile_view') return { username: activeTab.githubUsername || getGitHubUsername(), mockStats: MOCK_GITHUB_STATS, featureStatus: featuresStatus.githubProfileView };
     if (activeTab.type === 'guest_book') return { addAppLog, currentUser, userGuestBookNickname, userGitHubUsername, featureStatus: featuresStatus.guestBook }; 
+    if (activeTab.type === 'spotify_view') return true;
     if (activeTab.fileName) return generateFileContent(activeTab.fileName, PORTFOLIO_DATA);
     return null;
   }, [
@@ -1821,6 +1834,7 @@ const App: React.FC = () => {
     }
     if (activeTab.type === 'github_profile_view') return { username: activeTab.githubUsername || getGitHubUsername(), mockStats: MOCK_GITHUB_STATS, featureStatus: featuresStatus.githubProfileView };
     if (activeTab.type === 'guest_book') return { addAppLog, currentUser, userGuestBookNickname, userGitHubUsername, featureStatus: featuresStatus.guestBook }; 
+    if (activeTab.type === 'spotify_view') return true;
     if (activeTab.fileName) return generateFileContent(activeTab.fileName, PORTFOLIO_DATA);
     return null;
   }, [

@@ -8,20 +8,15 @@ interface NowPlayingWidgetProps {
 
 const NowPlayingWidget: React.FC<NowPlayingWidgetProps> = ({ onClick }) => {
   const [nowPlaying, setNowPlaying] = useState<SpotifyNowPlaying | null>(null);
-  const [visible, setVisible] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   const fetchNowPlaying = useCallback(async () => {
     if (!isSpotifyAuthenticated()) {
-      setVisible(false);
       return;
     }
     const data = await getNowPlaying();
     if (data?.item) {
       setNowPlaying(data);
-      setVisible(true);
-    } else {
-      setVisible(false);
     }
   }, []);
 
@@ -31,7 +26,19 @@ const NowPlayingWidget: React.FC<NowPlayingWidgetProps> = ({ onClick }) => {
     return () => clearInterval(intervalRef.current);
   }, [fetchNowPlaying]);
 
-  if (!visible || !nowPlaying?.item) return null;
+  if (!nowPlaying?.item) {
+    return (
+      <button
+        onClick={onClick}
+        className="flex items-center gap-1.5 hover:bg-[var(--statusbar-item-hover-background)] px-1.5 py-0.5 rounded transition-colors group"
+        title="Open Spotify integration"
+        aria-label="Open Spotify integration"
+      >
+        <Music size={10} className="opacity-60 text-[hsl(141_72%_55%)]" />
+        <span className="text-[10px] text-[var(--statusbar-foreground)] opacity-80 group-hover:opacity-100">Spotify</span>
+      </button>
+    );
+  }
 
   const track = nowPlaying.item;
   const name = track.name;
