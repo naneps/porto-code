@@ -34,8 +34,37 @@ function base64urlEncode(buf: ArrayBuffer) {
 }
 
 // ── Auth flow ─────────────────────────────────────────────────────────────────
-export function getSpotifyRedirectUri() {
-  return window.location.origin + window.location.pathname;
+/**
+ * IMPORTANT: Spotify Redirect URI Configuration
+ * 
+ * The redirect URI sent to Spotify MUST exactly match one registered in your
+ * Spotify Developer Dashboard (https://developer.spotify.com/dashboard).
+ * 
+ * Recommended setup:
+ * 
+ * 1. For LOCAL DEVELOPMENT:
+ *    - Add these in Spotify Dashboard:
+ *      http://localhost:5173/
+ *      http://localhost:5173
+ * 
+ * 2. For PRODUCTION (Vercel, etc.):
+ *    - Add your deployed URL, e.g.:
+ *      https://porto-code.vercel.app/
+ *      https://porto-code.vercel.app
+ * 
+ * You can override the redirect URI completely using the environment variable:
+ * VITE_SPOTIFY_REDIRECT_URI
+ */
+export function getSpotifyRedirectUri(): string {
+  // Allow full override via environment variable (most flexible for local/prod)
+  const override = import.meta.env.VITE_SPOTIFY_REDIRECT_URI;
+  if (override) {
+    return override;
+  }
+
+  // Default behavior: always use origin + root path.
+  // This works reliably with hash-based routing (#/).
+  return window.location.origin + '/';
 }
 
 export async function initiateSpotifyLogin() {
@@ -79,6 +108,7 @@ export async function handleSpotifyCallback(code: string): Promise<boolean> {
   storeTokens(data);
   localStorage.removeItem(LS_CODE_VERIFIER);
   // Clean the ?code= from URL without triggering a reload
+  // We go back to root to keep things clean with hash routing
   window.history.replaceState({}, document.title, window.location.pathname);
   return true;
 }
