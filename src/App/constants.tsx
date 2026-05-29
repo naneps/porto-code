@@ -1,7 +1,7 @@
 
 
 import { PortfolioData, CertificationEntry, SidebarItemConfig, ProjectDetail, Command as AppCommandType, ArticleItem, ActivityBarItemDefinition, ActivityBarSelection, ProjectListingItem, MockGitHubStats, FeatureId, FeaturesStatusState, FeatureStatus } from './types';
-import { User, Briefcase, Code2, FolderKanban, Mail, FileJson2, LucideIcon, FileTerminal, HelpCircle, Eye, Palette, Type as FontIcon, Settings, GitFork, Bell, TerminalSquare, ArrowLeft, ArrowRight, SplitSquareHorizontal, LayoutGrid, UserCircle2 as UserProfileIcon, Minus, Square, X, ChevronDown, ChevronRight, Search, Check, Files, FileCode, Bot, FileText, Link, Phone, MousePointerClick, Command, Newspaper, Play, Cat, Volume2, VolumeX, Sparkles, BarChart3, Folder as FolderClosed, FolderOpen, FileCode2 as FileCodeIcon, FileBadge, ExternalLink as ExternalLinkIcon, Image as ImageIcon, ListChecks, Github, MessageSquare, Loader2, Send, Heart, Info, CheckCircle2, AlertTriangle, RotateCcw, MessageSquarePlus, PawPrint, Waves, Bird, HardHat, ListFilter, LayoutPanelTop } from 'lucide-react'; // Changed LayoutPanelBottom to LayoutPanelTop
+import { User, Briefcase, Code2, FolderKanban, Mail, FileJson2, LucideIcon, FileTerminal, HelpCircle, Eye, Palette, Type as FontIcon, Settings, GitFork, Bell, TerminalSquare, ArrowLeft, ArrowRight, SplitSquareHorizontal, LayoutGrid, UserCircle2 as UserProfileIcon, Minus, Square, X, ChevronDown, ChevronRight, Search, Check, Files, FileCode, Bot, FileText, Link, Phone, MousePointerClick, Command, Newspaper, Play, Cat, Volume2, VolumeX, Sparkles, BarChart3, Folder as FolderClosed, FolderOpen, FileCode2 as FileCodeIcon, FileBadge, ExternalLink as ExternalLinkIcon, Image as ImageIcon, ListChecks, Github, MessageSquare, Loader2, Send, Heart, Info, CheckCircle2, AlertTriangle, RotateCcw, MessageSquarePlus, PawPrint, Waves, Bird, HardHat, ListFilter, LayoutPanelTop, GitBranch, Puzzle, Trophy } from 'lucide-react'; // Changed LayoutPanelBottom to LayoutPanelTop
 import { MOCK_CV_GENERATOR_CODE } from '../Assets/generate_cv_code';
 
 export const STATISTICS_FIREBASE_PATH = 'app_statistics'; // Base path for statistics in Firebase
@@ -285,6 +285,10 @@ export const ICONS: { [key: string]: LucideIcon } = {
   'feature_status_admin_icon': ListFilter,
   'guide.md': HelpCircle, 
   'layout_panel_bottom': LayoutPanelTop, // Changed LayoutPanelBottom to LayoutPanelTop
+  // New feature icons
+  'source_control_icon': GitBranch,
+  'extensions_icon': Puzzle,
+  'achievements_icon': Trophy,
 };
 
 export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
@@ -346,7 +350,14 @@ export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
     // No specific featureId, it's a general info file
     children: [
       { id: 'guide.md', label: 'guide.md', fileName: 'guide.md', icon: ICONS['guide.md'], type: 'file', title: 'Portfolio Guide', actionType: 'open_tab' },
-      { id: 'support.md', label: 'support.md', fileName: 'support.md', icon: ICONS.heart_icon, type: 'file', title: 'Support the Creator', actionType: 'open_tab' },
+      { 
+        id: 'support', 
+        label: 'support.md', 
+        icon: ICONS.heart_icon, 
+        type: 'support', 
+        title: 'Support the Creator', 
+        actionType: 'open_tab' 
+      },
     ],
   }
 ];
@@ -443,6 +454,11 @@ For direct donations via PayPal.
 
 [Donate via PayPal](https://paypal.me/n4n10)
 
+### <0xF0><0x9F><0x92><0xB0> Saweria (Indonesia)
+Platform donasi lokal yang cepat dan mudah.
+
+[Saweria - nannndev](https://saweria.co/nannndev)
+
 ---
 
 Every bit of support is greatly appreciated and helps me continue building and sharing. Thank you!
@@ -532,8 +548,10 @@ export function generateProjectDetailContent(projectId: string, data: PortfolioD
 export const DEFAULT_ACTIVITY_BAR_ITEMS: ActivityBarItemDefinition[] = [
   { id: 'explorer-activity', label: 'Explorer', iconName: 'files_icon', viewId: 'explorer', featureId: 'explorer' },
   { id: 'search-activity', label: 'Search', iconName: 'search_icon', viewId: 'search', featureId: 'searchPanel' },
+  { id: 'source-control-activity', label: 'Source Control', iconName: 'source_control_icon', viewId: 'source_control', featureId: 'sourceControl' },
   { id: 'ai_chat-activity', label: 'AI Assistant', iconName: 'ai_chat_icon', viewId: 'ai_chat_tab', featureId: 'aiChat' },
   { id: 'articles-activity', label: 'Articles', iconName: 'articles_icon', viewId: 'articles', featureId: 'articlesPanel' },
+  { id: 'extensions-activity', label: 'Extensions', iconName: 'extensions_icon', viewId: 'extensions', featureId: 'extensions' },
   { id: 'guest_book-activity', label: 'Guest Book', iconName: 'guest_book_icon', viewId: 'guest_book_activity', featureId: 'guestBook' },
   { id: 'statistics-activity', label: 'Statistics', iconName: 'statistics_icon', viewId: 'statistics', featureId: 'statisticsPanel' },
   { id: 'github-activity', label: 'GitHub Profile', iconName: 'github_icon', viewId: 'github_profile_view', featureId: 'githubProfileView' }, 
@@ -598,7 +616,11 @@ export const ALL_FEATURE_IDS: Record<FeatureId, string> = {
   cvGenerator: 'CV Generator',
   projectSuggestions: 'AI Project Suggestions',
   projectsView: 'Projects View',
-  featureStatusAdminPanel: 'Feature Status Admin Panel', // New panel
+  featureStatusAdminPanel: 'Feature Status Admin Panel',
+  // New features
+  sourceControl: 'Source Control',
+  extensions: 'Extensions Marketplace',
+  achievements: 'Achievements',
 };
 
 export const DEFAULT_FEATURE_STATUSES: FeaturesStatusState = {
@@ -616,5 +638,9 @@ export const DEFAULT_FEATURE_STATUSES: FeaturesStatusState = {
   cvGenerator: 'active',
   projectSuggestions: 'active',
   projectsView: 'active',
-  featureStatusAdminPanel: 'disabled', // Default to disabled, only accessible in dev mode
+  featureStatusAdminPanel: 'disabled',
+  // New features (enabled by default for now)
+  sourceControl: 'active',
+  extensions: 'active',
+  achievements: 'active',
 };

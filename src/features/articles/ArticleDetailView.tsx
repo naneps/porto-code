@@ -21,9 +21,10 @@ const ArticleDetailView: React.FC<ArticleDetailViewProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [coverImageFailed, setCoverImageFailed] = useState(false);
 
   const markdownContent = article?.body_markdown || "# Article content not available";
-  const imageUrl = article?.cover_image;
+  const rawImageUrl = article?.cover_image || article?.social_image || null;
   const title = article?.title || "Article Not Found";
   const description = article?.description; // Used as summary
   const authorName = article?.user?.name || "Unknown Author";
@@ -51,6 +52,8 @@ const ArticleDetailView: React.FC<ArticleDetailViewProps> = ({
       container.scrollTop = 0;
       setScrollProgress(0);
     }
+    // Reset image error state when switching articles
+    setCoverImageFailed(false);
     return () => {
       if (container) {
         container.removeEventListener('scroll', handleScroll);
@@ -124,15 +127,34 @@ const ArticleDetailView: React.FC<ArticleDetailViewProps> = ({
         </span>
       </div>
 
-      {/* Cover Image */}
-      {imageUrl && (
-        <div className="w-full h-48 md:h-64 overflow-hidden relative border-b border-[var(--border-color)]">
+      {/* Cover Image (with error handling for hotlinked news images) */}
+      {rawImageUrl && !coverImageFailed && (
+        <div className="w-full h-48 md:h-64 overflow-hidden relative border-b border-[var(--border-color)] bg-[var(--editor-tab-inactive-background)]">
           <img
-            src={imageUrl}
+            src={rawImageUrl}
             alt={`Cover image for ${title}`}
-            className="w-full h-full object-cover brightness-95"
+            className="w-full h-full object-cover"
+            loading="eager"
+            referrerPolicy="no-referrer"
+            onError={() => setCoverImageFailed(true)}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--editor-background)] to-transparent opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--editor-background)] via-[var(--editor-background)]/70 to-transparent" />
+          <div className="absolute bottom-3 left-4 right-4 text-[10px] font-mono text-[var(--text-muted)]/70 tracking-wider select-none pointer-events-none">
+            FEATURED IMAGE
+          </div>
+        </div>
+      )}
+
+      {/* Nice fallback when cover image is missing or fails to load (common with hotlinked news images) */}
+      {(!rawImageUrl || coverImageFailed) && (
+        <div className="w-full h-32 md:h-40 border-b border-[var(--border-color)] bg-[var(--editor-tab-inactive-background)] flex items-center justify-center relative">
+          <div className="text-center px-6">
+            <div className="text-[10px] font-mono uppercase tracking-[2px] text-[var(--text-accent)]/60 mb-1">FEATURED IMAGE</div>
+            <div className="text-sm text-[var(--text-muted)] max-w-md line-clamp-2">
+              {article?.category ? article.category.toUpperCase() : 'NEWS'} — {title.length > 80 ? title.substring(0, 77) + '...' : title}
+            </div>
+          </div>
+          <div className="absolute bottom-2 right-3 text-[9px] font-mono text-[var(--text-muted)]/40">image unavailable</div>
         </div>
       )}
 
@@ -301,7 +323,23 @@ const ArticleDetailView: React.FC<ArticleDetailViewProps> = ({
                     <code {...props}>{children}</code>
                   </pre>
                 );
-              }
+              },
+              img: ({ node, ...props }) => (
+                <span className="block my-5">
+                  <img
+                    {...props}
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    className="max-w-full h-auto rounded-md border border-[var(--border-color)]/60 shadow-sm mx-auto"
+                    style={{ maxHeight: '520px', objectFit: 'contain' }}
+                  />
+                  {props.alt && (
+                    <span className="block text-center text-[10px] text-[var(--text-muted)] mt-1.5 font-mono opacity-70">
+                      {props.alt}
+                    </span>
+                  )}
+                </span>
+              )
             }}
           >
             {markdownContent}
@@ -317,33 +355,50 @@ const ArticleDetailView: React.FC<ArticleDetailViewProps> = ({
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {relatedArticles.map(related => (
-                <button
-                  key={related.id}
-                  onClick={() => onOpenArticle?.(related)}
-                  className="text-left p-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--editor-tab-inactive-background)]/50 hover:bg-[var(--sidebar-item-hover-background)]/85 hover:border-[var(--focus-border)] transition-all flex flex-col justify-between h-full group"
-                >
-                  <div className="w-full">
-                    <div className="flex items-center justify-between gap-1 mb-2">
-                      <span className="text-[9px] uppercase tracking-wider text-[var(--text-muted)] font-mono">
-                        {related.user.username}
-                      </span>
-                      {related.category && (
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-[var(--border-color)] text-[var(--text-muted)] lowercase font-mono">
-                          {related.category}
+              {relatedArticles.map(related => {
+                const relThumb = related.cover_image || related.social_image || null;
+                return (
+                  <button
+                    key={related.id}
+                    onClick={() => onOpenArticle?.(related)}
+                    className="text-left p-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--editor-tab-inactive-background)]/50 hover:bg-[var(--sidebar-item-hover-background)]/85 hover:border-[var(--focus-border)] transition-all flex flex-col justify-between h-full group"
+                  >
+                    {/* Small thumbnail for related article */}
+                    {relThumb && (
+                      <div className="w-full h-20 mb-2.5 rounded overflow-hidden border border-[var(--border-color)]/50 bg-[var(--editor-background)]">
+                        <img
+                          src={relThumb}
+                          alt=""
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-200"
+                        />
+                      </div>
+                    )}
+
+                    <div className="w-full">
+                      <div className="flex items-center justify-between gap-1 mb-2">
+                        <span className="text-[9px] uppercase tracking-wider text-[var(--text-muted)] font-mono">
+                          {related.user.username}
                         </span>
-                      )}
+                        {related.category && (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-[var(--border-color)] text-[var(--text-muted)] lowercase font-mono">
+                            {related.category}
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-[12px] font-bold text-[var(--editor-foreground)] line-clamp-2 mb-2 group-hover:text-[var(--text-accent)] transition-colors leading-snug">
+                        {related.title}
+                      </h4>
                     </div>
-                    <h4 className="text-[12px] font-bold text-[var(--editor-foreground)] line-clamp-2 mb-2 group-hover:text-[var(--text-accent)] transition-colors leading-snug">
-                      {related.title}
-                    </h4>
-                  </div>
-                  <div className="text-[9px] text-[var(--text-muted)] mt-4 pt-2 border-t border-[var(--border-color)]/30 w-full flex items-center justify-between font-mono">
-                    <span>{related.readable_publish_date}</span>
-                    <span>{related.reading_time_minutes}m read</span>
-                  </div>
-                </button>
-              ))}
+
+                    <div className="text-[9px] text-[var(--text-muted)] mt-auto pt-2 border-t border-[var(--border-color)]/30 w-full flex items-center justify-between font-mono">
+                      <span>{related.readable_publish_date}</span>
+                      <span>{related.reading_time_minutes}m read</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

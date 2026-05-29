@@ -246,28 +246,54 @@ const ArticlesPanel: React.FC<ArticlesPanelProps> = ({
           )}
           {!isLoading && !error && filteredArticles.map((article) => {
             const isActive = article.slug === activeArticleSlug;
+            const thumb = article.cover_image || article.social_image || null;
+
             return (
               <button
                 key={article.id} 
                 onClick={() => onSelectArticle(article)}
-                className={`w-full text-left p-2.5 rounded-md transition-colors duration-150 ease-in-out border border-transparent
+                className={`w-full text-left p-2 rounded-md transition-colors duration-150 ease-in-out border border-transparent
                             focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[var(--focus-border)]
                             ${isActive 
                               ? 'bg-[var(--sidebar-item-focus-background)] text-[var(--sidebar-item-focus-foreground)] border-[var(--border-color)]' 
                               : 'hover:bg-[var(--sidebar-item-hover-background)]'}`}
               >
-                <div className="flex items-start justify-between gap-1">
-                  <h3 className="text-xs font-semibold line-clamp-2 leading-snug text-[var(--editor-foreground)] flex-1">{article.title}</h3>
-                  {article.category && (
-                    <span className="flex-shrink-0 text-[9px] px-1.5 py-0.5 rounded bg-[var(--editor-tab-inactive-background)] text-[var(--text-muted)] border border-[var(--border-color)] font-mono leading-none lowercase">
-                      {article.category}
-                    </span>
+                <div className="flex gap-2.5">
+                  {/* Thumbnail */}
+                  {thumb && (
+                    <div className="flex-shrink-0 w-14 h-10 rounded overflow-hidden border border-[var(--border-color)]/60 bg-[var(--editor-tab-inactive-background)] mt-0.5">
+                      <img
+                        src={thumb}
+                        alt=""
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   )}
-                </div>
-                <p className="text-[11px] text-[var(--text-muted)] mt-1 line-clamp-2 leading-relaxed">{article.description}</p>
-                <div className="flex items-center justify-between mt-2 pt-1 border-t border-[var(--border-color)]/30 text-[9px] text-[var(--text-muted)]">
-                  <span className="font-semibold">{getSourceName(article.user.username)}</span>
-                  <span>{article.readable_publish_date} &bull; {article.reading_time_minutes}m read</span>
+
+                  {/* Text content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-1.5">
+                      <h3 className="text-xs font-semibold line-clamp-2 leading-snug text-[var(--editor-foreground)] flex-1 pr-1">
+                        {article.title}
+                      </h3>
+                      {article.category && (
+                        <span className="flex-shrink-0 text-[9px] px-1.5 py-0.5 rounded bg-[var(--editor-tab-inactive-background)] text-[var(--text-muted)] border border-[var(--border-color)] font-mono leading-none lowercase self-start mt-px">
+                          {article.category}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-[11px] text-[var(--text-muted)] mt-1 line-clamp-2 leading-relaxed">
+                      {article.description}
+                    </p>
+
+                    <div className="flex items-center justify-between mt-2 pt-1 border-t border-[var(--border-color)]/30 text-[9px] text-[var(--text-muted)]">
+                      <span className="font-semibold truncate max-w-[55%]">{getSourceName(article.user.username)}</span>
+                      <span className="shrink-0">{article.readable_publish_date} &bull; {article.reading_time_minutes}m</span>
+                    </div>
+                  </div>
                 </div>
               </button>
             );

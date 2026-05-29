@@ -71,7 +71,7 @@ export interface PortfolioData {
 export interface Tab {
   id: string;
   title: string;
-  type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview' | 'article_detail' | 'cv_preview' | 'settings_editor' | 'github_profile_view' | 'guest_book' | 'spotify_view';
+  type: 'file' | 'project_detail' | 'ai_chat' | 'json_preview' | 'article_detail' | 'cv_preview' | 'settings_editor' | 'github_profile_view' | 'guest_book' | 'spotify_view' | 'extensions' | 'achievements' | 'support';
   fileName?: string; // For file-based tabs and json_preview of files or projects
   articleSlug?: string; // Remains for identifying which article is open
   articleId?: number; // Added to store dev.to article ID
@@ -180,7 +180,17 @@ export interface ContextMenuProps {
 }
 
 // For ActivityBar selection - github is now a tab, not a panel itself.
-export type ActivityBarSelection = 'explorer' | 'ai_chat_tab' | 'search' | 'articles' | 'statistics' | 'github_profile_view' | 'guest_book_activity' | null; // Added guest_book_activity
+export type ActivityBarSelection = 
+  | 'explorer' 
+  | 'ai_chat_tab' 
+  | 'search' 
+  | 'articles' 
+  | 'statistics' 
+  | 'github_profile_view' 
+  | 'guest_book_activity' 
+  | 'source_control'      // New
+  | 'extensions'          // New
+  | null;
 
 
 // For Global Search Results
@@ -547,7 +557,11 @@ export type FeatureId =
   | 'cvGenerator'
   | 'projectSuggestions' // Added new AI project suggestion feature
   | 'projectsView' 
-  | 'featureStatusAdminPanel'; // New panel for managing feature statuses
+  | 'featureStatusAdminPanel'
+  // New features (1 2 3)
+  | 'sourceControl'
+  | 'extensions'
+  | 'achievements';
 
 export type FeatureStatus = 'active' | 'maintenance' | 'disabled';
 export type FeaturesStatusState = Record<FeatureId, FeatureStatus>;

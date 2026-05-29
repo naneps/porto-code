@@ -65,87 +65,128 @@ const UserProfileDisplay: React.FC<UserProfileLinkProps> = ({ nickname, avatarUr
 
 
 const GuestBookEntryItem: React.FC<GuestBookEntryItemProps> = ({ entry, currentUser, onReaction, className }) => {
-  const [showFullMessage, setShowFullMessage] = useState(false);
-  const MAX_DISPLAY_LENGTH = 200; 
+  const [showAllReactions, setShowAllReactions] = useState(false);
 
-  const { nickname, avatarUrl, githubLogin, message, timestamp, aiValidationStatus, reactions, authProvider } = entry;
+  const aiStatusInfo = AI_STATUS_ICONS[entry.aiValidationStatus] || AI_STATUS_ICONS.pending;
+  const AiIcon = aiStatusInfo.icon;
 
-  const formattedTimestamp = timestamp instanceof Date 
-    ? timestamp.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-    : 'Invalid Date';
+  const userReactedEmojis = currentUser 
+    ? Object.keys(entry.reactions || {}).filter(emoji => 
+        (entry.reactions[emoji] || []).includes(currentUser.uid)
+      )
+    : [];
 
-  const displayMessage = showFullMessage || message.length <= MAX_DISPLAY_LENGTH
-    ? message
-    : `${message.substring(0, MAX_DISPLAY_LENGTH)}...`;
+  const sortedReactions = Object.entries(entry.reactions || {})
+    .filter(([, userIds]) => userIds.length > 0)
+    .sort((a, b) => b[1].length - a[1].length);
 
-  const ValidationIcon = AI_STATUS_ICONS[aiValidationStatus]?.icon || MessageSquare;
-  const validationIconColor = AI_STATUS_ICONS[aiValidationStatus]?.color || 'text-[var(--text-muted)]';
-  const validationTitle = AI_STATUS_ICONS[aiValidationStatus]?.title || 'AI Validation Status Unknown';
-  
+  const displayedReactions = showAllReactions ? sortedReactions : sortedReactions.slice(0, 5);
+
+  const formatTimestamp = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return 'yesterday';
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return date.toLocaleDateString(undefined, { 
+      month: 'short', 
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined 
+    });
+  };
+
   return (
-    <div className={`p-3 sm:p-4 bg-[var(--sidebar-background)] border border-[var(--border-color)] rounded-lg shadow-sm ${className || ''} ${entry.isNew ? 'animate-spawnItem' : ''}`}>
-      <div className="flex items-start space-x-0"> 
-        <div className="flex-1"> 
-          <div className="flex items-center justify-between mb-1.5"> 
-             <UserProfileDisplay 
-                nickname={nickname} 
-                avatarUrl={avatarUrl} 
-                githubLogin={githubLogin}
-                authProvider={authProvider}
-             />
-            <div className="flex items-center space-x-2">
-              <span className="text-xs text-[var(--text-muted)]" title={timestamp.toISOString()}>{formattedTimestamp}</span>
-              <span title={validationTitle}>
-                <ValidationIcon size={14} className={validationIconColor} />
+    <div className={`group p-4 rounded-xl border border-[var(--border-color)]/70 bg-[var(--sidebar-background)] hover:border-[var(--border-color)] transition-all duration-200 ${className || ''} ${entry.isNew ? 'animate-spawnItem ring-1 ring-[var(--focus-border)]/30' : ''}`}>
+      
+      {/* Header */}
+      <div className="flex items-start justify-between mb-3">
+        <UserProfileDisplay 
+          nickname={entry.nickname}
+          avatarUrl={entry.avatarUrl}
+          githubLogin={entry.githubLogin}
+          authProvider={entry.authProvider}
+        />
+        
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-[10px] text-[var(--text-muted)] font-mono tracking-tight">
+            {formatTimestamp(entry.timestamp)}
+          </span>
+          
+          {/* Improved AI Badge */}
+          {(entry.aiValidationStatus === 'validated_ok' || entry.aiValidationStatus === 'validated_flagged') && (
+            <div 
+              className={`flex items-center gap-1 px-2 py-px rounded-full text-[10px] font-medium border ${aiStatusInfo.color} bg-current/5 border-current/20`}
+              title={aiStatusInfo.title}
+            >
+              <AiIcon size={11} />
+              <span className="font-mono text-[9px] tracking-wider">
+                {entry.aiValidationStatus === 'validated_ok' ? 'VERIFIED' : 'REVIEWED'}
               </span>
             </div>
-          </div>
-          
-          <div className="mt-1 pl-[calc(2.5rem+0.75rem)]"> 
-            <div className="text-sm text-[var(--text-default)] whitespace-pre-line break-words">
-                {displayMessage}
-            </div>
-            {message.length > MAX_DISPLAY_LENGTH && (
-                <button
-                onClick={() => setShowFullMessage(!showFullMessage)}
-                className="text-xs text-[var(--link-foreground)] hover:underline mt-1"
-                >
-                {showFullMessage ? 'Show Less' : 'Show More'}
-                </button>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
-      <div className="mt-3 pt-2 border-t border-[var(--border-color)] border-opacity-50">
-        <div className="flex items-center space-x-1.5">
-          {PREDEFINED_EMOJIS.map((emoji) => {
-            const userHasReacted = currentUser && reactions[emoji]?.includes(currentUser.uid);
-            const count = reactions[emoji]?.length || 0;
-            return (
-              <button
-                key={emoji}
-                onClick={() => onReaction(emoji)}
-                disabled={!currentUser}
-                className={`px-1.5 py-0.5 rounded-full text-xs flex items-center transition-colors duration-150
-                  ${userHasReacted ? 'bg-[var(--focus-border)] bg-opacity-30 border border-[var(--focus-border)] text-[var(--text-accent)]' : 'bg-[var(--editor-tab-inactive-background)] hover:bg-[var(--sidebar-item-hover-background)] border border-transparent hover:border-[var(--border-color)] text-[var(--text-muted)]'}
-                  ${!currentUser ? 'cursor-not-allowed opacity-70' : ''}
-                `}
-                title={currentUser ? (userHasReacted ? `Remove ${emoji} reaction` : `React with ${emoji}`) : "Sign in to react"}
-                aria-pressed={userHasReacted}
-              >
-                <span className="text-sm mr-0.5">{emoji}</span>
-                {count > 0 && (
-                  <span 
-                    className={`font-mono ${userHasReacted ? 'text-[var(--editor-foreground)]' : 'text-[var(--text-muted)]'}`}
-                  >
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+      {/* Message */}
+      <div className="text-[13px] leading-relaxed text-[var(--editor-foreground)] whitespace-pre-wrap pl-1 pr-2 mb-4">
+        {entry.message}
+      </div>
+
+      {/* Reactions - Significantly improved */}
+      <div className="flex flex-wrap items-center gap-1.5 pl-1">
+        {PREDEFINED_EMOJIS.map(emoji => {
+          const userIds = entry.reactions?.[emoji] || [];
+          const count = userIds.length;
+          const hasReacted = userReactedEmojis.includes(emoji);
+          
+          if (count === 0 && !hasReacted) return null;
+
+          return (
+            <button
+              key={emoji}
+              onClick={() => onReaction(emoji)}
+              disabled={!currentUser}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 text-sm rounded-full border transition-all active:scale-[0.96]
+                ${hasReacted 
+                  ? 'bg-[var(--focus-border)]/15 border-[var(--focus-border)] text-[var(--focus-border)] shadow-sm' 
+                  : 'bg-[var(--editor-tab-inactive-background)] border-[var(--border-color)] hover:border-[var(--text-muted)] hover:bg-[var(--sidebar-item-hover-background)]'
+                }
+                ${!currentUser ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.03]'}
+              `}
+              title={currentUser ? (hasReacted ? `Remove your ${emoji} reaction` : `React with ${emoji}`) : "Sign in to react"}
+            >
+              <span className="text-base leading-none">{emoji}</span>
+              {count > 0 && (
+                <span className="font-mono text-[10px] font-medium tabular-nums">{count}</span>
+              )}
+            </button>
+          );
+        })}
+
+        {sortedReactions.length > 5 && !showAllReactions && (
+          <button 
+            onClick={() => setShowAllReactions(true)}
+            className="text-[10px] px-2 py-1 text-[var(--text-muted)] hover:text-[var(--editor-foreground)] hover:bg-[var(--sidebar-item-hover-background)] rounded-full transition-colors"
+          >
+            +{sortedReactions.length - 5}
+          </button>
+        )}
+        
+        {showAllReactions && sortedReactions.length > 5 && (
+          <button 
+            onClick={() => setShowAllReactions(false)}
+            className="text-[10px] px-2 py-1 text-[var(--text-muted)] hover:text-[var(--editor-foreground)]"
+          >
+            show less
+          </button>
+        )}
       </div>
     </div>
   );

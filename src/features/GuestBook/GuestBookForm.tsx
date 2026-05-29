@@ -80,14 +80,14 @@ const GuestBookForm: React.FC<GuestBookFormProps> = ({
           <button
             type="submit"
             disabled={isSubmitting || !message.trim() || message.length > MAX_MESSAGE_LENGTH}
-            className="w-full sm:w-auto px-4 py-2 bg-[var(--modal-button-background)] text-[var(--modal-button-foreground)] rounded-md text-sm font-medium hover:bg-[var(--modal-button-hover-background)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-border)] disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            className="w-full sm:w-auto px-5 py-2 bg-[var(--focus-border)] hover:bg-[#0066b3] active:scale-[0.985] text-white rounded-md text-sm font-semibold transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
-              <ICONS.SpinnerIcon size={18} className="animate-spin mr-2" />
+              <ICONS.SpinnerIcon size={17} className="animate-spin" />
             ) : (
-              <ICONS.send_icon size={16} className="mr-2" />
+              <ICONS.send_icon size={16} />
             )}
-            {isSubmitting ? 'Submitting...' : 'Post Message'}
+            {isSubmitting ? 'Posting...' : 'Post Message'}
           </button>
         </form>
       ) : (

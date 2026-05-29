@@ -15,6 +15,8 @@ import PetsPanel from '../features/Pets/PetsPanel';
 import SearchPanel from '../features/Search/SearchPanel';
 import StatisticsPanel from '../features/Statistics/StatisticsPanel';
 import TerminalPanel from '../features/Terminal/TerminalPanel';
+import SourceControlPanel from '../features/SourceControl/SourceControlPanel';
+import SupportView from '../features/Modals/SupportView';
 import ActivityBar from '../Layout/ActivityBar/ActivityBar';
 import BottomPanelTabs from '../Layout/BottomPanelTabs/BottomPanelTabs';
 import Breadcrumbs from '../Layout/Breadcrumbs/Breadcrumbs';
@@ -299,6 +301,7 @@ const App: React.FC = () => {
   const [isSearchPanelVisible, setIsSearchPanelVisible] = useState<boolean>(() => localStorage.getItem('portfolio-isSearchPanelVisible') === 'true' || false);
   const [isArticlesPanelVisible, setIsArticlesPanelVisible] = useState<boolean>(() => localStorage.getItem('portfolio-isArticlesPanelVisible') === 'true' || false);
   const [isStatisticsPanelVisible, setIsStatisticsPanelVisible] = useState<boolean>(() => localStorage.getItem('portfolio-isStatisticsPanelVisible') === 'true' || false);
+  const [isSourceControlVisible, setIsSourceControlVisible] = useState<boolean>(() => localStorage.getItem('portfolio-isSourceControlVisible') === 'true' || false);
   const [leftPanelWidth, setLeftPanelWidth] = useState<number>(() => { const saved = localStorage.getItem('portfolio-leftPanelWidth'); return saved ? parseInt(saved, 10) : DEFAULT_LEFT_PANEL_WIDTH; });
   const [bottomPanelHeight, setBottomPanelHeight] = useState<number>(() => { const saved = localStorage.getItem('portfolio-bottomPanelHeight'); return saved ? parseInt(saved, 10) : DEFAULT_BOTTOM_PANEL_HEIGHT; });
   const [globalSearchTerm, setGlobalSearchTerm] = useState<string>('');
@@ -375,6 +378,7 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('portfolio-isSearchPanelVisible', String(isSearchPanelVisible)); }, [isSearchPanelVisible]);
   useEffect(() => { localStorage.setItem('portfolio-isArticlesPanelVisible', String(isArticlesPanelVisible)); }, [isArticlesPanelVisible]);
   useEffect(() => { localStorage.setItem('portfolio-isStatisticsPanelVisible', String(isStatisticsPanelVisible)); }, [isStatisticsPanelVisible]);
+  useEffect(() => { localStorage.setItem('portfolio-isSourceControlVisible', String(isSourceControlVisible)); }, [isSourceControlVisible]);
   useEffect(() => { localStorage.setItem('portfolio-leftPanelWidth', String(leftPanelWidth)); }, [leftPanelWidth]);
   useEffect(() => { localStorage.setItem('portfolio-bottomPanelHeight', String(bottomPanelHeight)); }, [bottomPanelHeight]);
   useEffect(() => { localStorage.setItem('portfolio-isBottomPanelVisible', String(isBottomPanelVisible)); }, [isBottomPanelVisible]);
@@ -521,11 +525,12 @@ const App: React.FC = () => {
     else if (currentTab?.type === 'github_profile_view') setActivityBarSelection('github_profile_view');
     else if (currentTab?.type === 'guest_book') setActivityBarSelection('guest_book_activity');
     else if (isStatisticsPanelVisible) setActivityBarSelection('statistics');
+    else if (isSourceControlVisible) setActivityBarSelection('source_control');
     else if (isArticlesPanelVisible) setActivityBarSelection('articles');
     else if (isSearchPanelVisible) setActivityBarSelection('search');
     else if (isSidebarVisible) setActivityBarSelection('explorer');
     else setActivityBarSelection(null);
-  }, [currentActiveTabForFocusedPane, isSidebarVisible, isSearchPanelVisible, isArticlesPanelVisible, isStatisticsPanelVisible]);
+  }, [currentActiveTabForFocusedPane, isSidebarVisible, isSearchPanelVisible, isArticlesPanelVisible, isStatisticsPanelVisible, isSourceControlVisible]);
 
   const appendToTerminalOutput = useCallback((text: string | string[]) => {
     const linesToAdd = Array.isArray(text) ? text : [text];
@@ -1189,6 +1194,26 @@ const App: React.FC = () => {
   }, [triggerFetchDevToArticles, addNotificationAndLog, rawRemoveNotification]);
 
 
+  const handleToggleSourceControl = useCallback(() => {
+    if (featuresStatus.sourceControl !== 'active') {
+      addNotificationAndLog(`The Source Control feature is currently under maintenance.`, 'warning', 5000, undefined, ICONS.HardHatIcon);
+      return;
+    }
+    const newVisibility = !isSourceControlVisible;
+    setIsSourceControlVisible(newVisibility);
+    playSound('panel-toggle');
+    addAppLog('action', `Source Control panel ${newVisibility ? 'shown' : 'hidden'}.`, 'User');
+    if (newVisibility) {
+      setActivityBarSelection('source_control');
+      setIsSidebarVisible(false);
+      setIsSearchPanelVisible(false);
+      setIsArticlesPanelVisible(false);
+      setIsStatisticsPanelVisible(false);
+    } else if (activityBarSelection === 'source_control') {
+      setActivityBarSelection(null);
+    }
+  }, [isSourceControlVisible, activityBarSelection, addAppLog, featuresStatus, addNotificationAndLog]);
+
   const handleToggleStatisticsPanel = useCallback(() => {
     if (featuresStatus.statisticsPanel !== 'active') {
       addNotificationAndLog(`The Statistics Panel (${ALL_FEATURE_IDS.statisticsPanel}) is currently under maintenance.`, 'warning', 5000, undefined, ICONS.HardHatIcon);
@@ -1518,7 +1543,9 @@ const App: React.FC = () => {
         switch (def.viewId) {
           case 'explorer': actionToCall = toggleSidebarVisibility; break;
           case 'search': actionToCall = handleToggleSearchPanel; break;
+          case 'source_control': actionToCall = handleToggleSourceControl; break;
           case 'articles': actionToCall = handleToggleArticlesPanel; break;
+          case 'extensions': actionToCall = () => handleOpenTab({ id: 'extensions_marketplace', type: 'extensions', title: 'Extensions' }); break;
           case 'statistics': actionToCall = handleToggleStatisticsPanel; break;
           case 'github_profile_view': actionToCall = handleOpenGitHubProfileTab; break;
           case 'ai_chat_tab':actionToCall = handleOpenAIChatTab; break;
@@ -1528,7 +1555,7 @@ const App: React.FC = () => {
       }
       return { ...def, icon: ICONS[def.iconName] || ICONS.default, action: actionToCall, status: featureStatusForThisItem, featureId: def.featureId };
     });
-  }, [ orderedActivityBarItemDefinitions, toggleSidebarVisibility, handleToggleSearchPanel, handleToggleArticlesPanel, handleToggleStatisticsPanel, handleOpenGitHubProfileTab, handleOpenAIChatTab, handleOpenGuestBookTab, addAppLog, featuresStatus, addNotificationAndLog ]);
+  }, [ orderedActivityBarItemDefinitions, toggleSidebarVisibility, handleToggleSearchPanel, handleToggleArticlesPanel, handleToggleStatisticsPanel, handleOpenGitHubProfileTab, handleOpenAIChatTab, handleOpenGuestBookTab, handleToggleSourceControl, addAppLog, featuresStatus, addNotificationAndLog ]);
   const handleThemeChange = useCallback((themeName: string) => { rawHandleThemeChange(themeName); playSound('setting-change'); addAppLog('action', `Theme changed to: ${themeName}.`, 'User'); }, [rawHandleThemeChange, addAppLog]);
   const handleEditorFontFamilyChange = useCallback((fontId: string) => { rawHandleFontFamilyChange(fontId); playSound('setting-change'); const fontLabel = FONT_FAMILY_OPTIONS.find(f=>f.id === fontId)?.label || fontId; addAppLog('action', `Editor font family changed to: ${fontLabel}.`, 'User'); }, [rawHandleFontFamilyChange, addAppLog]);
   const handleEditorFontSizeChange = useCallback((sizeId: string) => { rawHandleEditorFontSizeChange(sizeId); playSound('setting-change'); const sizeLabel = FONT_SIZE_OPTIONS.find(s=>s.id === sizeId)?.label || sizeId; addAppLog('action', `Editor font size changed to: ${sizeLabel}.`, 'User'); }, [rawHandleEditorFontSizeChange, addAppLog]);
@@ -1746,7 +1773,34 @@ const App: React.FC = () => {
     }
     if (activeTab.type === 'project_detail') return aiGeneratedProjects.find(p => p.id === activeTab.id) || JSON.parse(generateProjectDetailContent(activeTab.id, PORTFOLIO_DATA));
     if (activeTab.type === 'json_preview' && activeTab.fileName) { const originalFile = editorPanes.left.openTabs.find(t => t.id === activeTab.fileName) || orderedSidebarItems.flatMap(item => item.children || [item]).find(item => item.id === activeTab.fileName); if (originalFile?.id?.startsWith('project_')) return JSON.parse(generateProjectDetailContent(originalFile.id, PORTFOLIO_DATA)); return generateFileContent(activeTab.fileName, PORTFOLIO_DATA); }
-    if (activeTab.type === 'article_detail' && activeTab.articleId) { const article = devToArticles.find(a => a.id === activeTab.articleId); return article || { title: "Article Not Found", body_markdown: "# Article Not Found", user: { name: "System" } }; }
+    if (activeTab.type === 'extensions') {
+      return { title: 'Extensions Marketplace', description: 'Browse and install VS Code extensions (demo)' };
+    }
+    if (activeTab.type === 'achievements') {
+      return { title: 'Achievements', description: 'Unlocked badges and milestones' };
+    }
+    if (activeTab.type === 'support') {
+      return { title: 'Support the Creator', description: 'Ways to support development' };
+    }
+    if (activeTab.type === 'article_detail' && activeTab.articleId) { 
+      const article = devToArticles.find(a => a.id === activeTab.articleId); 
+      if (article) return article;
+      // Richer fallback so the detail view still renders nicely (no broken image state)
+      return { 
+        id: activeTab.articleId as any, 
+        title: activeTab.title || "Article", 
+        slug: activeTab.articleSlug || String(activeTab.articleId),
+        description: "Article content could not be loaded.",
+        body_markdown: "# Article content unavailable\n\nThe article data could not be found. This can happen after a page refresh or deep link before articles finish loading.",
+        user: { name: "Unknown Source", username: "unknown" } as any,
+        cover_image: null,
+        social_image: null,
+        readable_publish_date: "",
+        reading_time_minutes: 1,
+        tag_list: [],
+        category: "",
+      } as any; 
+    }
     if (activeTab.type === 'cv_preview') return PORTFOLIO_DATA;
     if (activeTab.type === 'settings_editor') {
         const settingsProps: SettingsEditorProps = {
@@ -1808,7 +1862,34 @@ const App: React.FC = () => {
     }
     if (activeTab.type === 'project_detail') return aiGeneratedProjects.find(p => p.id === activeTab.id) || JSON.parse(generateProjectDetailContent(activeTab.id, PORTFOLIO_DATA));
     if (activeTab.type === 'json_preview' && activeTab.fileName) { const originalFile = editorPanes.right.openTabs.find(t => t.id === activeTab.fileName) || orderedSidebarItems.flatMap(item => item.children || [item]).find(item => item.id === activeTab.fileName); if (originalFile?.id?.startsWith('project_')) return JSON.parse(generateProjectDetailContent(originalFile.id, PORTFOLIO_DATA)); return generateFileContent(activeTab.fileName, PORTFOLIO_DATA); }
-    if (activeTab.type === 'article_detail' && activeTab.articleId) { const article = devToArticles.find(a => a.id === activeTab.articleId); return article || { title: "Article Not Found", body_markdown: "# Article Not Found", user: { name: "System" } }; }
+    if (activeTab.type === 'extensions') {
+      return { title: 'Extensions Marketplace', description: 'Browse and install VS Code extensions (demo)' };
+    }
+    if (activeTab.type === 'achievements') {
+      return { title: 'Achievements', description: 'Unlocked badges and milestones' };
+    }
+    if (activeTab.type === 'support') {
+      return { title: 'Support the Creator', description: 'Ways to support development' };
+    }
+    if (activeTab.type === 'article_detail' && activeTab.articleId) { 
+      const article = devToArticles.find(a => a.id === activeTab.articleId); 
+      if (article) return article;
+      // Richer fallback so the detail view still renders nicely (no broken image state)
+      return { 
+        id: activeTab.articleId as any, 
+        title: activeTab.title || "Article", 
+        slug: activeTab.articleSlug || String(activeTab.articleId),
+        description: "Article content could not be loaded.",
+        body_markdown: "# Article content unavailable\n\nThe article data could not be found. This can happen after a page refresh or deep link before articles finish loading.",
+        user: { name: "Unknown Source", username: "unknown" } as any,
+        cover_image: null,
+        social_image: null,
+        readable_publish_date: "",
+        reading_time_minutes: 1,
+        tag_list: [],
+        category: "",
+      } as any; 
+    }
     if (activeTab.type === 'cv_preview') return PORTFOLIO_DATA;
     if (activeTab.type === 'settings_editor') {
       const settingsProps: SettingsEditorProps = {
@@ -1943,7 +2024,7 @@ const App: React.FC = () => {
           activeViewId={activityBarSelection}
           onOpenSettingsEditor={handleOpenSettingsEditor}
         />
-        {(isSidebarVisible || isSearchPanelVisible || isArticlesPanelVisible || isStatisticsPanelVisible) && ( 
+        {(isSidebarVisible || isSearchPanelVisible || isArticlesPanelVisible || isStatisticsPanelVisible || isSourceControlVisible) && ( 
           <div ref={leftPanelContainerRef} className="flex"> 
             <div className="flex-shrink-0 overflow-hidden" style={{ width: `${leftPanelWidth}px` }}>
               {isSidebarVisible && featuresStatus.explorer === 'active' && <Sidebar items={orderedSidebarItems} onOpenTab={(item) => handleOpenTab(item, false, focusedEditorPaneId)} onRunAction={handleSidebarAction} isVisible={isSidebarVisible} activeTabId={editorPanes[focusedEditorPaneId].activeTabId} onReorderItems={handleReorderSidebarItems} onContextMenuRequest={handleSidebarItemContextMenuRequest} />}
@@ -1965,6 +2046,8 @@ const App: React.FC = () => {
                 />
               )}
               {isStatisticsPanelVisible && <StatisticsPanel isVisible={isStatisticsPanelVisible} statisticsData={statisticsData} isLoading={isLoadingStatistics} error={statisticsError} onClose={() => {setIsStatisticsPanelVisible(false); if(activityBarSelection === 'statistics') setActivityBarSelection(null);}} featureStatus={featuresStatus.statisticsPanel}/>}
+
+              {isSourceControlVisible && <SourceControlPanel isVisible={isSourceControlVisible} onClose={() => { setIsSourceControlVisible(false); if(activityBarSelection === 'source_control') setActivityBarSelection(null); }} featureStatus={featuresStatus.sourceControl} />}
             </div>
             <div ref={leftResizerRef} onMouseDown={handleLeftPanelResizeStart} onTouchStart={handleLeftPanelResizeStart} className="resizer resizer-x"></div>
           </div>

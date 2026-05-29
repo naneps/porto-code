@@ -17,6 +17,7 @@ import GuestBookView from '../GuestBook/GuestBookView';
 import SpotifyView from '../Spotify/SpotifyView';
 import SettingsEditor from '../Settings/SettingsEditor';
 import ArticleDetailView from '../articles/ArticleDetailView'; // Import the new component
+import SupportView from '../Modals/SupportView';
 import CVPreview from './CVPreview';
 import JsonPreviewView from './JsonPreviewView';
 
@@ -69,6 +70,63 @@ const TabContent: React.FC<TabContentPropsType> = ({
         onContextMenuRequest(event.pageX, event.pageY, tab.id, false);
     }
   };
+
+  if (tab.type === 'achievements') {
+    return (
+      <div className="p-8 text-[var(--editor-foreground)] bg-[var(--editor-background)] h-full overflow-auto">
+        <div className="max-w-xl mx-auto">
+          <h1 className="text-2xl font-bold mb-4 flex items-center gap-3">🏆 Achievements</h1>
+          <div className="space-y-3">
+            {[
+              { name: 'First Steps', desc: 'Opened your first file', unlocked: true },
+              { name: 'AI Curious', desc: 'Chatted with the AI Assistant', unlocked: true },
+              { name: 'Social Butterfly', desc: 'Left a message in the Guest Book', unlocked: false },
+              { name: 'Customization Master', desc: 'Changed themes 5+ times', unlocked: false },
+            ].map((a, i) => (
+              <div key={i} className={`p-4 rounded border ${a.unlocked ? 'border-[var(--text-accent)] bg-[var(--text-accent)]/5' : 'border-[var(--border-color)] opacity-60'}`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{a.unlocked ? '✅' : '🔒'}</span>
+                  <span className="font-semibold">{a.name}</span>
+                </div>
+                <div className="text-sm text-[var(--text-muted)] ml-7">{a.desc}</div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-xs text-[var(--text-muted)]">More achievements will unlock as you explore Porto Code.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (tab.type === 'support') {
+    return <SupportView />;
+  }
+
+  if (tab.type === 'extensions') {
+    return (
+      <div className="p-8 text-[var(--editor-foreground)] bg-[var(--editor-background)] h-full overflow-auto">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-2xl font-bold mb-2 flex items-center gap-3">
+            <span>🧩</span> Extensions Marketplace
+          </h1>
+          <p className="text-[var(--text-muted)] mb-6">Discover extensions that power Nandang's development workflow (demo)</p>
+
+          <div className="grid gap-3">
+            {['Flutter Tools', 'Dart', 'GitLens', 'Tailwind CSS IntelliSense', 'Prettier', 'ESLint'].map((ext, i) => (
+              <div key={i} className="flex justify-between items-center p-3 border border-[var(--border-color)] rounded bg-[var(--editor-tab-inactive-background)]">
+                <div>
+                  <div className="font-semibold">{ext}</div>
+                  <div className="text-xs text-[var(--text-muted)]">Popular • 10M+ installs</div>
+                </div>
+                <button className="px-3 py-1 text-xs bg-[var(--focus-border)] text-white rounded">Install</button>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 text-xs text-[var(--text-muted)]">More extensions coming soon. This is a demo marketplace.</div>
+        </div>
+      </div>
+    );
+  }
 
   if (tab.type === 'ai_chat') {
     const aiChatProps = content as AIChatInterfacePropsType; 
