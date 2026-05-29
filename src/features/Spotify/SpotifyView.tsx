@@ -8,12 +8,16 @@ import {
   getNowPlaying,
   initiateSpotifyLogin,
   isSpotifyAuthenticated,
+  getTopGenres,
+  initSpotifyPlayer,
   SpotifyArtist,
   SpotifyNowPlaying,
   SpotifyRecentlyPlayedItem,
   SpotifyTrack,
 } from '../../Utils/spotifyUtils';
 import { ExternalLink, Music, Headphones, TrendingUp, Clock, LogIn, LogOut, RefreshCw, Play, ChevronRight } from 'lucide-react';
+import SpotifyPlaybackControlsComponent from './SpotifyPlaybackControls';
+import { SpotifyPlaybackControls } from '../../Utils/spotifyUtils';
 
 // ── Music bars animation ──────────────────────────────────────────────────────
 const MusicBars: React.FC<{ playing: boolean; size?: 'sm' | 'md' }> = ({ playing, size = 'md' }) => {
@@ -208,24 +212,61 @@ interface SpotifyViewProps {
 
 const SpotifyView: React.FC<SpotifyViewProps> = () => {
   const [authenticated, setAuthenticated] = useState(isSpotifyAuthenticated());
-  const [activeTab, setActiveTab] = useState<'tracks' | 'artists' | 'recent'>('tracks');
+  const [activeTab, setActiveTab] = useState<'tracks' | 'artists' | 'recent' | 'insights'>('tracks');
   const [timeRange, setTimeRange] = useState<TimeRange>('short_term');
 
   const [nowPlaying, setNowPlaying] = useState<SpotifyNowPlaying | null>(null);
   const [topTracks, setTopTracks] = useState<SpotifyTrack[]>([]);
   const [topArtists, setTopArtists] = useState<SpotifyArtist[]>([]);
   const [recentTracks, setRecentTracks] = useState<SpotifyRecentlyPlayedItem[]>([]);
+  const [topGenres, setTopGenres] = useState<Array<{ name: string; count: number }>>([]);
 
   const [loadingNowPlaying, setLoadingNowPlaying] = useState(false);
   const [loadingContent, setLoadingContent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Web Playback SDK state (A: Strengthened integration)
+  const [playerReady, setPlayerReady] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playerError, setPlayerError] = useState<string | null>(null);
+
   const nowPlayingInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const progressInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined); // For B: Live progress
 
   const fetchNowPlaying = useCallback(async () => {
     if (!isSpotifyAuthenticated()) return;
     const data = await getNowPlaying();
     setNowPlaying(data);
+  }, []);
+
+  // B: Live updating progress bar (client-side simulation)
+  const startLiveProgress = useCallback(() => {
+    if (progressInterval.current) clearInterval(progressInterval.current);
+
+    progressInterval.current = setInterval(() => {
+      setNowPlaying(prev => {
+        if (!prev?.item || !prev.is_playing) return prev;
+
+        const newProgress = (prev.progress_ms || 0) + 1000;
+        if (newProgress >= prev.item.duration_ms) {
+          // Song likely ended — fetch fresh data
+          fetchNowPlaying();
+          return prev;
+        }
+
+        return {
+          ...prev,
+          progress_ms: newProgress,
+        };
+      });
+    }, 1000);
+  }, [fetchNowPlaying]);
+
+  const stopLiveProgress = useCallback(() => {
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current);
+      progressInterval.current = undefined;
+    }
   }, []);
 
   const fetchContent = useCallback(async (tr: TimeRange, tab: string) => {
@@ -239,9 +280,14 @@ const SpotifyView: React.FC<SpotifyViewProps> = () => {
       } else if (tab === 'artists') {
         const artists = await getTopArtists(tr, 12);
         setTopArtists(artists);
-      } else {
+      } else if (tab === 'recent') {
         const recent = await getRecentlyPlayed(20);
         setRecentTracks(recent);
+      } else if (tab === 'insights') {
+        // Data Visualization: Top Genres
+        const artists = await getTopArtists('long_term', 50);
+        const genres = getTopGenres(artists, 10);
+        setTopGenres(genres);
       }
     } catch {
       setError('Failed to load data from Spotify.');
@@ -260,12 +306,26 @@ const SpotifyView: React.FC<SpotifyViewProps> = () => {
 
     // Poll now playing every 30s
     nowPlayingInterval.current = setInterval(fetchNowPlaying, 30_000);
-    return () => clearInterval(nowPlayingInterval.current);
+    return () => {
+      clearInterval(nowPlayingInterval.current);
+      stopLiveProgress();
+    };
   }, [authenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (authenticated) fetchContent(timeRange, activeTab);
   }, [timeRange, activeTab, fetchContent, authenticated]);
+
+  // B: Start/stop live progress based on playback state
+  useEffect(() => {
+    if (nowPlaying?.is_playing) {
+      startLiveProgress();
+    } else {
+      stopLiveProgress();
+    }
+
+    return () => stopLiveProgress();
+  }, [nowPlaying?.is_playing, startLiveProgress, stopLiveProgress]);
 
   const handleLogin = () => initiateSpotifyLogin();
 
@@ -282,6 +342,42 @@ const SpotifyView: React.FC<SpotifyViewProps> = () => {
   const handleRefresh = () => {
     fetchNowPlaying();
     fetchContent(timeRange, activeTab);
+  };
+
+  // A: Strengthened Web Playback SDK integration
+  const handleEnablePlayback = async () => {
+    setPlayerError(null);
+
+    try {
+      const token = localStorage.getItem('spotify_access_token');
+      if (!token) {
+        setPlayerError('Please reconnect your Spotify account first.');
+        return;
+      }
+
+      await initSpotifyPlayer(
+        token,
+        (state: any) => {
+          // Real-time state sync from Spotify Player
+          if (state) {
+            setIsPlaying(!state.paused);
+            // Optionally update nowPlaying progress here in the future
+          }
+        },
+        (deviceId: string) => {
+          setPlayerReady(true);
+          setPlayerError(null);
+          console.log('✅ Spotify Web Playback ready on device:', deviceId);
+        }
+      );
+    } catch (err: any) {
+      console.error('Playback SDK Error:', err);
+      setPlayerError(
+        err?.message?.includes('Premium') 
+          ? 'Spotify Premium is required to use the Web Player.' 
+          : 'Failed to initialize playback. Make sure you have Spotify Premium.'
+      );
+    }
   };
 
   // ── Not authenticated ──────────────────────────────────────────────────────
@@ -316,9 +412,10 @@ const SpotifyView: React.FC<SpotifyViewProps> = () => {
 
   // ── Authenticated ──────────────────────────────────────────────────────────
   const tabItems: { id: typeof activeTab; label: string; icon: React.ElementType }[] = [
-    { id: 'tracks',  label: 'Top Tracks',  icon: TrendingUp },
-    { id: 'artists', label: 'Top Artists', icon: Headphones },
-    { id: 'recent',  label: 'Recent',      icon: Clock },
+    { id: 'tracks',   label: 'Top Tracks',  icon: TrendingUp },
+    { id: 'artists',  label: 'Top Artists', icon: Headphones },
+    { id: 'recent',   label: 'Recent',      icon: Clock },
+    { id: 'insights', label: 'Insights',    icon: TrendingUp }, // Data visualization
   ];
 
   return (
@@ -334,7 +431,17 @@ const SpotifyView: React.FC<SpotifyViewProps> = () => {
           </div>
           <span className="text-sm font-semibold" style={{ color: 'hsl(141 72% 55%)' }}>Spotify</span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          {/* Playback SDK Toggle - Starting point for full playback (#3) */}
+          {!playerReady && (
+            <button
+              onClick={handleEnablePlayback}
+              className="text-[10px] px-2 py-1 rounded bg-[var(--text-accent)]/10 text-[var(--text-accent)] hover:bg-[var(--text-accent)]/20 transition-colors"
+            >
+              Enable Playback
+            </button>
+          )}
+
           <button
             onClick={handleRefresh}
             className="p-1 rounded hover:bg-[var(--sidebar-item-hover-background)] transition-colors"
@@ -357,6 +464,34 @@ const SpotifyView: React.FC<SpotifyViewProps> = () => {
       <div className="flex-1 overflow-y-auto px-3 pb-4">
         {/* Now Playing */}
         <NowPlayingCard nowPlaying={nowPlaying} loading={loadingNowPlaying} />
+
+        {/* A: Enhanced Playback Controls UI */}
+        {playerReady && (
+          <div className="mb-4 px-1">
+            <div className="text-[10px] text-[var(--text-accent)] mb-1.5 px-1 font-mono">WEB PLAYER ACTIVE</div>
+            <SpotifyPlaybackControlsComponent
+              isPlaying={isPlaying}
+              onTogglePlay={async () => {
+                await SpotifyPlaybackControls.togglePlay?.();
+              }}
+              onNext={async () => {
+                await SpotifyPlaybackControls.nextTrack?.();
+              }}
+              onPrevious={async () => {
+                await SpotifyPlaybackControls.previousTrack?.();
+              }}
+              onVolumeChange={(v) => SpotifyPlaybackControls.setVolume?.(v)}
+              volume={0.8}
+            />
+          </div>
+        )}
+
+        {/* A: Better error messaging for Playback */}
+        {playerError && (
+          <div className="mb-3 px-3 py-2 text-xs rounded-lg bg-red-500/10 text-red-400 border border-red-500/20">
+            {playerError}
+          </div>
+        )}
 
         {/* Tab bar */}
         <div className="flex gap-1 mb-3 bg-[var(--sidebar-background)] rounded-lg p-1">
@@ -457,6 +592,43 @@ const SpotifyView: React.FC<SpotifyViewProps> = () => {
                 />
               ))
             )}
+          </div>
+        )}
+
+        {/* Data Visualizations - Insights Tab */}
+        {!loadingContent && activeTab === 'insights' && (
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-xs font-semibold text-[var(--text-muted)] mb-3 uppercase tracking-wider">
+                Top Genres (All Time)
+              </h4>
+              {topGenres.length === 0 ? (
+                <p className="text-xs text-[var(--text-muted)]">Not enough data yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {topGenres.map((genre, index) => {
+                    const maxCount = topGenres[0]?.count || 1;
+                    const percentage = (genre.count / maxCount) * 100;
+                    return (
+                      <div key={index} className="flex items-center gap-3">
+                        <span className="text-xs w-28 truncate text-[var(--editor-foreground)]">{genre.name}</span>
+                        <div className="flex-1 h-3 bg-[var(--editor-tab-inactive-background)] rounded-full overflow-hidden border border-[var(--border-color)]">
+                          <div 
+                            className="h-full bg-gradient-to-r from-[var(--text-accent)] to-[hsl(141_80%_55%)] transition-all duration-500"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-[var(--text-muted)] w-8 text-right tabular-nums">{genre.count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="text-[10px] text-[var(--text-muted)] pt-4 border-t border-[var(--border-color)]">
+              Data visualizations help understand listening habits beyond just top lists.
+            </div>
           </div>
         )}
       </div>

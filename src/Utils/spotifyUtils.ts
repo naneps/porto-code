@@ -238,6 +238,144 @@ export async function getRecentlyPlayed(limit = 10): Promise<SpotifyRecentlyPlay
   return data?.items ?? [];
 }
 
+// ── Data Visualization Helpers ────────────────────────────────────────────────
+
+/**
+ * Extracts top genres from a list of artists.
+ * This is great for data visualization.
+ */
+export function getTopGenres(artists: SpotifyArtist[], limit = 8): Array<{ name: string; count: number }> {
+  const genreCount: Record<string, number> = {};
+
+  artists.forEach(artist => {
+    artist.genres?.forEach(genre => {
+      genreCount[genre] = (genreCount[genre] || 0) + 1;
+    });
+  });
+
+  return Object.entries(genreCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([name, count]) => ({ name, count }));
+}
+
+// ── Web Playback SDK Foundation (Starting Point for #3) ──────────────────────
+
+declare global {
+  interface Window {
+    Spotify: any;
+  }
+}
+
+let playerInstance: any = null;
+let playerDeviceId: string | null = null;
+
+/**
+ * Loads the Spotify Web Playback SDK script.
+ * Call this once when the user is authenticated.
+ */
+export function loadSpotifySdk(): Promise<void> {
+  return new Promise((resolve) => {
+    if (window.Spotify) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://sdk.scdn.co/spotify-player.js';
+    script.async = true;
+
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      resolve();
+    };
+
+    document.body.appendChild(script);
+  });
+}
+
+/**
+ * Initializes the Spotify Web Playback SDK Player.
+ * Requires a valid access token.
+ */
+export async function initSpotifyPlayer(
+  accessToken: string,
+  onPlayerStateChanged?: (state: any) => void,
+  onReady?: (deviceId: string) => void
+): Promise<any> {
+  if (playerInstance) {
+    return playerInstance;
+  }
+
+  await loadSpotifySdk();
+
+  playerInstance = new window.Spotify.Player({
+    name: 'Porto Code Player',
+    getOAuthToken: (cb: (token: string) => void) => cb(accessToken),
+    volume: 0.8,
+  });
+
+  // Error handling
+  playerInstance.addListener('initialization_error', ({ message }: any) => {
+    console.error('Spotify Player initialization error:', message);
+  });
+  playerInstance.addListener('authentication_error', ({ message }: any) => {
+    console.error('Spotify Player authentication error:', message);
+  });
+  playerInstance.addListener('account_error', ({ message }: any) => {
+    console.error('Spotify Player account error (Premium required?):', message);
+  });
+
+  // Ready
+  playerInstance.addListener('ready', ({ device_id }: any) => {
+    playerDeviceId = device_id;
+    if (onReady) onReady(device_id);
+    console.log('Spotify Player ready with Device ID', device_id);
+  });
+
+  // Not ready
+  playerInstance.addListener('not_ready', ({ device_id }: any) => {
+    console.log('Spotify Player device has gone offline', device_id);
+  });
+
+  // Player state changes
+  if (onPlayerStateChanged) {
+    playerInstance.addListener('player_state_changed', onPlayerStateChanged);
+  }
+
+  const connected = await playerInstance.connect();
+  if (!connected) {
+    console.error('Failed to connect to Spotify Player');
+  }
+
+  return playerInstance;
+}
+
+export function getSpotifyPlayer() {
+  return playerInstance;
+}
+
+export function getSpotifyPlayerDeviceId() {
+  return playerDeviceId;
+}
+
+/**
+ * Basic playback controls using the Web Playback SDK
+ */
+export const SpotifyPlaybackControls = {
+  async togglePlay() {
+    if (playerInstance) await playerInstance.togglePlay();
+  },
+  async nextTrack() {
+    if (playerInstance) await playerInstance.nextTrack();
+  },
+  async previousTrack() {
+    if (playerInstance) await playerInstance.previousTrack();
+  },
+  async setVolume(volume: number) {
+    if (playerInstance) await playerInstance.setVolume(volume);
+  },
+};
+
 export function formatDuration(ms: number): string {
   const mins = Math.floor(ms / 60000);
   const secs = Math.floor((ms % 60000) / 1000);
